@@ -1,0 +1,18 @@
+"""Stable P2 tool registry and readiness metadata."""
+from .comment_anomaly import comment_anomaly
+from .sentiment import sentiment_curve
+from .text_intent import analyze_text_intent
+from .topic_drift import topic_drift
+
+TOOLS_V1 = [analyze_text_intent, sentiment_curve, topic_drift, comment_anomaly]
+
+TOOL_READINESS = {
+    "analyze_text_intent": True,
+    "sentiment_curve": True,
+    "topic_drift": True,
+    "comment_anomaly": True,
+    "ocr_extract": False,
+    "image_text_consistency": False,
+    "detect_logo_product": False,
+}
+

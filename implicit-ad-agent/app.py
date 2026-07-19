@@ -8,10 +8,48 @@
 """
 from __future__ import annotations
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from impad.graph import graph
 
 app = FastAPI(title="隐性广告识别 · 起步骨架")
+
+
+@app.get("/", response_class=HTMLResponse)
+def root():
+    return """
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>隐性广告识别 API</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; background: #f5f5f5; }
+            .card { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.08); }
+            h1 { color: #1a1a2e; margin-bottom: 20px; }
+            p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+            .links { display: flex; gap: 15px; flex-wrap: wrap; }
+            a { display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px; transition: background 0.2s; }
+            a:hover { background: #2563eb; }
+            .api-link { background: #10b981; }
+            .api-link:hover { background: #059669; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>隐性广告识别 API</h1>
+            <p>融合多模态行为特征与文本推断的隐性广告识别服务。</p>
+            <p>提供 <code>POST /analyze</code> 接口，传入帖子内容即可获得结构化审查结果。</p>
+            <div class="links">
+                <a href="/docs">📖 API 文档</a>
+                <a href="/redoc" class="api-link">📋 ReDoc 文档</a>
+                <a href="/health">❤️ 健康检查</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 
 class PostIn(BaseModel):

@@ -1,7 +1,7 @@
 # 交接文档 · 隐性广告识别项目（大创）
 
 > 写给一个完全没有上下文的新会话。读完这份就能接手，不用再翻旧记录。
-> 最后更新：2026-07-13
+> 最后更新：2026-07-19
 
 ---
 
@@ -118,6 +118,20 @@
 ---
 
 ## 三、当前卡在哪 / 下一步
+
+### P2 · L（Owner）工具舱进展（2026-07-19）
+
+L 已按 `docs/P2_工具舱模型工具化_执行指南.md` 完成目前可独立完成的 Owner 工作：
+
+- 新增公共契约 `impad/tools/contracts.py`：统一四态状态、证据结构和结果信封。
+- 新增 4 个“纯 core + LangChain @tool 薄适配”工具：`analyze_text_intent`、`sentiment_curve`、`topic_drift`、`comment_anomaly`。
+- 新增 `impad/tools/registry.py`，真实记录 4 个 L 工具 ready、3 个 V 视觉工具 pending，不虚报 M2。
+- 新增 5 份测试文件；2026-07-19 全套回归 **36 passed**（原 21 + 新 15），零 Key、零联网、无视觉重依赖。
+- 新增 `run_tools_demo.py` 固定零 Key 演示，以及 `docs/tool_catalog_v1.md` 的接口、限制、调用示例和替换点。
+
+关键实现边界：文本意图复用现有关键词唯一事实来源；情绪将普通正负情感与焦虑/紧迫分离；主题漂移只读当前时间之前的历史，当前用字符 bigram 余弦作为明确标注的降级实现；评论少于 5 条、历史少于 3 条均返回 `skipped` 而不是 0 分。
+
+**P2/M2 尚未完成，当前 4/7 ready。** 下一交接点是 V 实现 `ocr_extract`、`detect_logo_product`、`image_text_consistency`，并由 V 评审 L 四工具的输入输出/证据/降级/测试；L 随后评审视觉接口、把 7 工具纳入注册表并做最终 M2 回归。真实视觉 integration 和 30 对图文一致性质量小测仍由 V 执行。
 
 **当前没有硬卡点。** 骨架已跑通，用户正在自己上手体验 `/docs` 页面。
 
