@@ -6,7 +6,7 @@ from impad.tools.registry import TOOLS_V1, TOOL_READINESS
 
 def test_registry_has_unique_structured_tools():
     names = [item.name for item in TOOLS_V1]
-    assert len(names) == len(set(names)) == 4
+    assert len(names) == len(set(names)) == 7
     assert all(item.description for item in TOOLS_V1)
     assert all(item.args_schema is not None for item in TOOLS_V1)
     assert all(TOOL_READINESS[name] for name in names)

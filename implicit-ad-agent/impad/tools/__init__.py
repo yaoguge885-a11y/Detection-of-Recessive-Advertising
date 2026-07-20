@@ -4,5 +4,6 @@
 """
 
 from .registry import TOOLS_V1, TOOL_READINESS
+from .vision_context import VisionContext
 
-__all__ = ["TOOLS_V1", "TOOL_READINESS"]
+__all__ = ["TOOLS_V1", "TOOL_READINESS", "VisionContext"]

@@ -130,6 +130,7 @@ class ImageAnalyzer:
         if not vision_available():
             raise RuntimeError("视觉依赖未安装：pip install -r requirements-vision.txt")
         self.detector = _Detector(model_size=model_size, conf=conf, device=device)
+        self.enable_ocr = enable_ocr
         self.ocr = None
         if enable_ocr:
             try:
@@ -160,9 +161,13 @@ class ImageAnalyzer:
         detections = self.detector.detect(str(p))
         focus = self.detector.focus(str(p), detections)
         texts = self.ocr.recognize(str(p)) if self.ocr else []
+        ocr_version = ("EasyOCR" if self.ocr is not None else
+                       "OCR-unavailable" if self.enable_ocr else "OCR-disabled")
         return {
             "image_name": p.name,
             "model": f"YOLO11{self.detector.model_size}",
+            "model_version": f"YOLO11{self.detector.model_size}+{ocr_version}",
+            "ocr_available": self.ocr is not None,
             "objects": detections,
             "focus": focus,
             "texts": texts,
