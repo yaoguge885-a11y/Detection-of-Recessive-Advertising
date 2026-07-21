@@ -1,0 +1,387 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/implicit-ad/data_schema_v1.json",
+  "title": "隐性广告识别 P1 数据 Schema v1.0",
+  "description": "标准帖子输入和独立标注记录定义。内容记录不包含最终人工标签。",
+  "$ref": "#/$defs/content_record",
+  "$defs": {
+    "content_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "post_id",
+        "platform",
+        "source_type",
+        "blogger_id",
+        "text",
+        "media",
+        "provenance",
+        "privacy"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "description": "Schema 版本。"
+        },
+        "post_id": {
+          "type": "string",
+          "pattern": "^post_[A-Za-z0-9_-]+$",
+          "description": "去标识化且全局唯一的帖子 ID。"
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "wechat_official_account",
+            "weibo",
+            "xiaohongshu",
+            "douyin",
+            "synthetic",
+            "other"
+          ],
+          "description": "内容来源平台。"
+        },
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "public_dataset",
+            "manual_public_collection",
+            "authorized_export",
+            "synthetic"
+          ],
+          "description": "数据取得方式；模拟数据必须填 synthetic。"
+        },
+        "blogger_id": {
+          "type": "string",
+          "pattern": "^blogger_[A-Za-z0-9_-]+$",
+          "description": "经项目私有盐处理的稳定哈希/匿名 ID。"
+        },
+        "published_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "发布时间；未知时为 null。"
+        },
+        "text": {
+          "type": "string",
+          "description": "经脱敏后的正文；图像为主的帖子可为空字符串。"
+        },
+        "media": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/media_item"
+          },
+          "description": "媒体元数据，不在 Git 中提交未审查的原始媒体。"
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comment_item"
+          },
+          "description": "可获得时的匿名化评论。"
+        },
+        "blogger_history_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "用于主题漂移判断的去标识化历史帖子引用。"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance",
+          "description": "来源和采集审计信息。"
+        },
+        "privacy": {
+          "$ref": "#/$defs/privacy",
+          "description": "脱敏与敏感信息检查结果。"
+        }
+      }
+    },
+    "media_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "media_id",
+        "type",
+        "local_ref",
+        "sha256",
+        "phash",
+        "ocr_text"
+      ],
+      "properties": {
+        "media_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video",
+            "audio",
+            "link",
+            "other"
+          ]
+        },
+        "local_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "phash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ocr_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "comment_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comment_id",
+        "author_id",
+        "text",
+        "like_count",
+        "is_pinned"
+      ],
+      "properties": {
+        "comment_id": {
+          "type": "string"
+        },
+        "author_id": {
+          "type": "string",
+          "description": "匿名评论者 ID。"
+        },
+        "text": {
+          "type": "string"
+        },
+        "like_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "is_pinned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_ref_hash",
+        "collected_at",
+        "collector",
+        "terms_checked_at"
+      ],
+      "properties": {
+        "source_ref_hash": {
+          "type": "string"
+        },
+        "collected_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "collector": {
+          "type": "string"
+        },
+        "terms_checked_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "anonymized",
+        "contains_sensitive_data"
+      ],
+      "properties": {
+        "anonymized": {
+          "type": "boolean"
+        },
+        "contains_sensitive_data": {
+          "type": "boolean"
+        }
+      }
+    },
+    "annotation_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "post_id",
+        "annotator_id",
+        "guide_version",
+        "label",
+        "confidence",
+        "evidence_codes",
+        "evidence",
+        "uncertain_reason",
+        "annotated_at"
+      ],
+      "properties": {
+        "post_id": {
+          "type": "string",
+          "pattern": "^post_[A-Za-z0-9_-]+$"
+        },
+        "annotator_id": {
+          "type": "string",
+          "description": "正式双标时使用 D 或 N；本模拟集使用 synthetic_reference。"
+        },
+        "guide_version": {
+          "const": "1.0"
+        },
+        "label": {
+          "type": "string",
+          "enum": [
+            "明广",
+            "暗广",
+            "非广",
+            "out_of_scope",
+            "uncertain"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "D",
+              "C",
+              "P",
+              "A",
+              "V",
+              "B",
+              "M"
+            ]
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uncertain_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "annotated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "x_field_reference": [
+    {
+      "field": "post_id",
+      "required": true,
+      "purpose": "内容和标注记录的唯一关联键。"
+    },
+    {
+      "field": "blogger_id",
+      "required": true,
+      "purpose": "按博主分组切分、防泄漏；不得存真实昵称。"
+    },
+    {
+      "field": "media/comments/blogger_history_refs",
+      "required": false,
+      "purpose": "支撑视觉、评论异常和主题漂移证据。"
+    },
+    {
+      "field": "provenance",
+      "required": true,
+      "purpose": "确保来源、采集时间、责任人和条款检查可追溯。"
+    },
+    {
+      "field": "privacy",
+      "required": true,
+      "purpose": "保证数据已脱敏并标记敏感风险。"
+    },
+    {
+      "field": "annotation_record",
+      "required": "separate file",
+      "purpose": "保存独立标注，不与模型输入内容混放。"
+    }
+  ],
+  "examples": [
+    {
+      "schema_version": "1.0",
+      "post_id": "post_explicit_sponsor",
+      "platform": "synthetic",
+      "source_type": "synthetic",
+      "blogger_id": "blogger_style_001",
+      "published_at": "2026-07-20T10:00:00+08:00",
+      "text": "本期穿搭内容由晴岚服饰赞助，下面展示三套新品搭配和购买入口。",
+      "media": [
+        {
+          "media_id": "media_001",
+          "type": "image",
+          "local_ref": null,
+          "sha256": null,
+          "phash": null,
+          "ocr_text": "晴岚服饰新品合作"
+        }
+      ],
+      "comments": [],
+      "blogger_history_refs": [],
+      "provenance": {
+        "source_ref_hash": "synthetic_case_post_explicit_sponsor",
+        "collected_at": "2026-07-21T09:00:00+08:00",
+        "collector": "P1_team",
+        "terms_checked_at": "2026-07-21"
+      },
+      "privacy": {
+        "anonymized": true,
+        "contains_sensitive_data": false
+      }
+    },
+    {
+      "post_id": "post_explicit_sponsor",
+      "annotator_id": "synthetic_reference",
+      "guide_version": "1.0",
+      "label": "明广",
+      "confidence": 0.9,
+      "evidence_codes": [
+        "D",
+        "C"
+      ],
+      "evidence": [
+        "正文明确写明品牌赞助",
+        "内容围绕单一服饰品牌展示"
+      ],
+      "uncertain_reason": null,
+      "annotated_at": "2026-07-21T09:00:00+08:00"
+    }
+  ]
+}
