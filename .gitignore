@@ -1,0 +1,9 @@
+﻿# Python artifacts
+__pycache__/
+*.py[cod]
+.venv/
+
+# Sensitive or non-submittable P1 data
+data/raw/
+data/run_outputs/
+.env
