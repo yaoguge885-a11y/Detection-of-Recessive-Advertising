@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/implicit-ad/data_schema_v1.json",
   "title": "隐性广告识别 P1 数据 Schema v1.0",
-  "description": "标准帖子输入和独立标注记录定义。内容记录不包含最终人工标签。",
+  "description": "标准帖子输入、独立主标注记录和可选标注补充记录定义。内容记录不包含最终人工标签。",
   "$ref": "#/$defs/content_record",
   "$defs": {
     "content_record": {
@@ -105,7 +105,7 @@
       "required": [
         "media_id",
         "type",
-        "local_ref",
+        "ref",
         "sha256",
         "phash",
         "ocr_text"
@@ -124,11 +124,12 @@
             "other"
           ]
         },
-        "local_ref": {
+        "ref": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "媒体本地逻辑引用；图像补充记录的 media_ref 与此对应。"
         },
         "sha256": {
           "type": [
@@ -300,6 +301,213 @@
           "format": "date-time"
         }
       }
+    },
+    "annotation_supplement_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "post_id",
+        "annotator_id",
+        "supplement_version",
+        "image_analyses",
+        "markdown_notes",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "post_id": {
+          "type": "string",
+          "pattern": "^post_[A-Za-z0-9_-]+$"
+        },
+        "annotator_id": {
+          "type": "string",
+          "description": "与主标注记录关联的标注人 ID。"
+        },
+        "supplement_version": {
+          "const": "1.0"
+        },
+        "image_analyses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/image_analysis"
+          }
+        },
+        "markdown_notes": {
+          "type": "string",
+          "description": "标注者 Markdown 格式补充备注。"
+        },
+        "edge_case_discussion": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/edge_case_discussion"
+            }
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "image_analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "media_ref",
+        "image_index",
+        "analysis_method",
+        "description",
+        "detected_elements",
+        "visual_evidence_codes",
+        "relevance_to_annotation",
+        "analyzed_at"
+      ],
+      "properties": {
+        "media_ref": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "image_index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "analysis_method": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "llm_vision",
+            "ocr_auto",
+            "hybrid"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ocr_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detected_elements": {
+          "$ref": "#/$defs/detected_elements"
+        },
+        "visual_evidence_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "V",
+              "A",
+              "D"
+            ]
+          }
+        },
+        "relevance_to_annotation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "image_quality_notes": {
+          "type": "string"
+        },
+        "analyzed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "detected_elements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "has_logo",
+        "has_qr_code",
+        "has_price_info",
+        "has_product_image",
+        "has_chart_or_table",
+        "has_promotional_text",
+        "has_contact_info"
+      ],
+      "properties": {
+        "has_logo": {
+          "type": "boolean"
+        },
+        "has_qr_code": {
+          "type": "boolean"
+        },
+        "has_price_info": {
+          "type": "boolean"
+        },
+        "has_product_image": {
+          "type": "boolean"
+        },
+        "has_chart_or_table": {
+          "type": "boolean"
+        },
+        "has_promotional_text": {
+          "type": "boolean"
+        },
+        "has_contact_info": {
+          "type": "boolean"
+        }
+      }
+    },
+    "edge_case_discussion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "is_edge_case"
+      ],
+      "properties": {
+        "is_edge_case": {
+          "type": "boolean"
+        },
+        "edge_case_category": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": [
+            "easy",
+            "medium",
+            "hard"
+          ]
+        },
+        "alternative_label": {
+          "type": "string",
+          "enum": [
+            "明广",
+            "暗广",
+            "非广",
+            "out_of_scope"
+          ]
+        },
+        "reason_for_uncertainty": {
+          "type": "string"
+        },
+        "suggested_guide_update": {
+          "type": "string"
+        },
+        "needs_team_discussion": {
+          "type": "boolean"
+        },
+        "discussion_tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "x_field_reference": [
@@ -332,6 +540,11 @@
       "field": "annotation_record",
       "required": "separate file",
       "purpose": "保存独立标注，不与模型输入内容混放。"
+    },
+    {
+      "field": "annotation_supplement_record",
+      "required": "optional separate file",
+      "purpose": "按 post_id + annotator_id 关联图像分析、Markdown 备注、边界讨论与审计时间。"
     }
   ],
   "examples": [
@@ -347,10 +560,10 @@
         {
           "media_id": "media_001",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "晴岚服饰新品合作"
+          "ocr_text": "晴岚服饰新品合作",
+          "ref": "media/post_explicit_sponsor/01.jpg"
         }
       ],
       "comments": [],
@@ -382,6 +595,39 @@
       ],
       "uncertain_reason": null,
       "annotated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_explicit_sponsor",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_explicit_sponsor/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：晴岚服饰新品合作。",
+          "ocr_text": "晴岚服饰新品合作",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "D"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 D 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **明广**，置信度为 0.90。正文：本期穿搭内容由晴岚服饰赞助，下面展示三套新品搭配和购买入口。\n\n## 证据补充\n\n- 主证据代码：D, C\n- 主要依据：正文明确写明品牌赞助；内容围绕单一服饰品牌展示\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 D 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
     }
   ]
 }

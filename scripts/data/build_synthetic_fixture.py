@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""Generate reproducible P1 schema and synthetic-post submission assets."""
+"""Generate reproducible P1 schema, annotation supplements, and synthetic-post assets."""
 from __future__ import annotations
 
 import json
@@ -10,6 +10,7 @@ SCHEMA_PATH = ROOT / "data" / "schema" / "data_schema_v1.json"
 DATASET_PATH = ROOT / "data" / "synthetic" / "simulated_posts_v1.json"
 
 SCHEMA_VERSION = "1.0"
+SUPPLEMENT_VERSION = "1.0"
 NOW = "2026-07-21T09:00:00+08:00"
 
 
@@ -163,6 +164,122 @@ annotations = [
     annotation("post_blurry_image", "uncertain", ["V"], ["图片疑似商品包装但关键信息无法识别", "正文没有品牌、价格或导流"], confidence=0.35, uncertain_reason="图片证据不清晰且上下文不足"),
 ]
 
+
+# The supplement schema refers to media[].ref.  These are logical references in the
+# synthetic fixture only; no real image files or URLs are bundled with the dataset.
+for content in posts:
+    for image_index, item in enumerate(content["media"], start=1):
+        item["ref"] = f"media/{content['post_id']}/{image_index:02d}.jpg"
+        item.pop("local_ref", None)
+
+
+EDGE_CASES = {
+    "post_ambiguous_model": {
+        "is_edge_case": True,
+        "edge_case_category": "型号信息与导购意图难以区分",
+        "difficulty": "hard",
+        "alternative_label": "非广",
+        "reason_for_uncertainty": "只有型号，没有链接、价格、优惠或合作披露；需要结合全文、评论和账号历史复核。",
+        "suggested_guide_update": "在标注指南中补充“仅给型号但无转化入口”的判定边界案例。",
+        "needs_team_discussion": True,
+        "discussion_tags": ["型号信息", "导购阈值", "上下文不足"],
+    },
+    "post_blurry_image": {
+        "is_edge_case": True,
+        "edge_case_category": "图像质量不足",
+        "difficulty": "hard",
+        "alternative_label": "非广",
+        "reason_for_uncertainty": "图片疑似商品包装但文字、品牌和价格均无法可靠识别，正文也没有导流。",
+        "suggested_guide_update": "明确低清图片不能靠主观补全，必须进入复核池。",
+        "needs_team_discussion": True,
+        "discussion_tags": ["图像模糊", "证据不足", "数据质量"],
+    },
+}
+
+
+def detected_elements_from_ocr(ocr_text: str | None) -> dict:
+    text = ocr_text or ""
+    return {
+        "has_logo": any(token in text for token in ("Logo", "品牌", "商业推广", "合作", "新品")),
+        "has_qr_code": any(token in text for token in ("二维码", "扫码")),
+        "has_price_info": any(token in text for token in ("价", "减", "券", "满", "限时", "到手")),
+        "has_product_image": not ("跑步数据" in text or "数据截图" in text),
+        "has_chart_or_table": any(token in text for token in ("菜单", "数据", "表", "图表")),
+        "has_promotional_text": any(token in text for token in ("商业推广", "合作", "优惠", "领券", "首发", "限时", "到手价", "试用装")),
+        "has_contact_info": any(token in text for token in ("二维码", "扫码", "群", "联系")),
+    }
+
+
+def make_image_analysis(post_id: str, image_index: int, item: dict, annotation_record: dict) -> dict:
+    ocr_text = item["ocr_text"]
+    visual_codes = [code for code in annotation_record["evidence_codes"] if code in {"V", "A", "D"}]
+    is_blurry = post_id == "post_blurry_image"
+    description = (
+        "合成示例图片文字模糊，无法可靠辨识商品、品牌或价格。"
+        if is_blurry
+        else f"合成图片 {image_index}：{ocr_text or '未设置可识别图中文字'}。"
+    )
+    relevance = (
+        f"该图片支持主标注中的 {'、'.join(visual_codes)} 类视觉/转化证据。"
+        if visual_codes
+        else "该图片已审阅，但没有提供足以改变主标注结论的视觉商业证据。"
+    )
+    return {
+        "media_ref": item["ref"],
+        "image_index": image_index,
+        "analysis_method": "manual",
+        "description": description,
+        "ocr_text": ocr_text,
+        "detected_elements": detected_elements_from_ocr(ocr_text),
+        "visual_evidence_codes": visual_codes,
+        "relevance_to_annotation": relevance,
+        "image_quality_notes": "模糊，文字无法可靠识别" if is_blurry else "合成示例图像；文字信息清晰可读",
+        "analyzed_at": NOW,
+    }
+
+
+def make_markdown_notes(post_record: dict, annotation_record: dict, image_analyses: list[dict]) -> str:
+    evidence = "；".join(annotation_record["evidence"])
+    visual_note = (
+        "\n\n## 图像补充\n\n" + "\n".join(
+            f"- 图片 {item['image_index']}：{item['relevance_to_annotation']}" for item in image_analyses
+        )
+        if image_analyses
+        else "\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。"
+    )
+    uncertainty = annotation_record["uncertain_reason"] or "无明显疑虑；该记录仅用于合成数据的格式和流程测试。"
+    return (
+        "## 判定思考\n\n"
+        f"参考标签为 **{annotation_record['label']}**，置信度为 {annotation_record['confidence']:.2f}。"
+        f"正文：{post_record['text']}\n\n"
+        "## 证据补充\n\n"
+        f"- 主证据代码：{', '.join(annotation_record['evidence_codes']) or '无'}\n"
+        f"- 主要依据：{evidence}"
+        f"{visual_note}\n\n"
+        "## 疑虑\n\n"
+        f"{uncertainty}\n"
+    )
+
+
+annotation_by_post_id = {record["post_id"]: record for record in annotations}
+supplements = []
+for content in posts:
+    annotation_record = annotation_by_post_id[content["post_id"]]
+    image_analyses = [
+        make_image_analysis(content["post_id"], image_index, item, annotation_record)
+        for image_index, item in enumerate(content["media"], start=1)
+    ]
+    supplements.append({
+        "post_id": content["post_id"],
+        "annotator_id": annotation_record["annotator_id"],
+        "supplement_version": SUPPLEMENT_VERSION,
+        "image_analyses": image_analyses,
+        "markdown_notes": make_markdown_notes(content, annotation_record, image_analyses),
+        "edge_case_discussion": EDGE_CASES.get(content["post_id"]),
+        "created_at": NOW,
+        "updated_at": NOW,
+    })
+
 content_properties = {
     "schema_version": {"const": SCHEMA_VERSION, "description": "Schema 版本。"},
     "post_id": {"type": "string", "pattern": "^post_[A-Za-z0-9_-]+$", "description": "去标识化且全局唯一的帖子 ID。"},
@@ -182,7 +299,7 @@ schema = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://example.invalid/implicit-ad/data_schema_v1.json",
     "title": "隐性广告识别 P1 数据 Schema v1.0",
-    "description": "标准帖子输入和独立标注记录定义。内容记录不包含最终人工标签。",
+    "description": "标准帖子输入、独立主标注记录和可选标注补充记录定义。内容记录不包含最终人工标签。",
     "$ref": "#/$defs/content_record",
     "$defs": {
         "content_record": {
@@ -194,11 +311,11 @@ schema = {
         "media_item": {
             "type": "object",
             "additionalProperties": False,
-            "required": ["media_id", "type", "local_ref", "sha256", "phash", "ocr_text"],
+            "required": ["media_id", "type", "ref", "sha256", "phash", "ocr_text"],
             "properties": {
                 "media_id": {"type": "string"},
                 "type": {"type": "string", "enum": ["image", "video", "audio", "link", "other"]},
-                "local_ref": {"type": ["string", "null"]},
+                "ref": {"type": ["string", "null"], "description": "媒体本地逻辑引用；图像补充记录的 media_ref 与此对应。"},
                 "sha256": {"type": ["string", "null"], "pattern": "^[A-Fa-f0-9]{64}$"},
                 "phash": {"type": ["string", "null"]},
                 "ocr_text": {"type": ["string", "null"]},
@@ -261,8 +378,78 @@ schema = {
         {"field": "privacy", "required": True, "purpose": "保证数据已脱敏并标记敏感风险。"},
         {"field": "annotation_record", "required": "separate file", "purpose": "保存独立标注，不与模型输入内容混放。"},
     ],
-    "examples": [posts[0], annotations[0]],
+    "examples": [posts[0], annotations[0], supplements[0]],
 }
+
+schema["$defs"].update({
+    "annotation_supplement_record": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["post_id", "annotator_id", "supplement_version", "image_analyses", "markdown_notes", "created_at", "updated_at"],
+        "properties": {
+            "post_id": {"type": "string", "pattern": "^post_[A-Za-z0-9_-]+$"},
+            "annotator_id": {"type": "string", "description": "与主标注记录关联的标注人 ID。"},
+            "supplement_version": {"const": SUPPLEMENT_VERSION},
+            "image_analyses": {"type": "array", "items": {"$ref": "#/$defs/image_analysis"}},
+            "markdown_notes": {"type": "string", "description": "标注者 Markdown 格式补充备注。"},
+            "edge_case_discussion": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/edge_case_discussion"}]},
+            "created_at": {"type": "string", "format": "date-time"},
+            "updated_at": {"type": "string", "format": "date-time"},
+        },
+    },
+    "image_analysis": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["media_ref", "image_index", "analysis_method", "description", "detected_elements", "visual_evidence_codes", "relevance_to_annotation", "analyzed_at"],
+        "properties": {
+            "media_ref": {"type": "string"},
+            "source_url": {"type": "string"},
+            "image_index": {"type": "integer", "minimum": 1},
+            "analysis_method": {"type": "string", "enum": ["manual", "llm_vision", "ocr_auto", "hybrid"]},
+            "description": {"type": "string", "minLength": 1},
+            "ocr_text": {"type": ["string", "null"]},
+            "detected_elements": {"$ref": "#/$defs/detected_elements"},
+            "visual_evidence_codes": {"type": "array", "items": {"type": "string", "enum": ["V", "A", "D"]}},
+            "relevance_to_annotation": {"type": "string", "minLength": 1},
+            "image_quality_notes": {"type": "string"},
+            "analyzed_at": {"type": "string", "format": "date-time"},
+        },
+    },
+    "detected_elements": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["has_logo", "has_qr_code", "has_price_info", "has_product_image", "has_chart_or_table", "has_promotional_text", "has_contact_info"],
+        "properties": {
+            "has_logo": {"type": "boolean"},
+            "has_qr_code": {"type": "boolean"},
+            "has_price_info": {"type": "boolean"},
+            "has_product_image": {"type": "boolean"},
+            "has_chart_or_table": {"type": "boolean"},
+            "has_promotional_text": {"type": "boolean"},
+            "has_contact_info": {"type": "boolean"},
+        },
+    },
+    "edge_case_discussion": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["is_edge_case"],
+        "properties": {
+            "is_edge_case": {"type": "boolean"},
+            "edge_case_category": {"type": "string"},
+            "difficulty": {"type": "string", "enum": ["easy", "medium", "hard"]},
+            "alternative_label": {"type": "string", "enum": ["明广", "暗广", "非广", "out_of_scope"]},
+            "reason_for_uncertainty": {"type": "string"},
+            "suggested_guide_update": {"type": "string"},
+            "needs_team_discussion": {"type": "boolean"},
+            "discussion_tags": {"type": "array", "items": {"type": "string"}},
+        },
+    },
+})
+schema["x_field_reference"].append({
+    "field": "annotation_supplement_record",
+    "required": "optional separate file",
+    "purpose": "按 post_id + annotator_id 关联图像分析、Markdown 备注、边界讨论与审计时间。",
+})
 
 dataset = {
     "dataset_metadata": {
@@ -270,6 +457,8 @@ dataset = {
         "dataset_version": "synthetic_v1.0",
         "schema_version": SCHEMA_VERSION,
         "schema_file": "data/schema/data_schema_v1.json",
+        "annotation_supplement_schema_file": "docs/annotation_supplement_schema.md",
+        "supplement_version": SUPPLEMENT_VERSION,
         "created_at": NOW,
         "purpose": "Schema 校验、标注规范试跑和数据处理流程冒烟测试。全部为团队生成的合成数据，不可作为真实金标训练集。",
         "synthetic_only": True,
@@ -277,6 +466,7 @@ dataset = {
     },
     "content_records": posts,
     "reference_annotations": annotations,
+    "reference_annotation_supplements": supplements,
     "coverage_matrix": {
         "明广": ["post_explicit_sponsor", "post_platform_paid_label", "post_gifted_product", "post_invited_launch", "post_disclosed_giveaway"],
         "暗广": ["post_coupon_code", "post_link_in_comments", "post_qr_coupon_image", "post_restaurant_discount", "post_comparison_one_link", "post_pinned_store_entry", "post_scarcity_price", "post_health_qr", "post_topic_drift_finance", "post_image_only_sale", "post_comment_anomaly", "post_direct_shop_route"],
@@ -297,4 +487,4 @@ SCHEMA_PATH.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", 
 DATASET_PATH.write_text(json.dumps(dataset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(f"wrote {SCHEMA_PATH.relative_to(ROOT)}")
 print(f"wrote {DATASET_PATH.relative_to(ROOT)}")
-print(f"records: {len(posts)}, annotations: {len(annotations)}")
+print(f"records: {len(posts)}, annotations: {len(annotations)}, supplements: {len(supplements)}")

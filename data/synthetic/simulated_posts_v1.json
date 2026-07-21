@@ -4,6 +4,8 @@
     "dataset_version": "synthetic_v1.0",
     "schema_version": "1.0",
     "schema_file": "data/schema/data_schema_v1.json",
+    "annotation_supplement_schema_file": "docs/annotation_supplement_schema.md",
+    "supplement_version": "1.0",
     "created_at": "2026-07-21T09:00:00+08:00",
     "purpose": "Schema 校验、标注规范试跑和数据处理流程冒烟测试。全部为团队生成的合成数据，不可作为真实金标训练集。",
     "synthetic_only": true,
@@ -22,10 +24,10 @@
         {
           "media_id": "media_001",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "晴岚服饰新品合作"
+          "ocr_text": "晴岚服饰新品合作",
+          "ref": "media/post_explicit_sponsor/01.jpg"
         }
       ],
       "comments": [],
@@ -53,10 +55,10 @@
         {
           "media_id": "media_002",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "平台标识：商业推广；云巷咖啡夏日新品"
+          "ocr_text": "平台标识：商业推广；云巷咖啡夏日新品",
+          "ref": "media/post_platform_paid_label/01.jpg"
         }
       ],
       "comments": [],
@@ -84,10 +86,10 @@
         {
           "media_id": "media_003",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "澄光品牌寄送"
+          "ocr_text": "澄光品牌寄送",
+          "ref": "media/post_gifted_product/01.jpg"
         }
       ],
       "comments": [],
@@ -115,10 +117,10 @@
         {
           "media_id": "media_004",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "星曜耳机新品发布会"
+          "ocr_text": "星曜耳机新品发布会",
+          "ref": "media/post_invited_launch/01.jpg"
         }
       ],
       "comments": [],
@@ -176,10 +178,10 @@
         {
           "media_id": "media_006",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "专属优惠码 ZY20"
+          "ocr_text": "专属优惠码 ZY20",
+          "ref": "media/post_coupon_code/01.jpg"
         }
       ],
       "comments": [],
@@ -237,10 +239,10 @@
         {
           "media_id": "media_008",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "满199减80，扫码领券；清禾收纳盒"
+          "ocr_text": "满199减80，扫码领券；清禾收纳盒",
+          "ref": "media/post_qr_coupon_image/01.jpg"
         }
       ],
       "comments": [],
@@ -350,10 +352,10 @@
         {
           "media_id": "media_012",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "限时2小时；到手价169元；清泉净水壶"
+          "ocr_text": "限时2小时；到手价169元；清泉净水壶",
+          "ref": "media/post_scarcity_price/01.jpg"
         }
       ],
       "comments": [],
@@ -381,10 +383,10 @@
         {
           "media_id": "media_013",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "元气维C片；扫码领取试用装"
+          "ocr_text": "元气维C片；扫码领取试用装",
+          "ref": "media/post_health_qr/01.jpg"
         }
       ],
       "comments": [],
@@ -445,10 +447,10 @@
         {
           "media_id": "media_015",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "北屿香薰机；新品首发；限时立减50元"
+          "ocr_text": "北屿香薰机；新品首发；限时立减50元",
+          "ref": "media/post_image_only_sale/01.jpg"
         }
       ],
       "comments": [],
@@ -527,10 +529,10 @@
         {
           "media_id": "media_017",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "轻爪猫砂；直播间赠品"
+          "ocr_text": "轻爪猫砂；直播间赠品",
+          "ref": "media/post_direct_shop_route/01.jpg"
         }
       ],
       "comments": [],
@@ -580,10 +582,10 @@
         {
           "media_id": "media_019",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "远处饮料包装Logo，非内容主体"
+          "ocr_text": "远处饮料包装Logo，非内容主体",
+          "ref": "media/post_logo_background/01.jpg"
         }
       ],
       "comments": [],
@@ -721,10 +723,10 @@
         {
           "media_id": "media_025",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "跑步数据截图，无价格或导流"
+          "ocr_text": "跑步数据截图，无价格或导流",
+          "ref": "media/post_running_diary/01.jpg"
         }
       ],
       "comments": [],
@@ -840,10 +842,10 @@
         {
           "media_id": "media_030",
           "type": "image",
-          "local_ref": null,
           "sha256": null,
           "phash": null,
-          "ocr_text": "图中文字模糊，疑似商品包装，无法识别品牌或价格"
+          "ocr_text": "图中文字模糊，疑似商品包装，无法识别品牌或价格",
+          "ref": "media/post_blurry_image/01.jpg"
         }
       ],
       "comments": [],
@@ -1354,6 +1356,634 @@
       ],
       "uncertain_reason": "图片证据不清晰且上下文不足",
       "annotated_at": "2026-07-21T09:00:00+08:00"
+    }
+  ],
+  "reference_annotation_supplements": [
+    {
+      "post_id": "post_explicit_sponsor",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_explicit_sponsor/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：晴岚服饰新品合作。",
+          "ocr_text": "晴岚服饰新品合作",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "D"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 D 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **明广**，置信度为 0.90。正文：本期穿搭内容由晴岚服饰赞助，下面展示三套新品搭配和购买入口。\n\n## 证据补充\n\n- 主证据代码：D, C\n- 主要依据：正文明确写明品牌赞助；内容围绕单一服饰品牌展示\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 D 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_platform_paid_label",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_platform_paid_label/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：平台标识：商业推广；云巷咖啡夏日新品。",
+          "ocr_text": "平台标识：商业推广；云巷咖啡夏日新品",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "D",
+            "V"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 D、V 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **明广**，置信度为 0.90。正文：周末去云巷咖啡体验新品，菜单和店铺地址整理在图里。\n\n## 证据补充\n\n- 主证据代码：D, C, V\n- 主要依据：图片中存在平台商业推广标识；店铺和新品是内容核心\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 D、V 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_gifted_product",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_gifted_product/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：澄光品牌寄送。",
+          "ocr_text": "澄光品牌寄送",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": false,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "D"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 D 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **明广**，置信度为 0.90。正文：感谢澄光品牌寄送试用套装。本文记录七天使用感受，并附产品信息。\n\n## 证据补充\n\n- 主证据代码：D, C\n- 主要依据：正文披露品牌寄送；围绕单一产品套装展开\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 D 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_invited_launch",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_invited_launch/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：星曜耳机新品发布会。",
+          "ocr_text": "星曜耳机新品发布会",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": false,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "D"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 D 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **明广**，置信度为 0.90。正文：受邀参加星曜耳机新品发布会，现场试听和型号介绍如下。\n\n## 证据补充\n\n- 主证据代码：D, C\n- 主要依据：正文披露受邀参加发布会；集中介绍单一品牌新品\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 D 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_disclosed_giveaway",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **明广**，置信度为 0.90。正文：与森野家居联合送福利：转发并留言可参与抽奖，奖品为本期合作产品。\n\n## 证据补充\n\n- 主证据代码：D, C, A\n- 主要依据：明确写明联合活动；抽奖活动引导用户参与\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_coupon_code",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_coupon_code/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：专属优惠码 ZY20。",
+          "ocr_text": "专属优惠码 ZY20",
+          "detected_elements": {
+            "has_logo": false,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "A"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 A 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：这支防晒我自费回购很多次，最近店铺给了我的专属码 ZY20，到手价更低。\n\n## 证据补充\n\n- 主证据代码：C, A\n- 主要依据：明确指向单一防晒产品；提供专属优惠码形成直接转化动作\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 A 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_link_in_comments",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：这双通勤鞋真的闭眼入，显腿长又不磨脚，想要同款的去评论区看链接。\n\n## 证据补充\n\n- 主证据代码：C, P, A\n- 主要依据：围绕单一鞋款强推荐；使用‘闭眼入’等促销话术；置顶评论提供购买链接\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_qr_coupon_image",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_qr_coupon_image/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：满199减80，扫码领券；清禾收纳盒。",
+          "ocr_text": "满199减80，扫码领券；清禾收纳盒",
+          "detected_elements": {
+            "has_logo": false,
+            "has_qr_code": true,
+            "has_price_info": true,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": true
+          },
+          "visual_evidence_codes": [
+            "V",
+            "A"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 V、A 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：今天只分享厨房收纳的小变化。\n\n## 证据补充\n\n- 主证据代码：C, V, A\n- 主要依据：图片明确展示收纳盒品牌；图内有满减与扫码领券信息\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 V、A 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_restaurant_discount",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：这家店的套餐太值了，周末一定要冲！报我的暗号可领九折券，排队前先预约。\n\n## 证据补充\n\n- 主证据代码：C, P, A\n- 主要依据：明确商业对象为餐厅套餐；存在‘一定要冲’等促销话术；提供暗号折扣和预约引导\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_comparison_one_link",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：三款降噪耳机里我更推荐澜声 X2，续航和佩戴最好。购买页我放在置顶评论。\n\n## 证据补充\n\n- 主证据代码：C, A\n- 主要依据：比较后只重点推荐一款耳机；置顶评论提供该款购买页\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_pinned_store_entry",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：宝宝餐椅选购做了很多功课，最后留下晨芽这款。尺寸、材质和店铺入口都在置顶。\n\n## 证据补充\n\n- 主证据代码：C, A, M\n- 主要依据：内容聚焦单一餐椅；置顶评论提供店铺入口和活动价；置顶导流属于评论异常证据\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_scarcity_price",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_scarcity_price/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：限时2小时；到手价169元；清泉净水壶。",
+          "ocr_text": "限时2小时；到手价169元；清泉净水壶",
+          "detected_elements": {
+            "has_logo": false,
+            "has_qr_code": false,
+            "has_price_info": true,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "V",
+            "A"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 V、A 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：这个净水壶库存快没了，今天活动只剩最后两小时，低于这个价真的别等。\n\n## 证据补充\n\n- 主证据代码：C, P, V, A\n- 主要依据：明确推广单一净水壶；强调库存和限时稀缺；图片展示到手价；形成购买时机引导\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 V、A 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_health_qr",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_health_qr/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：元气维C片；扫码领取试用装。",
+          "ocr_text": "元气维C片；扫码领取试用装",
+          "detected_elements": {
+            "has_logo": false,
+            "has_qr_code": true,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": true
+          },
+          "visual_evidence_codes": [
+            "V",
+            "A"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 V、A 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：最近熬夜多的朋友可以看看元气维 C 片，我连续吃一周精神好多了。图里有扫码领试用装。\n\n## 证据补充\n\n- 主证据代码：C, V, A\n- 主要依据：明确商业对象为维C片；图内展示试用装扫码信息；扫码领取构成转化动作\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 V、A 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_topic_drift_finance",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：平时写旅行攻略，今天想认真推荐一个理财课程：零基础也能学，报名入口见评论。\n\n## 证据补充\n\n- 主证据代码：C, A, B\n- 主要依据：明确推广理财课程；评论区有报名入口；旅行主题账号突然推广金融课程，存在可验证主题偏移\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_image_only_sale",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_image_only_sale/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：北屿香薰机；新品首发；限时立减50元。",
+          "ocr_text": "北屿香薰机；新品首发；限时立减50元",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": true,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": true,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "V",
+            "A"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 V、A 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：新品到了。\n\n## 证据补充\n\n- 主证据代码：C, V, A\n- 主要依据：正文虽短，但图片明确展示香薰机新品；图内有首发立减等促销信息\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 V、A 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_comment_anomaly",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：最近一直在用润泽精华，肤感轻薄又稳定，分享给需要的人。\n\n## 证据补充\n\n- 主证据代码：C, P, M\n- 主要依据：内容聚焦单一精华产品；存在正向推荐语气；评论区出现集中重复的模板化赞美\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_direct_shop_route",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_direct_shop_route/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：轻爪猫砂；直播间赠品。",
+          "ocr_text": "轻爪猫砂；直播间赠品",
+          "detected_elements": {
+            "has_logo": false,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": false,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "A"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 A 类视觉/转化证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **暗广**，置信度为 0.90。正文：新手养猫先备这款除味豆腐砂，灰尘少、结团快。店铺直播间今天有赠品，直接搜‘轻爪猫砂’。\n\n## 证据补充\n\n- 主证据代码：C, P, A\n- 主要依据：内容聚焦单一猫砂品牌；使用强推荐表达；引导用户搜索直播间并提示赠品\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 A 类视觉/转化证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_balanced_review",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：自费买了风铃键盘，用一周后优点是手感稳定，缺点是声音偏大、配列不适合所有人；没有购买链接。\n\n## 证据补充\n\n- 主证据代码：C\n- 主要依据：虽有明确产品对象，但同时给出缺点；没有购买入口、优惠或促销话术\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_logo_background",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_logo_background/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：远处饮料包装Logo，非内容主体。",
+          "ocr_text": "远处饮料包装Logo，非内容主体",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": false,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": false,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [],
+          "relevance_to_annotation": "该图片已审阅，但没有提供足以改变主标注结论的视觉商业证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：和朋友在公园野餐，记录一下天气和路线。\n\n## 证据补充\n\n- 主证据代码：无\n- 主要依据：品牌Logo仅作为生活照片背景，不是内容核心\n\n## 图像补充\n\n- 图片 1：该图片已审阅，但没有提供足以改变主标注结论的视觉商业证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_negative_complaint",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：上周买的北湾酸奶口感发酸且客服处理慢，记录避雷过程，不建议购买。\n\n## 证据补充\n\n- 主证据代码：C\n- 主要依据：对象是商品，但内容为负面投诉且没有推广导流\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_news_price",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：行业快讯：多家家电企业公布季度销量和原材料价格变化，本文只整理公开财报数据。\n\n## 证据补充\n\n- 主证据代码：无\n- 主要依据：价格和销量属于新闻事实整理，不构成促销\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_science_multibrand",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：防晒成分科普：氧化锌、阿伏苯宗各有适用场景，列出多个品牌仅作成分示例，不提供购买渠道。\n\n## 证据补充\n\n- 主证据代码：无\n- 主要依据：多品牌仅作科普示例，没有购买渠道或导流\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_restaurant_diary",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：下班和同事去巷口吃面，汤头偏咸但分量足，记录路线和当天心情，没有折扣或联络方式。\n\n## 证据补充\n\n- 主证据代码：C\n- 主要依据：餐厅仅是日常记录对象，没有折扣、链接或促销引导\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_objective_device_review",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：对两台扫地机做了噪声、续航和避障测试：A 的避障好，B 的续航长；没有指定推荐，也没有链接。\n\n## 证据补充\n\n- 主证据代码：C\n- 主要依据：客观比较两台设备，没有偏向单一购买入口或促销动作\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_running_diary",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_running_diary/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成图片 1：跑步数据截图，无价格或导流。",
+          "ocr_text": "跑步数据截图，无价格或导流",
+          "detected_elements": {
+            "has_logo": false,
+            "has_qr_code": false,
+            "has_price_info": true,
+            "has_product_image": false,
+            "has_chart_or_table": true,
+            "has_promotional_text": false,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [],
+          "relevance_to_annotation": "该图片已审阅，但没有提供足以改变主标注结论的视觉商业证据。",
+          "image_quality_notes": "合成示例图像；文字信息清晰可读",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **非广**，置信度为 0.90。正文：晨跑 5 公里打卡。脚上的鞋是去年买的旧款，今天只记录配速和心率。\n\n## 证据补充\n\n- 主证据代码：无\n- 主要依据：鞋子不是内容核心，图片仅展示跑步数据\n\n## 图像补充\n\n- 图片 1：该图片已审阅，但没有提供足以改变主标注结论的视觉商业证据。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_used_sale",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **out_of_scope**，置信度为 1.00。正文：搬家出一台自用二手书桌，使用痕迹见图，有需要的本地自取。\n\n## 证据补充\n\n- 主证据代码：无\n- 主要依据：个人二手转卖不属于本项目定义的内容营销\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_recruitment",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **out_of_scope**，置信度为 1.00。正文：工作室招聘剪辑实习生，岗位职责和投递邮箱见下方。\n\n## 证据补充\n\n- 主证据代码：无\n- 主要依据：招聘信息不属于商业产品推广帖\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_charity",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **out_of_scope**，置信度为 1.00。正文：本周末为山区儿童开展公益图书募集，欢迎按活动说明捐赠闲置书籍。\n\n## 证据补充\n\n- 主证据代码：无\n- 主要依据：公益募集不是商业广告，需单独统计\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n无明显疑虑；该记录仅用于合成数据的格式和流程测试。\n",
+      "edge_case_discussion": null,
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_ambiguous_model",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **uncertain**，置信度为 0.45。正文：很多人问这件外套的同款，我先写下型号：M-27。其余信息之后再整理。\n\n## 证据补充\n\n- 主证据代码：C\n- 主要依据：出现服装型号，但没有价格、店铺、链接或明确导购\n\n## 图像补充\n\n- 本帖没有图片，未产生图像分析条目。\n\n## 疑虑\n\n需要结合后续内容或博主历史判断是否存在转化意图\n",
+      "edge_case_discussion": {
+        "is_edge_case": true,
+        "edge_case_category": "型号信息与导购意图难以区分",
+        "difficulty": "hard",
+        "alternative_label": "非广",
+        "reason_for_uncertainty": "只有型号，没有链接、价格、优惠或合作披露；需要结合全文、评论和账号历史复核。",
+        "suggested_guide_update": "在标注指南中补充“仅给型号但无转化入口”的判定边界案例。",
+        "needs_team_discussion": true,
+        "discussion_tags": [
+          "型号信息",
+          "导购阈值",
+          "上下文不足"
+        ]
+      },
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
+    },
+    {
+      "post_id": "post_blurry_image",
+      "annotator_id": "synthetic_reference",
+      "supplement_version": "1.0",
+      "image_analyses": [
+        {
+          "media_ref": "media/post_blurry_image/01.jpg",
+          "image_index": 1,
+          "analysis_method": "manual",
+          "description": "合成示例图片文字模糊，无法可靠辨识商品、品牌或价格。",
+          "ocr_text": "图中文字模糊，疑似商品包装，无法识别品牌或价格",
+          "detected_elements": {
+            "has_logo": true,
+            "has_qr_code": false,
+            "has_price_info": true,
+            "has_product_image": true,
+            "has_chart_or_table": false,
+            "has_promotional_text": false,
+            "has_contact_info": false
+          },
+          "visual_evidence_codes": [
+            "V"
+          ],
+          "relevance_to_annotation": "该图片支持主标注中的 V 类视觉/转化证据。",
+          "image_quality_notes": "模糊，文字无法可靠识别",
+          "analyzed_at": "2026-07-21T09:00:00+08:00"
+        }
+      ],
+      "markdown_notes": "## 判定思考\n\n参考标签为 **uncertain**，置信度为 0.35。正文：朋友送来一份新品小礼物，先随手拍一下。\n\n## 证据补充\n\n- 主证据代码：V\n- 主要依据：图片疑似商品包装但关键信息无法识别；正文没有品牌、价格或导流\n\n## 图像补充\n\n- 图片 1：该图片支持主标注中的 V 类视觉/转化证据。\n\n## 疑虑\n\n图片证据不清晰且上下文不足\n",
+      "edge_case_discussion": {
+        "is_edge_case": true,
+        "edge_case_category": "图像质量不足",
+        "difficulty": "hard",
+        "alternative_label": "非广",
+        "reason_for_uncertainty": "图片疑似商品包装但文字、品牌和价格均无法可靠识别，正文也没有导流。",
+        "suggested_guide_update": "明确低清图片不能靠主观补全，必须进入复核池。",
+        "needs_team_discussion": true,
+        "discussion_tags": [
+          "图像模糊",
+          "证据不足",
+          "数据质量"
+        ]
+      },
+      "created_at": "2026-07-21T09:00:00+08:00",
+      "updated_at": "2026-07-21T09:00:00+08:00"
     }
   ],
   "coverage_matrix": {
