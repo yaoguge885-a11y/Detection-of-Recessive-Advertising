@@ -673,4 +673,250 @@ def print_stats(records: List[Dict[str, Any]]) -> None:
     print(f"  本次标注统计: 共 {total} 条")
     for label in ["明广", "暗广", "非广", "out_of_scope"]:
         count = labels.get(label, 0)
-        pct = co
+        pct = count / total * 100 if total else 0
+        print(f"    {label}: {count} ({pct:.1f}%)")
+    print(f"{'=' * 50}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="手动复核标注程序 —— LLM 辅助预判 + 人工确认",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent("""\
+            示例:
+              # 从头开始标注（限制 20 条）
+              python scripts/data/manual_review_annotate.py --limit 20
+
+              # 指定输入输出
+              python scripts/data/manual_review_annotate.py \\
+                --input data/run_outputs/anonymized_posts.jsonl \\
+                --output-dir data/annotations
+
+              # 断点续传（自动检测已有标注文件）
+              python scripts/data/manual_review_annotate.py --limit 100
+        """),
+    )
+    parser.add_argument(
+        "--input", "-i",
+        default="data/run_outputs/anonymized_posts.jsonl",
+        help="输入的帖子 JSONL 文件路径 (默认: data/run_outputs/anonymized_posts.jsonl)",
+    )
+    parser.add_argument(
+        "--guide", "-g",
+        default="docs/annotation_guide.md",
+        help="标注指南 markdown 文件路径 (默认: docs/annotation_guide.md)",
+    )
+    parser.add_argument(
+        "--output-dir", "-o",
+        default="data/annotations",
+        help="标注输出目录 (默认: data/annotations)",
+    )
+    parser.add_argument(
+        "--limit", "-n",
+        type=int,
+        default=0,
+        help="限制标注条数，0=全部 (默认: 0)",
+    )
+    parser.add_argument(
+        "--no-llm",
+        action="store_true",
+        help="禁用 LLM 预分析，纯人工标注",
+    )
+    parser.add_argument(
+        "--no-supplement",
+        action="store_true",
+        help="跳过补充字段（图像分析/Markdown备注/边界讨论），仅输出主标注字段",
+    )
+    parser.add_argument(
+        "--media-base",
+        default="data",
+        help="图片本地存储根目录，用于解析 media[].ref 路径 (默认: data)",
+    )
+    parser.add_argument(
+        "--auto-view",
+        action="store_true",
+        help="每条帖子自动弹出图片查看（跳过交互式选择）",
+    )
+    parser.add_argument(
+        "--annotator-id",
+        default="",
+        help="直接指定标注人 ID（跳过交互式询问）",
+    )
+    args = parser.parse_args()
+
+    # ── 1. 加载帖子数据 ──
+    input_path = Path(args.input)
+    if not input_path.exists():
+        print(f"❌ 输入文件不存在: {input_path}")
+        sys.exit(1)
+
+    all_posts = load_jsonl(input_path)
+    print(f"✅ 已加载 {len(all_posts)} 条帖子")
+
+    # ── 2. 获取标注人 ID ──
+    annotator_id = args.annotator_id.strip()
+    if not annotator_id:
+        annotator_id = input("请输入标注人 ID (如 D/N): ").strip()
+        while not annotator_id:
+            annotator_id = input("标注人 ID 不能为空，请重新输入: ").strip()
+
+    # ── 3. 加载标注指南 ──
+    guide_path = Path(args.guide)
+    guide_text = load_guide(guide_path)
+    if guide_path.exists():
+        print(f"✅ 已加载标注指南: {guide_path}")
+    else:
+        print("⚠️ 标注指南文件不存在，使用内置摘要")
+
+    # ── 4. 断点续传检测 ──
+    output_dir = Path(args.output_dir)
+    existing_file, completed_ids = find_existing_annotations(output_dir, annotator_id)
+
+    output_file: Path
+    if existing_file and completed_ids:
+        skipped = len(completed_ids)
+        print(f"\n📂 检测到已有标注文件: {existing_file}")
+        print(f"   已完成 {skipped} 条，将跳过这些帖子继续标注")
+        resp = input("是否继续上次标注？[Y/n]: ").strip().lower()
+        if resp in ("n", "no"):
+            # 创建新文件
+            ts = datetime.now(CST).strftime("%Y%m%d_%H%M%S")
+            output_file = output_dir / f"{annotator_id}_{ts}.json"
+            completed_ids = set()
+            print(f"   创建新标注文件: {output_file}")
+        else:
+            output_file = existing_file
+            print(f"   断点续传模式，已有 {skipped} 条标注")
+    else:
+        ts = datetime.now(CST).strftime("%Y%m%d_%H%M%S")
+        output_file = output_dir / f"{annotator_id}_{ts}.json"
+        print(f"\n📂 新建标注文件: {output_file}")
+
+    # ── 5. 打印标注指南 ──
+    print(ANNOTATION_GUIDE_SUMMARY)
+
+    # ── 6. 过滤待标注帖子 ──
+    pending = [p for p in all_posts if p.get("post_id") not in completed_ids]
+    if args.limit > 0:
+        pending = pending[:args.limit]
+
+    total_pending = len(pending)
+    if total_pending == 0:
+        print("✅ 所有帖子已标注完毕，无需继续！")
+        return
+
+    print(f"\n📋 本轮待标注: {total_pending} 条")
+    print(f"   操作: [y] 采纳LLM建议  [n] 手动修改  [s] 跳过  [q] 退出并保存\n")
+
+    # ── 7. 逐条标注 ──
+    annotated_this_session: List[Dict[str, Any]] = []
+    media_base = Path(args.media_base)
+
+    try:
+        for idx, post in enumerate(pending, 1):
+            print(format_post_display(post, idx, total_pending))
+
+            # ── 自动查看图片 ──
+            if args.auto_view:
+                view_images(post, media_base)
+
+            llm_result = None
+            if not args.no_llm:
+                print("⏳ 正在调用 LLM 预分析...")
+                llm_result = call_llm_pre_analysis(post, guide_text)
+                print(format_llm_suggestion(llm_result))
+
+            # 交互式确认
+            default_label = llm_result.get("label", "非广") if llm_result else "非广"
+
+            while True:
+                action = input("操作 [y=采纳建议 / n=手动修改 / v=查看图片 / s=跳过 / q=保存退出]: ").strip().lower()
+
+                if action == "q":
+                    print("\n⏹️  用户退出，正在保存...")
+                    print_stats(annotated_this_session)
+                    print(f"标注文件: {output_file}")
+                    return
+
+                if action == "v":
+                    view_images(post, media_base)
+                    continue
+
+                if action == "s":
+                    print(f"  ⏭️  跳过 {post.get('post_id')}\n")
+                    break
+
+                if action == "y" and llm_result:
+                    # 采纳 LLM 建议
+                    record = make_annotation_record(
+                        post_id=post["post_id"],
+                        annotator_id=annotator_id,
+                        label=llm_result["label"],
+                        confidence=llm_result["confidence"],
+                        evidence_codes=llm_result["evidence_codes"],
+                        evidence=llm_result["evidence"],
+                        uncertain_reason=llm_result.get("uncertain_reason"),
+                        llm_suggestion=llm_result,
+                        post=post,
+                    )
+                    # ── 可选补充字段 ──
+                    if not args.no_supplement:
+                        record["image_analyses"] = prompt_image_analysis(post)
+                        record["markdown_notes"] = prompt_markdown_notes()
+                        record["edge_case_discussion"] = prompt_edge_case()
+                    append_annotation(output_file, record)
+                    annotated_this_session.append(record)
+                    print(f"  ✅ 已记录: {llm_result['label']} (确信度: {llm_result['confidence']:.0%})\n")
+                    break
+
+                if action in ("y", "n"):
+                    # 手动标注
+                    if action == "y" and not llm_result:
+                        print("  ⚠️ 无 LLM 建议可采纳，进入手动模式")
+
+                    label = prompt_label_choice(default_label)
+                    evidence_codes = prompt_evidence_codes()
+                    confidence = prompt_confidence()
+                    evidence = prompt_evidence_text()
+                    uncertain = None
+                    if confidence < 0.6:
+                        uncertain = input("  不确定原因（直接回车跳过）: ").strip() or None
+
+                    record = make_annotation_record(
+                        post_id=post["post_id"],
+                        annotator_id=annotator_id,
+                        label=label,
+                        confidence=confidence,
+                        evidence_codes=evidence_codes,
+                        evidence=evidence,
+                        uncertain_reason=uncertain,
+                        llm_suggestion=llm_result,
+                        post=post,
+                    )
+                    # ── 可选补充字段 ──
+                    if not args.no_supplement:
+                        record["image_analyses"] = prompt_image_analysis(post)
+                        record["markdown_notes"] = prompt_markdown_notes()
+                        record["edge_case_discussion"] = prompt_edge_case()
+                    append_annotation(output_file, record)
+                    annotated_this_session.append(record)
+                    print(f"  ✅ 已记录: {label} (确信度: {confidence:.0%})\n")
+                    break
+
+                print("  无效操作，请输入 y / n / v / s / q")
+
+        # ── 8. 完成 ──
+        print("\n🎉 本轮标注全部完成！")
+        print_stats(annotated_this_session)
+        print(f"\n标注文件: {output_file}")
+        total_done = len(completed_ids) + len(annotated_this_session)
+        print(f"该标注人累计完成: {total_done} 条")
+
+    except KeyboardInterrupt:
+        print("\n\n⏹️  用户中断，已标注内容已保存。")
+        print_stats(annotated_this_session)
+        print(f"标注文件: {output_file}")
+
+
+if __name__ == "__main__":
+    main()
