@@ -20,9 +20,11 @@
 | `image_text_consistency` | V | 是 | 越高图文语义越一致 | 当前为 OCR bigram + YOLO 对象映射降级版；只输出一致性，不输出广告结论 |
 | `detect_logo_product` | V | 是 | 越高商品/品牌越显著 | 复用 YOLO COCO 与 OCR；明确区分通用商品、OCR 品牌候选和真正 Logo |
 
-因此当前为 **7/7 ready**。三个视觉工具均使用独立 Pydantic Input，只接收本地 `image_path`，并可注入同一个 `VisionContext` 以避免重复运行 YOLO/OCR。M2 仍需完成更完整的真实视觉样例复核和 L/V 交叉评审后才能最终验收。
+因此当前为 **7/7 ready**。三个视觉工具均使用独立 Pydantic Input，只接收本地 `image_path`，并可注入同一个 `VisionContext` 以避免重复运行 YOLO/OCR。2026-07-20 已完成代码层 L/V 交叉评审、真实视觉 integration、注册表验收和最终回归，P2/M2 技术验收通过；P1 Schema 握手与组员签字属于后续协作确认。
 
-图文一致性已完成 30 对合成 sanity set：匹配组平均分 0.659、错配组 0.000，均值差 0.659。该结果记录于 `docs/vision_consistency_sanity_v1.md`；它验证降级算法的分数方向，不替代真实图片 integration。
+图文一致性已完成 30 对合成 sanity set，覆盖 `aligned`、`complementary`、`conflicting`、`insufficient` 四类；匹配组平均分 0.668、错配组 0.000，均值差 0.668。该结果记录于 `docs/vision_consistency_sanity_v1.md`；它验证降级算法的分数方向，不替代真实图片 integration。
+
+真实视觉验收已在 Python 3.10.11 与 GPU 环境完成：`PyTorch 2.13.0+cu126`、CUDA Runtime 12.6、`torch.cuda.is_available() == True`，设备为 `NVIDIA GeForce RTX 4060 Laptop GPU`。固定狗图由 YOLO 检出 `dog`（置信度 0.883），EasyOCR 对固定生成图识别 `SALE 99`（置信度 0.951）；真实 integration `2 passed`。三个视觉工具复用同一 `VisionContext`，测试会在发生第二次推理时直接失败。完整记录见 `docs/m2_verification_report.md`。
 
 ## 调用示例
 
@@ -64,13 +66,25 @@ relation = image_text_consistency.invoke({
 
 ```powershell
 cd implicit-ad-agent
-..\.venv\Scripts\python.exe run_tools_demo.py
+.\.venv\Scripts\python.exe run_tools_demo.py
+```
+
+读取同一脱敏帖子并改用真实本地图片：
+
+```powershell
+.\.venv\Scripts\python.exe run_tools_demo.py --image samples\images\test_dog.jpg
 ```
 
 默认回归测试零 Key、零联网且不要求视觉重依赖：
 
 ```powershell
-..\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+真实视觉测试必须显式选择，避免默认回归加载重模型：
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -m vision_integration -q
 ```
 
 ## 后续替换点
@@ -81,4 +95,3 @@ cd implicit-ad-agent
 - `VisionContext` 已实现按图片内容哈希和视觉流水线版本缓存；三个工具接受同一上下文，不重复运行 YOLO/OCR。
 - `image_text_consistency` 当前明确标记 `degraded`；后续可在稳定契约内替换为 VLM/CLIP 主实现。
 - `detect_logo_product` 当前没有专用 Logo 模型，`logo_candidates` 保持为空且 `capabilities.logo_detection="none"`。
-

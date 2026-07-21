@@ -35,6 +35,19 @@ python run_demo.py --llm
 uvicorn app:app --reload             # 打开 http://127.0.0.1:8000/docs
 ```
 
+### GPU 视觉环境（2026-07-20 实测）
+
+项目虚拟环境 `implicit-ad-agent/.venv` 已安装并跑通 CUDA 版 PyTorch：
+
+```text
+PyTorch: 2.13.0+cu126
+CUDA Runtime: 12.6
+torch.cuda.is_available(): True
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+```
+
+真实 YOLO/EasyOCR 集成测试结果为 `2 passed`。该安装只位于项目 `.venv`，不影响系统 Python 或其他项目。
+
 ### Windows PowerShell 激活（踩坑指南）
 
 PowerShell 的激活脚本是 `Activate.ps1`（不是 `activate`）：

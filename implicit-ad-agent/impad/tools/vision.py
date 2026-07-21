@@ -11,8 +11,42 @@
 首次运行会自动下载 YOLO 权重（~5MB）与 OCR 语言模型（~100MB）。
 """
 from __future__ import annotations
+import os
+import tempfile
 from pathlib import Path
 from typing import Any, Optional
+
+
+def _configure_model_cache() -> None:
+    """Keep third-party model settings/cache in a writable local temp area.
+
+    Ultralytics otherwise writes its settings under the user's roaming profile,
+    which is not writable in some service/sandbox deployments.  Callers can
+    override the shared root with ``IMPAD_MODEL_CACHE_DIR``.
+    """
+    root = Path(os.getenv(
+        "IMPAD_MODEL_CACHE_DIR",
+        str(Path(tempfile.gettempdir()) / "implicit-ad-agent-models"),
+    ))
+    try:
+        yolo_dir = root / "ultralytics"
+        yolo_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
+    os.environ.setdefault("YOLO_CONFIG_DIR", str(yolo_dir))
+    # Preserve an existing EasyOCR model cache.  Only redirect when the
+    # default cache is absent, so installed language weights are reused.
+    default_easyocr = Path.home() / ".EasyOCR" / "model"
+    if not default_easyocr.is_dir():
+        easyocr_dir = root / "easyocr"
+        try:
+            easyocr_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            return
+        os.environ.setdefault("EASYOCR_MODULE_PATH", str(easyocr_dir))
+
+
+_configure_model_cache()
 
 try:  # 基础图像栈：缺了就整体降级
     import cv2
@@ -57,7 +91,9 @@ class _Detector:
         self.model_size = model_size
         self.conf, self.iou, self.max_det, self.imgsz = conf, iou, max_det, imgsz
         self.device = device or ("cuda" if _cuda() else "cpu")
-        self.model = YOLO(_MODELS.get(model_size, "yolo11n.pt"))
+        model_name = _MODELS.get(model_size, "yolo11n.pt")
+        project_model = Path(__file__).resolve().parents[2] / model_name
+        self.model = YOLO(str(project_model if project_model.is_file() else model_name))
         self.class_names = self.model.names
 
     def detect(self, image_path: str) -> list[dict]:

@@ -121,6 +121,24 @@ python run_demo.py --image samples/images/test_image.jpg
 #    {"text": "分享个好物～", "image_path": "samples/images/test_image.jpg"}
 ```
 
+本机 GPU 环境已于 2026-07-20 实测跑通：
+
+```text
+PyTorch: 2.13.0+cu126
+CUDA Runtime: 12.6
+torch.cuda.is_available(): True
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+```
+
+真实视觉集成测试：
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -m vision_integration -q
+# 2 passed
+```
+
+YOLO 与 EasyOCR 会通过 `torch.cuda.is_available()` 自动选择该 GPU，无需手工修改设备参数。
+
 **不装也没关系**：`vision_agent` 探测到依赖缺失会自动投空票（`confidence=0`，Judge 忽略），
 全部现有功能与测试照常。判定逻辑 `vote_from_findings` 是纯函数，因此视觉测试零重依赖也能跑。
 > 注：为保持轻量，移植时**未搬**桌面版的标注绘图（画框图）功能——智能体只需结构化结果；

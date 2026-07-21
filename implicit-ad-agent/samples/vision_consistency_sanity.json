@@ -11,9 +11,9 @@
   {"case_id": "aligned-10", "expected": "aligned", "text": "这台笔记本电脑适合学习编程", "ocr_text": "笔记本电脑编程", "object": "laptop"},
   {"case_id": "aligned-11", "expected": "aligned", "text": "新背包容量很大适合上学", "ocr_text": "上学大容量背包", "object": "backpack"},
   {"case_id": "aligned-12", "expected": "aligned", "text": "花瓶里的鲜花开得很好看", "ocr_text": "花瓶鲜花", "object": "vase"},
-  {"case_id": "aligned-13", "expected": "aligned", "text": "晚餐用红酒杯喝了一点红酒", "ocr_text": "红酒杯晚餐", "object": "wine glass"},
-  {"case_id": "aligned-14", "expected": "aligned", "text": "这只手提包和今天的衣服很搭", "ocr_text": "手提包穿搭", "object": "handbag"},
-  {"case_id": "aligned-15", "expected": "aligned", "text": "书桌旁的新椅子坐着很舒服", "ocr_text": "舒服的新椅子", "object": "chair"},
+  {"case_id": "complementary-01", "expected": "complementary", "text": "晚餐用红酒杯喝了一点红酒", "ocr_text": "会员积分说明", "object": "wine glass"},
+  {"case_id": "complementary-02", "expected": "complementary", "text": "这只手提包和今天的衣服很搭", "ocr_text": "春季系列发布", "object": "handbag"},
+  {"case_id": "complementary-03", "expected": "complementary", "text": "书桌旁的新椅子坐着很舒服", "ocr_text": "门店今日营业", "object": "chair"},
   {"case_id": "conflict-01", "expected": "conflicting", "text": "今天带小狗去公园散步", "ocr_text": "面霜限时优惠扫码下单", "object": "bottle"},
   {"case_id": "conflict-02", "expected": "conflicting", "text": "周末在图书馆复习数学", "ocr_text": "红酒买一送一会员专享", "object": "wine glass"},
   {"case_id": "conflict-03", "expected": "conflicting", "text": "傍晚骑车沿河看风景", "ocr_text": "笔记本电脑新品首发", "object": "laptop"},
@@ -26,7 +26,7 @@
   {"case_id": "conflict-10", "expected": "conflicting", "text": "第一次尝试做番茄炒蛋", "ocr_text": "宠物用品领券下单", "object": "dog"},
   {"case_id": "conflict-11", "expected": "conflicting", "text": "博物馆的新展览很有意思", "ocr_text": "鲜花花瓶限时秒杀", "object": "vase"},
   {"case_id": "conflict-12", "expected": "conflicting", "text": "和室友一起整理宿舍卫生", "ocr_text": "办公椅满减活动", "object": "chair"},
-  {"case_id": "conflict-13", "expected": "conflicting", "text": "周末去郊外观察候鸟", "ocr_text": "电视新品预售", "object": "tv"},
-  {"case_id": "conflict-14", "expected": "conflicting", "text": "练习钢琴曲终于顺畅了一点", "ocr_text": "汽车保养套餐优惠", "object": "car"},
-  {"case_id": "conflict-15", "expected": "conflicting", "text": "午后在阳台晒太阳发呆", "ocr_text": "图书套装限量发售", "object": "book"}
+  {"case_id": "insufficient-01", "expected": "insufficient", "text": "周末去郊外观察候鸟", "ocr_text": "", "object": null},
+  {"case_id": "insufficient-02", "expected": "insufficient", "text": "练习钢琴曲终于顺畅了一点", "ocr_text": "", "object": null},
+  {"case_id": "insufficient-03", "expected": "insufficient", "text": "午后在阳台晒太阳发呆", "ocr_text": "", "object": null}
 ]
