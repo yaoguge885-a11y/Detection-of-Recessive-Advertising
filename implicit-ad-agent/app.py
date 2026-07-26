@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from pydantic import BaseModel
 from impad.graph import graph
+import uvicorn
 
 app = FastAPI(title="隐性广告识别 · 起步骨架")
 
@@ -40,3 +41,6 @@ def analyze(post: PostIn):
         "evidence": result.get("evidence"),
         "report": result.get("report"),
     }
+
+if __name__=="__main__":
+    uvicorn.run(app, host="127.0.0.1", port=4000)

@@ -5,7 +5,7 @@ TL;DR: 按照 P1 文档，执行一个 4 周的数据基线和标注规范建设
 步骤
 1. 初始化仓库交付结构
    - 在仓库内确认并逐步建立目录：`docs/`、`data/raw/`、`data/interim/`、`data/annotations/`、`data/splits/`、`data/reports/`、`scripts/data/`
-   - 创建关键文档框架：`docs/data_compliance.md`、`docs/data_schema.md`、`docs/annotation_guide.md`、`docs/annotation_changelog.md`、`docs/dataset_card_v1.md`
+   - 创建关键文档框架：`docs/04-数据合规登记.md`、`docs/01-数据Schema规范.md`、`docs/02-标注规范指南.md`、`docs/annotation_changelog.md`、`docs/03-数据集说明卡片.md`
    - 规划脚本模板：`validate_schema.py`、`normalize_and_deduplicate.py`、`calculate_agreement.py`、`build_gold_dataset.py`、`split_by_blogger.py`
 
 2. 第 1 周：合规与候选池搭建
@@ -39,17 +39,17 @@ TL;DR: 按照 P1 文档，执行一个 4 周的数据基线和标注规范建设
    - 无法确定的样本进入 `uncertain_pool`，不入 `gold_v1`
    - 生成 `data/annotations/gold_v1.jsonl`，并按 `blogger_id`/`content_group_id` 做 train/dev/test 划分，目标 70/15/15
    - 做三类泄漏检查：同博主、近重复文本、近重复图片/同图；确认 test 集锁定且未用于规则调整
-   - 产出最终报告：`quality_report_v1.json`、`source_distribution.csv`、`label_distribution.csv`、`leakage_report.txt`、`docs/dataset_card_v1.md`
+   - 产出最终报告：`quality_report_v1.json`、`source_distribution.csv`、`label_distribution.csv`、`leakage_report.txt`、`docs/03-数据集说明卡片.md`
    - 计算最终 κ，并保留两人原始标注、冲突与仲裁记录
 
 6. 验收交付物
-   - `docs/data_compliance.md`
-   - `docs/data_schema.md` + ≥3 条脱敏样例
-   - `docs/annotation_guide.md`（含 ≥20 个边界案例）
+   - `docs/04-数据合规登记.md`
+   - `docs/01-数据Schema规范.md` + ≥3 条脱敏样例
+   - `docs/02-标注规范指南.md`（含 ≥20 个边界案例）
    - ≥1500 条仲裁后的金标数据
    - 两人独立原始标注记录、κ 计算结果、冲突与仲裁文件
    - `data/splits/train_ids.txt`、`dev_ids.txt`、`test_ids.txt`
-   - `docs/dataset_card_v1.md`
+   - `docs/03-数据集说明卡片.md`
 
 关键原则
 - 保留数据可追溯性，避免提交真实个人信息到仓库

@@ -4,6 +4,8 @@
 venv/
 /文献/
 /资料/
+/data/run_outputs/v2_0726/
+/data/media/
 # Python
 __pycache__/
 *.pyc
@@ -33,3 +35,7 @@ Thumbs.db
 #html
 *.html
 /data/run_outputs/tmp_1784556667/
+
+*.zip
+*.7z
+/data/run_outputs/v2_0726_bs4/
