@@ -100,7 +100,7 @@ def _crawl_one(cmd: list, label: str, print_lock: Lock) -> tuple:
 def batch_crawl_per_account(
     per_account_url_files: list,
     tmp: Path,
-    outdir: Path,
+    run_dir: Path,
     python: str,
     args,
     resume: bool = False,
@@ -115,7 +115,7 @@ def batch_crawl_per_account(
     print_lock = Lock()
     write_lock = Lock()
 
-    anonymized = outdir / "anonymized_posts.jsonl"
+    anonymized = run_dir / "anonymized_posts.jsonl"
     is_resume = resume
 
     # ── 续传模式：加载已抓取 URL，过滤 ──
@@ -295,8 +295,8 @@ def _filter_url_file(url_file: Path, crawled_urls: set) -> tuple:
 
 def main():
     parser = argparse.ArgumentParser(description="全流程: 抓取 → 匿名化 → 去重 → 校验")
-    parser.add_argument("--mode", choices=["article", "sogou"], required=True,
-                        help="article: 从一篇文章 URL 出发; sogou: 从公众号名称 Sogou 检索出发")
+    parser.add_argument("--mode", choices=["article", "sogou", "bilibili", "xiaohongshu"], required=True,
+                        help="article: 从一篇微信文章出发; sogou: 公众号名称搜狗检索; bilibili: B站作者空间; xiaohongshu: 小红书用户主页")
     parser.add_argument("--source", default=None,
                         help="article 模式：微信文章 URL; sogou 模式：公众号名称（与 --accounts-file 二选一）")
     parser.add_argument("--accounts-file", default=None,
@@ -323,15 +323,24 @@ def main():
     # 校验参数
     if not args.source and not args.accounts_file and not args.resume and not args.resume_from:
         parser.error("必须提供 --source、--accounts-file、--resume 或 --resume-from 之一")
-    if args.accounts_file and args.mode != "sogou":
+    if args.accounts_file and args.mode not in ("sogou",):
         parser.error("--accounts-file 仅支持 --mode sogou")
 
     outdir = Path(args.output_dir)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    # ── 媒体子目录：自动从 output-dir 派生，区分不同爬取批次 ──
-    media_base = Path(args.media_dir)
-    media_sub = media_base / outdir.name  # data/media/v2_0726
+    # ── 自动创建带时间戳的运行子目录 ──
+    ts = int(time.time())
+    ts_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(ts))
+    platform_map = {"article": "wechat_official_account", "sogou": "wechat_official_account",
+                     "bilibili": "bilibili", "xiaohongshu": "xiaohongshu"}
+    platform = platform_map.get(args.mode, "wechat_official_account")
+    run_dir = outdir / f"{platform}_{ts_str}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    print(f"📁 运行目录: {run_dir}")
+
+    # ── 媒体子目录（在 run_dir 内）──
+    media_sub = run_dir / "media"
     media_sub.mkdir(parents=True, exist_ok=True)
     args.media_dir = str(media_sub)
     print(f"📁 媒体目录: {media_sub}")
@@ -366,9 +375,18 @@ def main():
 
     elif args.resume:
         if outdir.exists():
-            tmp_dirs = sorted(
-                [d for d in outdir.iterdir() if d.is_dir() and d.name.startswith("tmp_")],
-                key=lambda d: d.stat().st_mtime, reverse=True)
+            # 搜索旧格式 tmp_* 和新格式 {platform}_*/tmp
+            tmp_candidates = []
+            for d in outdir.iterdir():
+                if d.is_dir() and d.name.startswith("tmp_"):
+                    tmp_candidates.append((d, d.stat().st_mtime))
+            # 也搜索新格式子目录内的 tmp
+            for d in outdir.iterdir():
+                if d.is_dir() and "_" in d.name:
+                    inner_tmp = d / "tmp"
+                    if inner_tmp.is_dir():
+                        tmp_candidates.append((inner_tmp, d.stat().st_mtime))
+            tmp_dirs = [d for d, _ in sorted(tmp_candidates, key=lambda x: x[1], reverse=True)]
             for td in tmp_dirs:
                 # 优先检测批量分文件（排除 .filtered.txt 残留）
                 batch_files = sorted(
@@ -394,15 +412,14 @@ def main():
             print("output-dir 不存在, 回退到正常流程")
 
     if tmp is None:
-        ts = int(time.time())
-        tmp = outdir / f"tmp_{ts}"
+        tmp = run_dir / "tmp"
         tmp.mkdir(parents=True, exist_ok=True)
         urls_file = tmp / "urls.txt"
 
     # ── 批量断点续传：跳过搜索，直接用已有分文件抓取 ──
     if is_batch_resume and per_account_url_files:
         print(f"\n Step 1 跳过（批量续传: {len(per_account_url_files)} 个分文件已就绪）")
-        batch_crawl_per_account(per_account_url_files, tmp, outdir, python, args, resume=True)
+        batch_crawl_per_account(per_account_url_files, tmp, run_dir, python, args, resume=True)
         return
 
     # ── Step 1: 抓取文章 URL 列表（断点续传时跳过）──
@@ -438,7 +455,7 @@ def main():
             time.sleep(2)  # 礼貌间隔，降低反爬风险
 
         # ─── Step 2 (批量): 每个公众号单独抓取，用自己的 URL 文件做历史上下文 ───
-        batch_crawl_per_account(per_account_url_files, tmp, outdir, python, args, resume=False)
+        batch_crawl_per_account(per_account_url_files, tmp, run_dir, python, args, resume=False)
         return  # 批量模式到此结束，不走下面的单次抓取逻辑
 
     elif args.mode == "article":
@@ -453,6 +470,40 @@ def main():
             cmd.extend(["--cookies", args.cookies])
         run(cmd)
 
+    elif args.mode == "bilibili":
+        # ─── B站模式: 直接调 bilibili_crawler.py ───
+        cmd = [
+            python, "scripts/data/crawler/bilibili_crawler.py",
+            "--url", args.source,
+            "--max-items", str(args.max_articles),
+            "--output-dir", str(outdir),
+            "--collector", args.collector,
+        ]
+        if args.no_images:
+            cmd.append("--no-images")
+        if args.terms_checked_at:
+            cmd.extend(["--terms-checked-at", args.terms_checked_at])
+        run(cmd)
+        return
+
+    elif args.mode == "xiaohongshu":
+        # ─── 小红书模式: 直接调 xiaohongshu_crawler.py ───
+        cmd = [
+            python, "scripts/data/crawler/xiaohongshu_crawler.py",
+            "--url", args.source,
+            "--max-items", str(args.max_articles),
+            "--output-dir", str(outdir),
+            "--collector", args.collector,
+        ]
+        if args.no_images:
+            cmd.append("--no-images")
+        if args.cookies:
+            cmd.extend(["--cookies", args.cookies])
+        if args.terms_checked_at:
+            cmd.extend(["--terms-checked-at", args.terms_checked_at])
+        run(cmd)
+        return
+
     else:  # sogou 单公众号
         cmd = [
             python, "scripts/data/crawler/sogou_wechat_crawler.py",
@@ -463,7 +514,7 @@ def main():
         run(cmd)
 
     # ── Step 2: 抓取内容 + 匿名化（传入全部 URL 列表作为博主历史）──
-    anonymized = outdir / "anonymized_posts.jsonl"
+    anonymized = run_dir / "anonymized_posts.jsonl"
     cmd = [
         python, "scripts/data/crawler/crawl_public_posts.py",
         "--input", str(urls_file),
@@ -483,13 +534,19 @@ def main():
     # ── 完成 ──
     # 清洗（normalize_and_deduplicate.py）和校验（validate_schema.py）后续单独执行
 
+    # ── 复制 urls.txt 到 run_dir 存档 ──
+    import shutil as _shutil
+    archived_urls = run_dir / "urls.txt"
+    if urls_file and urls_file.exists() and urls_file != archived_urls:
+        _shutil.copy(urls_file, archived_urls)
+
     print("\n✅ 流水线完成。")
-    print(f"  URL 列表:     {urls_file}")
+    print(f"  URL 列表:     {archived_urls}")
     print(f"  匿名化数据:   {anonymized}")
     print(f"  图片目录:     {args.media_dir}")
-    print(f"  临时文件:     {tmp}")
+    print(f"  运行目录:     {run_dir}")
     print(f"\n  后续步骤:")
-    print(f"    python scripts/data/annotation/normalize_and_deduplicate.py {anonymized} {outdir / 'anonymized_posts_dedup.jsonl'}")
+    print(f"    python scripts/data/annotation/normalize_and_deduplicate.py {anonymized} {run_dir / 'anonymized_posts_dedup.jsonl'}")
     print(f"    python scripts/data/annotation/validate_schema.py {outdir / 'anonymized_posts_dedup.jsonl'}")
 
 

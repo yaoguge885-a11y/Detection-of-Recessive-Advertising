@@ -29,6 +29,9 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
 
+# 默认输出根目录
+DEFAULT_OUTPUT_ROOT = "data/run_outputs"
+
 # 确保项目根目录在 path 中，使得 scripts.data 和 impad 可被 import
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
@@ -526,8 +529,9 @@ def load_urls(path: Path) -> List[Dict[str, str]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Collect public posts and anonymize publisher info.")
     parser.add_argument("--input", default="data/raw/urls.txt", help="URL list file, one per line, optional tab-separated publisher name and publisher id")
-    parser.add_argument("--output", default="data/interim/anonymized_posts.jsonl", help="Output JSONL file")
-    parser.add_argument("--media-dir", default="data/media", help="Directory to store downloaded images")
+    parser.add_argument("--output", default=None, help="Output JSONL file (auto-generated as {output_dir}/{platform}_{timestamp}/anonymized_posts.jsonl if not specified)")
+    parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_ROOT, help=f"Root output directory (default: {DEFAULT_OUTPUT_ROOT})")
+    parser.add_argument("--media-dir", default=None, help="Directory to store downloaded images (auto-generated under output dir if not specified)")
     parser.add_argument("--no-images", action="store_true", help="Skip image downloading (media will be [])")
     parser.add_argument("--compact", action="store_true", help="Output compact single-line JSON instead of pretty-printed")
     parser.add_argument("--history-urls", default=None, help="File with all article URLs from the same blogger search (for blogger_history_refs)")
@@ -539,11 +543,29 @@ def main() -> int:
 
     salt = get_salt()
     input_path = Path(args.input)
-    output_path = Path(args.output)
-    media_base_dir = Path(args.media_dir)
     urls = load_urls(input_path)
+
+    # ── 自动生成输出路径 ──
+    if args.output is None:
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # 从首个 URL 推测平台
+        first_url = urls[0]["url"] if urls else ""
+        platform = platform_from_url(first_url) if first_url else "public"
+        run_dir = Path(args.output_dir) / f"{platform}_{ts}"
+        output_path = run_dir / "anonymized_posts.jsonl"
+    else:
+        output_path = Path(args.output)
+        run_dir = output_path.parent
+
+    if args.media_dir is None:
+        media_base_dir = run_dir / "media"
+    else:
+        media_base_dir = Path(args.media_dir)
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     media_base_dir.mkdir(parents=True, exist_ok=True)
+    print(f"📁 输出目录: {run_dir}")
+    print(f"📁 媒体目录: {media_base_dir}")
 
     # 加载博主全部历史 URL 列表 → 预计算所有 post_id
     all_history_urls: List[str] = []
