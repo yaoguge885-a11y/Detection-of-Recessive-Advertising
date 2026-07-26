@@ -1,18 +1,45 @@
-# ---- 起步核心（装完这些就能跑通 hello_graph 与 LLM 图）----
-langgraph>=0.2
-langchain>=0.3
-langchain-core>=0.3
-langchain-openai>=0.2      # OpenAI 兼容端点：DeepSeek / 通义千问 / OpenAI 都走它
-langsmith>=0.1             # 轨迹追踪
-python-dotenv>=1.0
-pydantic>=2.6
-fastapi>=0.110
-uvicorn[standard]>=0.27
-pytest>=8.0                # 冒烟测试
+# =============================================================================
+# 核心依赖 — 基于实际 Python import 语句整理（2026-07-25）
+# =============================================================================
+# 安装: pip install -r requirements.txt
+# 最低 Python: >=3.10
+#
+# 依赖来源:
+#   impad/llm.py              → langchain-openai
+#   impad/graph.py            → langgraph
+#   impad/hello_graph.py      → langgraph
+#   impad/agents/nlp_agent.py → langchain-core, pydantic
+#   impad/config.py           → python-dotenv
+#   app.py                    → fastapi, pydantic, uvicorn
+#   tests/                    → pytest
 
-# ---- 后续阶段按需再装（先留注释，避免首次安装过重）----
-# chromadb>=0.5            # 向量库：情景记忆 / RAG 法规库
-# bertopic>=0.16          # 主题建模 / 主题漂移
-# paddleocr               # 图像 OCR
-# scikit-learn            # 评估指标 / 标注一致性(κ)
-# streamlit               # 演示前端
+# ---- AI Agent 框架 ----
+langgraph>=0.2              # Agent 状态图 (impad/graph.py, impad/hello_graph.py)
+langchain-core>=0.3         # LLM 消息/工具/回调核心 (impad/agents/nlp_agent.py)
+langchain-openai>=0.2       # OpenAI 兼容端点: DeepSeek/通义千问/OpenAI (impad/llm.py)
+langchain>=0.3
+# ---- 配置与数据模型 ----
+python-dotenv>=1.0          # .env 环境变量加载 (impad/config.py)
+pydantic>=2.6               # 数据校验与模型定义 (impad/agents/nlp_agent.py, app.py)
+
+# ---- Web 服务 ----
+fastapi>=0.110              # REST API 框架 (app.py)
+uvicorn[standard]>=0.27     # ASGI 服务器 (app.py)
+
+# ---- 可选: LLM 轨迹追踪 ----
+langsmith>=0.1              # LangSmith 追踪平台 (通过环境变量启用, 无需代码导入)
+
+# ---- 爬虫 / 数据采集 ----
+requests>=2.31              # HTTP 请求 (5 个爬虫/提取脚本)
+beautifulsoup4>=4.12        # HTML 解析 (sogou_wechat_crawler.py 等)
+playwright>=1.45            # 浏览器渲染: Sogou 回退 + 微信文章 (3 个爬虫脚本)
+                            # 首次使用需运行: playwright install chromium
+
+# ---- 测试 ----
+pytest>=8.0                 # 冒烟测试框架 (tests/)
+
+# ---- 后续阶段按需再装（暂注释，避免首次安装过重）----
+# chromadb>=0.5             # 向量库: 情景记忆 / RAG 法规库
+# bertopic>=0.16            # 主题建模 / 主题漂移检测
+# scikit-learn>=1.5         # 评估指标 / 标注一致性 (Cohen's κ)
+# streamlit>=1.35           # 演示前端

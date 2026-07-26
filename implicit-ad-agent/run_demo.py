@@ -2,9 +2,9 @@
 
 用法：
     python run_demo.py                       # 零成本：规则占位图 hello_graph，不花钱、不需 Key
-    python run_demo.py --llm                 # 用 .env 里的 LLM（配好 LangSmith 后能看到轨迹）
+    python run_demo.py --llm                 # 兼容旧参数：运行确定性 P2.5 图，不需 Key
     python run_demo.py --image path/to.jpg   # 带图跑多智能体图（视觉专家；需装 requirements-vision.txt）
-                                             # 可与 --llm 叠加；缺视觉依赖时视觉专家自动降级
+                                             # 缺视觉依赖时视觉专家自动降级
 """
 from __future__ import annotations
 import json
@@ -42,7 +42,7 @@ def main():
 
     if use_llm:
         from impad.graph import graph
-        print(">> 使用 LLM 图（graph.py）——请确认 .env 已配置好\n")
+        print(">> 使用确定性 P2.5 图（graph.py）——无需配置 Key\n")
     else:
         from impad.hello_graph import graph
         print(">> 使用零成本占位图（hello_graph.py）\n")

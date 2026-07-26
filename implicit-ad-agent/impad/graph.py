@@ -1,12 +1,4 @@
-"""多智能体图的装配：Supervisor 调度 → 专家依次分析 → Judge 加权聚合。
-
-本文件只负责"搭骨架"（节点怎么连），各智能体逻辑在 impad/agents/ 里。
-路由：Supervisor 按输入排出专家队列（纯文本跳过视觉、无历史跳过行为），
-每位专家跑完从队列自我移除，队列空了交给 Judge 出最终判定。
-
-未配 .env Key 时 NLP 专家自动降级为规则，全图零成本可跑；
-配好 Key 后 NLP 走真实 LLM（LangSmith 可看轨迹）。
-"""
+"""P2.5 graph: normalize → plan → tool groups → evidence-only Judge."""
 from __future__ import annotations
 from langgraph.graph import StateGraph, START, END
 from .state import AdCheckState

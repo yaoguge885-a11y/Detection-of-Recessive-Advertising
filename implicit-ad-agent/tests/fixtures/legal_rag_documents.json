@@ -1,0 +1,122 @@
+[
+  {
+    "source_id": "fixture_disclosure",
+    "document_title": "合成披露规则",
+    "source_path_or_url": "fixture://disclosure",
+    "document_version": "fixture-v1",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "synthetic",
+    "authority_level": "synthetic_fixture",
+    "fixture_only": true,
+    "sections": [
+      {
+        "article_id": "D1",
+        "title": "正文披露",
+        "text": "商业推广内容应当在正文首段显著标明广告合作。",
+        "keywords": ["商业推广", "正文", "广告合作"]
+      },
+      {
+        "article_id": "D2",
+        "title": "图片披露",
+        "text": "图片含有商品展示时，披露标识必须清晰并且可以辨认。",
+        "keywords": ["图片", "商品展示", "披露标识"]
+      }
+    ]
+  },
+  {
+    "source_id": "fixture_links",
+    "document_title": "合成转化规则",
+    "source_path_or_url": "fixture://links",
+    "document_version": "fixture-v1",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "synthetic",
+    "authority_level": "synthetic_fixture",
+    "fixture_only": true,
+    "sections": [
+      {
+        "article_id": "L1",
+        "title": "购买链接",
+        "text": "帖子包含购买链接时，应当同时说明商业合作关系。",
+        "keywords": ["购买链接", "商业合作"]
+      },
+      {
+        "article_id": "L2",
+        "title": "优惠码",
+        "text": "引导用户私信领取优惠码属于转化引导，应当保留披露标识。",
+        "keywords": ["私信", "优惠码", "转化引导"]
+      }
+    ]
+  },
+  {
+    "source_id": "fixture_platform",
+    "document_title": "合成平台商业内容规则",
+    "source_path_or_url": "fixture://platform",
+    "document_version": "fixture-v1",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "synthetic",
+    "authority_level": "synthetic_fixture",
+    "fixture_only": true,
+    "sections": [
+      {
+        "article_id": "P1",
+        "title": "平台商业标记",
+        "text": "平台商业内容应当使用平台提供的商业内容标记。",
+        "keywords": ["平台", "商业内容标记"]
+      },
+      {
+        "article_id": "P2",
+        "title": "标记加载失败",
+        "text": "平台商业标记加载失败时，应当记录缺失并进入人工复核。",
+        "keywords": ["加载失败", "记录缺失", "人工复核"]
+      }
+    ]
+  },
+  {
+    "source_id": "fixture_capture",
+    "document_title": "合成采集审计规则",
+    "source_path_or_url": "fixture://capture",
+    "document_version": "fixture-v1",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "synthetic",
+    "authority_level": "synthetic_fixture",
+    "fixture_only": true,
+    "sections": [
+      {
+        "article_id": "C1",
+        "title": "采集不完整",
+        "text": "正文、图片或评论采集不完整时，不得据此认定没有披露。",
+        "keywords": ["采集不完整", "不得认定", "没有披露"]
+      },
+      {
+        "article_id": "C2",
+        "title": "采集元数据",
+        "text": "每次采集应当记录采集时间、适配器版本和失败原因。",
+        "keywords": ["采集时间", "适配器版本", "失败原因"]
+      }
+    ]
+  },
+  {
+    "source_id": "fixture_reports",
+    "document_title": "合成报告引用规则",
+    "source_path_or_url": "fixture://reports",
+    "document_version": "fixture-v1",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "synthetic",
+    "authority_level": "synthetic_fixture",
+    "fixture_only": true,
+    "sections": [
+      {
+        "article_id": "R1",
+        "title": "引用字段",
+        "text": "报告引用必须包含来源标题、条款编号和原文片段。",
+        "keywords": ["报告引用", "来源标题", "条款编号", "原文片段"]
+      },
+      {
+        "article_id": "R2",
+        "title": "无答案拒引",
+        "text": "没有可靠检索结果时，报告不得生成法规引用。",
+        "keywords": ["可靠检索结果", "不得生成", "法规引用"]
+      }
+    ]
+  }
+]

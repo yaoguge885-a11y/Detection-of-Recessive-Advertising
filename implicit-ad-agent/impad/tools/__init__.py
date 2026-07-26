@@ -1,4 +1,22 @@
 """工具层：被智能体调用的确定性能力（关键词、OCR、图文一致性等）。
 
-按《说明书》P2 逐步扩充；当前只有关键词清单。
+按《说明书》P2 逐步扩充；公共入口见 registry.py。
 """
+
+from .registry import (
+    TOOLS_V1,
+    TOOL_READINESS,
+    TOOL_SPEC_BY_NAME,
+    TOOL_SPECS_V1,
+    ToolSpec,
+)
+from .vision_context import VisionContext
+
+__all__ = [
+    "TOOLS_V1",
+    "TOOL_READINESS",
+    "TOOL_SPEC_BY_NAME",
+    "TOOL_SPECS_V1",
+    "ToolSpec",
+    "VisionContext",
+]

@@ -11,10 +11,60 @@ dependencies = [
     "langsmith>=0.1",
     "python-dotenv>=1.0",
     "pydantic>=2.6",
+    "jsonschema>=4.22,<5",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
+]
+
+[project.optional-dependencies]
+crawler = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "playwright>=1.45",
+]
+vision = [
+    "ultralytics>=8.3",
+    "easyocr>=1.7",
+    "opencv-python>=4.9",
+    "Pillow>=10.0",
+    "numpy>=1.26",
+    "torch>=2.0",
+    "pytesseract>=0.3",
+]
+annotation = [
+    "flet>=0.22",
+    "openai>=1.0",
+]
+test = [
+    "pytest>=8.0",
+]
+mcp = [
+    "mcp>=1.27,<2",
+]
+rag = [
+    "chromadb>=1.1,<2",
+]
+all = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "playwright>=1.45",
+    "ultralytics>=8.3",
+    "easyocr>=1.7",
+    "opencv-python>=4.9",
+    "Pillow>=10.0",
+    "numpy>=1.26",
+    "torch>=2.0",
+    "pytesseract>=0.3",
+    "flet>=0.22",
+    "openai>=1.0",
+    "pytest>=8.0",
+    "mcp>=1.27,<2",
+    "chromadb>=1.1,<2",
 ]
 
 # 让 `pytest` 能从项目根目录 import impad 包
 [tool.pytest.ini_options]
 pythonpath = ["."]
+markers = [
+    "vision_integration: runs the installed YOLO/EasyOCR stack on real local images",
+]

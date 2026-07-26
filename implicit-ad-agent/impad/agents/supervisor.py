@@ -1,30 +1,98 @@
-"""Supervisor 主控智能体：按输入动态调度专家。
-
-规则（《说明书》P3）：纯文本帖跳过视觉专家；没有博主历史就跳过行为专家。
-当前用确定性规则路由，零成本；后续可升级为 LLM 决策路由。
-"""
+"""Normalize input and build a deterministic capability plan."""
 from __future__ import annotations
+
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from ..adapters import (
+    post_record_from_content_record,
+    post_record_from_manual,
+)
+from ..contracts import PostRecord, RunMetadata
+from ..orchestration import (
+    CapabilityPlanner,
+    capability_context_from_post,
+)
 from ..state import AdCheckState
 
 
+_NLP_TOOLS = {
+    "analyze_text_intent",
+    "sentiment_curve",
+    "comment_anomaly",
+}
+_VISION_TOOLS = {
+    "ocr_extract",
+    "image_text_consistency",
+    "detect_logo_product",
+}
+_BEHAVIOR_TOOLS = {"topic_drift"}
+_P1_SOURCE_TYPES = {
+    "public_dataset",
+    "manual_public_collection",
+    "authorized_export",
+    "synthetic",
+}
+
+
+def _normalize(raw: dict | PostRecord) -> PostRecord:
+    if isinstance(raw, PostRecord):
+        return raw
+    is_p1 = raw.get("schema_version") == "1.0" or (
+        "blogger_id" in raw
+        and ("provenance" in raw or "privacy" in raw)
+    ) or (
+        raw.get("source_type") in _P1_SOURCE_TYPES
+        and "blogger_id" in raw
+        and all(
+            field in raw
+            for field in ("post_id", "platform", "media")
+        )
+    )
+    if is_p1:
+        return post_record_from_content_record(raw)
+    return post_record_from_manual(raw)
+
+
 def supervisor(state: AdCheckState) -> AdCheckState:
-    post = state.get("post", {})
-    plan = ["nlp"]
-    notes = ["NLP 专家必选"]
-    if post.get("image_path") or post.get("image_url"):
+    post = _normalize(state.get("post", {}))
+    context = capability_context_from_post(post)
+    capability_plan = CapabilityPlanner().plan(context)
+    available = set(capability_plan.available_tools)
+    plan = []
+    if available & _NLP_TOOLS:
+        plan.append("nlp")
+    if available & _VISION_TOOLS:
         plan.append("vision")
-        notes.append("检测到图片 → 调度视觉专家")
-    if post.get("history"):
+    if available & _BEHAVIOR_TOOLS:
         plan.append("behavior")
-        notes.append(f"检测到 {len(post['history'])} 条历史帖 → 调度行为专家")
+    run_id = f"run_{uuid4().hex}"
     return {
+        "post_record": post,
+        "capture_status": post.capture_status,
+        "capability_plan": capability_plan,
         "plan": plan,
+        "tool_results": [],
+        "function_traces": [],
+        "run_events": [],
+        "run_metadata": RunMetadata(
+            run_id=run_id,
+            status="running",
+            started_at=datetime.now(timezone.utc),
+            runtime_mode="local",
+            planner_version="capability_planner_v1",
+        ),
+        "agent_outputs": {},
         "agent_votes": {},
-        "evidence": [f"[Supervisor] 调度：{' → '.join(plan)}（{'；'.join(notes)}）"],
+        "evidence": [
+            "[Supervisor] capability plan: "
+            + ", ".join(capability_plan.available_tools)
+        ],
     }
 
 
 def route_next(state: AdCheckState) -> str:
-    """条件路由：按计划走下一位专家，专家跑完就交给 Judge。"""
+    """Route each eligible expert group once, then hand off to Judge."""
+
     plan = state.get("plan") or []
     return plan[0] if plan else "judge"

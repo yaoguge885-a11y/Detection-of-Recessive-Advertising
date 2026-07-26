@@ -1,0 +1,43 @@
+{
+  "annotations": {
+    "common_posts": 36,
+    "file_count": 2,
+    "rows_per_file": [
+      38,
+      37
+    ],
+    "unique_posts_per_file": [
+      37,
+      36
+    ],
+    "valid_three_class_rows_per_file": [
+      23,
+      22
+    ]
+  },
+  "candidates": {
+    "duplicate_post_rows": 22,
+    "platform_counts": {
+      "wechat_official_account": 304
+    },
+    "rows": 304,
+    "unique_creators": 15,
+    "unique_posts": 282
+  },
+  "compliance": {
+    "privacy_claim_counts": {},
+    "terms_checked_records": 0
+  },
+  "dataset_fingerprint": "c106e496bedc2534cea69117982035586b18c378fe600aebbdf4c7baec1eb32e",
+  "generated_at": "2026-07-26T15:49:41.483725+00:00",
+  "media": {
+    "available_unique_references": 6697,
+    "disk_files": 6973,
+    "missing_unique_references": 0,
+    "references": 7794,
+    "structured_zip_entries": 0,
+    "unique_references": 6697,
+    "zip_files": 6346
+  },
+  "report_version": "1.0"
+}
