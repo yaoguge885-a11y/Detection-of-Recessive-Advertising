@@ -1,244 +1,241 @@
-# 交接文档 · 隐性广告识别项目（大创）
+# HANDOFF：隐性广告识别项目
 
-> 写给一个完全没有上下文的新会话。读完这份就能接手，不用再翻旧记录。
-> 最后更新：2026-07-21
+> 面向下一位接手开发者的事实交接。最后更新：2026-07-26（远端最新P1合入本地P2后）。
+> 先读本文件，再读 `docs/隐性广告识别项目_说明书.md`、`docs/隐性广告识别项目_分阶段计划表.md` 和 `docs/现有代码修改大纲.md`。
 
----
+## 1. 一句话目标
 
-## 一、我们在做什么
+构建一个证据驱动的多智能体系统：输入社交媒体文本、图片、评论和创作者历史，输出 **明广 / 暗广 / 非广** 三元判定、置信度、可追溯证据和法规/平台规则引用；证据不足或采集不完整时转为 `需复核`。
 
-**项目**：华东理工大学 信息科学与工程学院 的大学生创新创业训练计划（大创）项目——
-**《融合多模态行为特征与文本推断的隐性广告识别》**。
+首批用户是4名项目开发者。最终形态是可在GitHub直接下载运行的开源网页工程，浏览器插件为冲刺目标。
 
-**一句话目标**：识别社交媒体帖子是「明广 / 暗广 / 非广」三类里的哪一类。暗广 = 没标注广告、但有明显导购意图/软广话术的内容。
+## 2. 已冻结的关键决策
 
-**技术路线的关键转向**：申报书里原本的方案是传统流水线（BERT 文本 + CNN/YOLO 视觉 + BERTopic 主题漂移 + XGBoost/MLP 二分类）。经过调研，我们**转向了 LangGraph 多智能体架构**（Supervisor 调度 + NLP/视觉/行为 专家智能体 + RAG 法规库 + Judge 聚合 + 人在环 HITL）。传统流水线（尤其 XGBoost）保留作为对照基线，用于论文的消融/对比实验。
+### 2.1 研究与工程边界
 
-**团队**：4 名本科二年级学生（用户称在新加坡 UC 大学读 Information Engineering；申报书上写的是华东理工大学，以申报书为准）。角色分工代号：
-- **L**（负责人/架构）= 姚家辉
-- **N**（NLP）= 江灵均
-- **V**（视觉）= 叶泽楷
-- **D**（数据/评估）= 王一帆（商学院金融+计算机双学位）
-- 指导老师：胡庆春 副教授（NLP 方向）
+- 论文核心创新：**CreatorShift纵向多模态偏好变化建模**。
+- Agent、Function Calling、MCP、A2A、RAG是正式工程贡献，不冒充算法创新。
+- 传统XGBoost、文本单模态、单帖多模态和简单历史池化均作为基线。
+- CreatorShift的最低成功标准是优于“单帖多模态”和“简单历史池化”，不能只要求优于XGBoost。
 
-**时间**：约 6 个月（2026-07 起步）。暑假可全职，秋季学期半负荷，期末几乎停摆，寒假可全职。计划表已按校历排好产能。
+### 2.2 标签边界
 
-**最终产出目标**：论文 + 软件著作权 + 竞赛 + 一个能演示的 Web 应用。
+- 正式金标：`明广 / 暗广 / 非广`。
+- 商业意图成立后，有明确披露证据为明广；无披露且采集充分为暗广。
+- `需复核` 是运行状态；P1 schema中的 `uncertain/out_of_scope` 是数据治理状态，不是第四个金标。
+- 不单独训练“披露状态分类器”；保留轻量 `disclosure_evidence`，记录披露文本、平台标记及来源位置。
 
----
+### 2.3 系统边界
 
-## 二、已经完成了什么
+- `Function Calling`：L0默认主链。
+- `RAG`：L0知识与引用层，分类后运行，不污染分类证据。
+- `MCP`：L1正式工具接口；本地和MCP复用同一工具实现。
+- `A2A`：L1正式分布式运行模式；保留本地模式作为参考实现和降级路径。
+- 网页端是最低产品目标；小红书优先、B站其次，抖音后置；浏览器插件在网页/API稳定后开发。
 
-### A. 两份核心交付文档（在本文件夹根目录）
-1. **`隐性广告识别项目_分阶段计划表.md`**
-   —— P0~P6 分阶段计划、里程碑 M0~M6 及其完成标准（DoD）、校历产能表、甘特概览、MVP 优先级阶梯（L0必做/L1应做/L2可做/L3冲刺）、每周节奏（周一站会/周五 demo+复盘/双周见导师）。
-2. **`隐性广告识别项目_说明书.md`**
-   —— 战略说明（为何从 XGBoost 转 LangGraph）、目标架构 ASCII 图、推荐技术栈、5 份参考资料各自的用途、P0~P6 每阶段的「目标/先学/工作路线/工具库/常见坑/完成标准」、数据与标注规范（三元标签、Cohen's κ≥0.6、训练/测试集不允许同博主重叠）、评估方案与论文提纲、风险表、协作规范、以及分类关键词清单（A~H 八大类）。
-3. **`implicit-ad-agent/docs/ADR.md`**（2026-07-12 初稿，任务 0.2）
-   —— 10 条架构决策：ADR-001 LLM 分档用模（DeepSeek-chat 主力 / Qwen-VL 视觉 / 便宜模型路由，厂商无关端点）、002 LangGraph 编排、003 Chroma + bge-small-zh-v1.5、004 Streamlit 前端、005 FastAPI + 腾讯云 CVM、006 LangSmith（含数据脱敏红线）、007 原生 @tool（FastMCP=L2）、008 降级阶梯 + 四个降级决策点（M1/M3/M4/M5）、009 Python 3.10 环境、010 json_mode 结构化输出策略。**待 4 人签字**，签字后 M0 的 ADR 项即验收。计划表/说明书已同步更新交叉引用。
+## 3. 当前Git与工作区事实
 
-> 这两份是给全组人看的"作战地图"，任何新决策都应回头对照它们、必要时更新它们。
+- 当前工作分支：`P2_Tool-Compartment-Model-Tooling`。
+- P1远程分支：`origin/P1-·-数据地基与标注规范`，本次拉取到的最新提交为 `6679671d35abf6d4bd9f17ec92f5585397244202`。
+- 本地P1→P2合并提交：`98cb599e280d97dddf779cfaa1b0a90d4f2b7608`；两个父提交分别是原P2 `76fb13f` 与最新P1 `6679671`。
+- 已用 `git merge-base --is-ancestor` 验证 `6679671` 是当前P2的祖先；两边历史均被保留。
+- 本次只完成本地合并，没有推送远端P2。
+- 合并前的67个未提交/未跟踪P2文件已逐路径恢复；除本文件外，其余修改继续保持未提交状态，不得覆盖、清理或重置。
+- 安全备份仍保留在 `stash@{0}`：`codex-pre-p1-merge-2026-07-26`，对象为 `6c0bfedd4c8d990a5ffccd8a089bb3ee9bafcba3`。确认工作区无误前不要删除。
 
-### B. 项目起步骨架（在子目录 `implicit-ad-agent/`）
-一个**最小可运行的 LangGraph 起步骨架**，已实测跑通。结构：
+不要从最新 `main` 重新建空目录复制文件，也不要再次把P1整分支覆盖到P2。后续开发直接从当前P2继续，并将现有未提交模块按职责拆成可Review提交。
 
-| 路径 | 作用 | 状态 |
-| --- | --- | --- |
-| `impad/hello_graph.py` | 零 Key 规则占位图（不花钱、不需 API Key） | ✅ 实测跑通 |
-| `impad/graph.py` | **多智能体图装配**：Supervisor→专家→Judge（2026-07-12 从单体裂变） | ✅ 零 Key 实测跑通（NLP 无 Key 自动降级规则） |
-| `impad/agents/` | supervisor（调度+条件路由）/ nlp_agent（LLM+规则降级）/ vision_agent（占位）/ behavior_agent（占位规则）/ judge（加权聚合+反思质询） | ✅ 骨架就绪，视觉/行为待填肉（P2/P3） |
-| `impad/tools/keywords.py` | 明广标识 + 软广信号词清单（规则降级共用） | ✅ |
-| `impad/state.py` | 共享状态 `AdCheckState`（已加 `plan`/`agent_votes`） | ✅ |
-| `impad/llm.py` | 厂商无关 LLM 客户端（OpenAI 兼容端点） | ✅ |
-| `impad/config.py` | 读 `.env` 的集中配置 | ✅ |
-| `app.py` | FastAPI，`GET /health` + `POST /analyze` | ✅ /health 实测 200；/analyze 需配 Key |
-| `run_demo.py` | 一键跑样本（`--llm` 切真实 LLM） | ✅ 实测跑通（含 UTF-8 修复） |
-| `samples/sample_posts.json` | 3 条固定样本（暗广/明广/非广各一） | ✅ |
-| `tests/test_smoke.py` | 冒烟测试（零 Key） | ✅ 通过 |
-| `tests/test_agents.py` | 多智能体路由/聚合/全图测试（零 Key，monkeypatch 掉 Key 防误调 LLM） | ✅ 通过 |
-| `requirements.txt` / `pyproject.toml` | 依赖（含 pytest） | ✅ |
-| `.env.example` | LLM/LangSmith 配置模板 | ✅（用户尚未 cp 成 .env 填 Key） |
-| `.gitignore` | 已排除 .env / .venv / __pycache__ 等 | ✅ |
-| `.python-version` | `3.10`（本机 Python 3.10.11） | ✅ |
-| `README.md` | 快速开始 + LangSmith 看轨迹步骤 | ✅ |
+## 4. 当前代码状态
 
-### B+. 平行实现的代码移植（2026-07-13）
-桌面另有一版同课题的未完成实现 `hidad_detect_agent-unfinished--main`（评估见其中的
-`移植评估与方案.md`），确认三块可移植：① 关键词清单+6维权重、② 视觉模块(YOLO+OCR)、
-③ ERNIE 训练管线做论文对照基线。**已完成块①与块②，仅剩块③**：
+主程序目录：`implicit-ad-agent/`。
 
-#### 块① 关键词清单 + 6 维权重（2026-07-13）
+### 4.1 已完成
 
-- `impad/tools/keywords.py`：从十几个词扩成 6 组分类词表（促销/价格/紧迫/品牌/行动/自然），
-  新增 `compute_keyword_weights(text)`（确定性算 6 维 0~1 权重，无需 LLM）、`ad_pressure()`、
-  `summarize_weights()`。明广标识/软广词表也一并扩充。
-- `impad/agents/nlp_agent.py`：prompt 融合三分类判据（明广/暗广/非广定义更清晰，仍保 json_mode+英文字段）；
-  LLM 与规则降级两条路径**都产出** keyword_weights；规则降级新增"导购压力"兜底层
-  （未命中软广词但 promotion/price/urgency/action 均值≥0.5 且盖过自然表达 → 判暗广）。
-- `impad/agents/judge.py`：证据链与报告里加入 6 维特征参考（不改加权投票数学，保证原测试稳定）。
-- `impad/state.py` 加 `keyword_weights` 字段；`app.py` 的 `/analyze` 响应透出该字段；
-  `hello_graph.py` 改为复用共享词表并展示权重（顺手补了 `__main__` 的 UTF-8 reconfigure，见坑#1）。
-- 新增 `tests/test_keywords.py`（7 项）。零 Key 与真实 LLM 均实测跑通。
-- **关键设计决定**：6 维权重刻意在代码里确定性计算，不让 LLM 吐嵌套 JSON——
-  避开国产端点复杂结构化输出不稳的坑（同坑#4），且规则降级路径也能有同样特征。
-
-#### 块② 视觉专家：物体检测 + OCR + 焦点（2026-07-13）
-- `impad/tools/vision.py`（新）：从桌面 `pics/yolo_detector.py` 精简移植。YOLO11 物体检测 + EasyOCR
-  中英文 + 加权焦点。**精进三点**：① 去掉标注绘图（智能体只需结构化数据，不需画框图，省 ~150 行与 PIL 字体依赖）；
-  ② 所有重依赖（cv2/numpy/ultralytics/easyocr）改**带守卫的惰性导入**，缺依赖时 import 不报错、
-  `vision_available()` 返回 False；③ 模型模块级缓存，只加载一次。
-- `impad/agents/vision_agent.py`（重写）：占位 → 真实分析。**核心是把 OCR 抠出的图内文字回灌关键词规则**
-  （复用块①的 keywords），抓"广告词印在图上、文本专家看不见"的暗广。判定逻辑抽成纯函数
-  `vote_from_findings`（无重依赖，可零依赖单测）。四级降级：无图 / 缺依赖 / 文件缺失 / 推理异常，
-  都投 confidence=0 空票并说明原因，绝不拖垮全图（ADR-008）。
-- `impad/state.py` 加 `vision_findings`；`supervisor.py` 改为 `image_path` 或 `image_url` 任一即调度视觉；
-  `app.py` 的 `PostIn` 加 `image_path` 字段、`/analyze` 透出 `vision_findings`；
-  `run_demo.py` 加 `--image path` 带图跑多智能体图。
-- 新增 `requirements-vision.txt`（ultralytics/easyocr/opencv，约 2~3GB，可选）、`samples/images/`（2 张测试图）。
-- 新增 `tests/test_vision.py`（9 项）。**全套 `pytest` 21 项通过**。
-- **实测状态**：降级路径与真实 GPU 路径均已跑通。项目 `.venv` 当前为
-  `PyTorch 2.13.0+cu126`、CUDA Runtime 12.6，`torch.cuda.is_available() == True`，
-  显卡为 `NVIDIA GeForce RTX 4060 Laptop GPU`。真实 YOLO/EasyOCR integration **2 passed**；
-  未安装视觉依赖时仍会按 ADR-008 正确降级，不拖垮全图。
-
-### C. 已解答的用户问题（不用重复讲）
-- Git/GitHub 基本操作、关联远程仓库
-- Pull Request 用法
-- 一行命令把整个文件夹 push 到某分支
-- PR 合并"看似删掉了 main 原有文件"的根因排查与修复（真正原因通常是新分支历史里本就没那个文件，不是 merge 会删文件）
-- 帮用户找了 3 个匹配的开源参考项目（含 MANA：https://github.com/MANA-2026/MANA）
-- 做成软件/浏览器插件/网站的取舍
-- 部署选型：**推荐腾讯云普通服务器，不用 AWS Lambda**（Lambda 有超时/无状态/GPU/国内区摩擦问题）；Docker 留到 P5 部署阶段再上，前期本地 venv 即可
-- LangSmith 的用途与是否必须（答：非必须，但强烈推荐——看轨迹/调试/Dataset+Evaluation）
-- `http://127.0.0.1:8000/docs` 是什么（FastAPI 自动生成的 Swagger 交互文档）
-
-### D. 记忆文件（在 `.claude/.../memory/`）
-- `implicit-ad-detection-project.md` 已记录项目身份/团队/转向/时间线/交付物
-- `MEMORY.md` 索引已更新
-
----
-
-## 三、当前卡在哪 / 下一步
-
-### P2 · 工具舱进展（2026-07-20）
-
-L 已按 `docs/P2_工具舱模型工具化_执行指南.md` 完成目前可独立完成的 Owner 工作：
-
-- 新增公共契约 `impad/tools/contracts.py`：统一四态状态、证据结构和结果信封。
-- 新增 4 个“纯 core + LangChain @tool 薄适配”工具：`analyze_text_intent`、`sentiment_curve`、`topic_drift`、`comment_anomaly`。
-- 新增 `impad/tools/registry.py`，当前真实记录 7 个工具 ready。
-- 新增 3 个视觉工具 `ocr_extract`、`detect_logo_product`、`image_text_consistency`；输入使用独立 Pydantic Model，只接收本地 `image_path`。
-- 新增可序列化 `VisionContext`，保存 YOLO 对象、OCR 文本及 bbox、焦点和模型版本；按图片内容哈希缓存，三个视觉工具可复用同一次推理。
-- 2026-07-20 默认回归 **58 passed, 2 skipped**（skipped 为显式 opt-in 的真实视觉测试），零 Key、零联网；真实 GPU integration **2 passed**。固定 demo 已覆盖全部 7 个工具。
-- 完成 30 对合成图文 sanity set：覆盖 aligned/complementary/conflicting/insufficient 四类，匹配组均分 0.668、错配组 0.000、均值差 0.668；真实样图已验证 YOLO/EasyOCR 输出能进入工具层。
-- `docs/tool_catalog_v1.md` 已更新接口、限制、调用示例和替换点。
-
-关键实现边界：文本意图复用现有关键词唯一事实来源；情绪将普通正负情感与焦虑/紧迫分离；主题漂移只读当前时间之前的历史，当前用字符 bigram 余弦作为明确标注的降级实现；评论少于 5 条、历史少于 3 条均返回 `skipped` 而不是 0 分。
-
-**P2 工具实现当前 7/7 ready，M2 代码层技术验收已通过。** 已完成工具注册、L/V 代码层交叉评审、默认回归、真实 GPU 视觉 integration 和固定演示。外部待确认项仅剩 P1 Schema 握手及组员对验收记录的人工确认。当前图文一致性是 OCR bigram + YOLO 对象映射的明确降级实现，后续可在稳定契约内替换 VLM/CLIP。
-
-**当前没有硬卡点。** 骨架已跑通，用户正在自己上手体验 `/docs` 页面。
-
-**下一步计划**（按《说明书》P0→P6 推进，短期最该做的）：
-0. ADR 拿给 4 人签字确认✅ 已完成（初稿已完成，见 `implicit-ad-agent/docs/ADR.md`），签完 M0 即可关口。
-1. 开始搭数据与标注流程（D 主导）：三元标签、标注手册、Cohen's κ 一致性校验。
-2. ~~把 `graph.py` 扩成多智能体图~~ ✅ 已完成（2026-07-12）：Supervisor+3专家+Judge 骨架就位，视觉/行为是占位，待填肉。
-3. 视觉专家（P2）：~~OCR + 物体 + 焦点骨架~~ ✅ 已完成（块②，2026-07-13，见 B+）。
-   ~~图文一致性降级实现、30 对合成质量小测、真实 GPU integration 与代码层交叉评审~~ ✅ 已完成（2026-07-20）。
-   行为专家（P3）：EMA 偏好偏移 + Chroma 情景记忆，仍是占位待填。
-   ~~关键词清单+6维权重（块①）~~ ✅ 已完成（2026-07-13，见 B+）。
-4. **论文对照基线（块③，待做）**：从桌面 `hidad_detect_agent-unfinished--main/text/train/` 搬文件到仓库根目录
-   `baseline/`，加 `requirements.txt`（paddlepaddle 生态，独立 venv）和 `README.md`。
-   桌面版已有实测结果（acc≈90.5%，macro-F1≈0.90，54 组超参实验）；`build_balanced_dataset.py` 是
-   P1 标注阶段 D 需要的构建工具。搬文件本身不依赖标注数据，**半天内可完成**；真正训练等 P1 数据就绪。
-   详见 `implicit-ad-agent/README.md`「论文对照基线（待做：块③）」小节。
-5. P3 法规 RAG：先完成 Chroma 基线，再按下方计划做 LightRAG 独立对照；XGBoost 仍是分类对照基线。Judge 权重（现为手工 nlp 0.6/vision 0.25/behavior 0.15）P4 用验证集误判率校准。
-
-### LightRAG 参考计划（已写入计划，尚未实施）
-
-- **状态**：仅完成项目研读和书面计划；没有安装依赖、启动服务、修改主项目代码或改变 ADR-003。
-- **用途边界**：只评估法规/平台规范/判例检索，不替换 LangGraph 编排，也暂不用于 P4 博主历史记忆。CreatorShift 的历史仍必须满足 `creator_id` 隔离与 `published_at < target_time`。
-- **实施顺序**：先交付 Chroma 法规 RAG → 定义统一 `LegalRetriever/LawEvidence` → 独立虚拟环境固定 LightRAG 版本或 commit → 3～5 份法规冒烟 → 30 问 A/B → Go/No-Go。
-- **学习重点**：图谱+向量双层索引；`local/global/hybrid/naive/mix`；REST API；`source_id`/原文 chunk 来源追踪；`insert_custom_kg` 的实体、关系和 chunk 格式。
-- **对照门槛**：Recall@5 不低于 Chroma、引用准确率 ≥95%、10 道跨文档题至少多答对 2 道、10 道无答案题误引 ≤1、P95 延迟 ≤2 倍 Chroma。未通过就归档 `docs/lightrag_spike_report.md` 并继续 Chroma。
-- **依赖纪律**：LightRAG 放在独立环境，通过 REST/薄适配器接入；对照阶段不写进主 `requirements.txt`，不同时引入 RAG-Anything。通过门槛后才能提出 ADR-003 变更。
-- **论文边界**：LightRAG/RAG 是工程底座，不是 CreatorShift 的算法创新；论文仍聚焦纵向多模态创作者偏好偏移。
-
-官方入口：[仓库](https://github.com/HKUDS/LightRAG) · [API Server](https://github.com/HKUDS/LightRAG/blob/main/docs/LightRAG-API-Server.md) · [SDK/QueryParam](https://github.com/HKUDS/LightRAG/blob/main/docs/ProgramingWithCore.md) · [`insert_custom_kg`](https://github.com/HKUDS/LightRAG/blob/main/examples/insert_custom_kg.py)
-
-> 接手时：先读上面 B 两份 .md，再看 `implicit-ad-agent/README.md`，就能对齐。
-
----
-
-## 四、踩过的坑，绝对不要再踩
-
-1. **Windows 终端中文乱码（GBK vs UTF-8）**
-   - 现象：`python run_demo.py` 打出 "ʹ����ɱ�ռλͼ" 之类乱码。
-   - 根因：Windows 控制台默认 GBK，与 UTF-8 stdout 冲突。
-   - **已永久修复**：`run_demo.py` 顶部加了 `sys.stdout.reconfigure(encoding="utf-8")`。**新写任何会打印中文的脚本都要照抄这一段**，不要让用户去记 `PYTHONUTF8=1` 环境变量。
-
-2. **`antiword` 解 .doc 出问号乱码**
-   - 必须加映射参数：`antiword -m UTF-8.txt <file>`，否则中文全变 `?`。
-
-3. **`pdftoppm` 未安装** —— Read 工具渲染 PDF 页面会失败。
-   - 绕过：直接用 Python 的 `fitz`（PyMuPDF）抽文本。
-
-4. **`with_structured_output` 的坑**
-   - `graph.py` 里用的是 `method="json_mode"` 且 **prompt 里强制英文字段名**（verdict/confidence/evidence）。这是有意为之：DeepSeek 等国产端点对默认 function-calling 结构化输出支持不稳，json_mode + 显式字段约束更稳。**不要随手改回默认结构化模式**，否则国产 Key 可能报错。
-
-5. **`/analyze` 返回错误 ≠ 代码坏了**
-   - 没配 `.env` Key 时，`/analyze` 走真实 LLM 会失败，这是**预期**。别去"修" app.py。
-   - 想零成本验证逻辑，用 `hello_graph`（`python run_demo.py` 不带 `--llm`）或跑 `pytest`。
-
-5b. **视觉专家投 `confidence=0` 的空票 ≠ 代码坏了**
-   - 没装 `requirements-vision.txt` 时，`vision_available()` 返回 False，视觉专家自动降级投空票，
-     Judge 会忽略它。这是**预期降级**（ADR-008），不是 bug。想让它真出结果就装那份可选依赖（2~3GB）。
-   - 另注：`from impad.agents import supervisor` 拿到的是**函数**不是模块（`__init__` 里 re-export 了），
-     写测试时直接 `supervisor({...})`，别写 `supervisor.supervisor(...)`。
-
-6. **pytest 找不到包**
-   - `pyproject.toml` 里已配 `[tool.pytest.ini_options] pythonpath = ["."]`，这样才能 import `impad`。别删。
-   - pytest 已写进 `requirements.txt`，别再当它是可选。
-
-7. **本机没有 `uv`，也没有 `py -3.11`**
-   - 只有 `C:\Python310\python.exe`（3.10.11）。用 `python -m venv .venv` 建环境，别指望 uv。
-
-8. **PR 合并"删文件"的误解**
-   - 用户曾以为"合并含不同文件的分支会删掉 main 原文件"。真相：正常 merge 不动未触碰的文件；真删了几乎一定是**新分支历史里本来就没那个文件**（比如在新文件夹里重新 `git init` 建的分支，而非从最新 main 切出来的）。
-   - 正确姿势：永远先 `git pull` 更新 main，再 `git checkout -b 新分支`。
-
-9. **交付原则：不要在终端里长篇输出交付内容**
-   - 用户明确要求过"不要在终端内输出"——交付物一律写成文件（.md / 代码），终端只给简短的"怎么运行/怎么看结果"说明。
-
-10. **`Fatal error in launcher`＝Windows venv launcher exe 把 Python 路径编码坏了**
-    - 现象：激活了 venv 后跑 `uvicorn app:app --reload`（或 `pip`/`pytest`），报 `Fatal error in launcher: Unable to create process using '...\?????\...'`。
-    - 根因：`.venv\Scripts\uvicorn.exe`（以及 pip.exe、pytest.exe 等）在 venv 创建时把 Python 绝对路径硬编码进去；路径含中文字符或 venv 被移过位置时，这个 exe 就坏掉了。
-    - **修**：用 `python -m uvicorn`（模块方式）完全绕过 launcher exe，效果一样，永久有效。同理：`python -m pip install …`、`python -m pytest`。
-    - **项目内所有地方统一用 `python -m <命令>` 的形式**，不要用裸命令 `uvicorn`/`pip`/`pytest`，避免同类问题。
-
-11. **`No module named 'langgraph'`＝venv 没激活，不是没装依赖**
-    - 现象：PowerShell 里 `python run_demo.py --llm` 报 `ModuleNotFoundError: No module named 'langgraph'`。
-    - 根因：直接敲 `python` 用的是系统 `C:\Python310\python.exe`，依赖装在 `.venv` 里，两者不是一个环境。
-    - 修：先激活 venv。**PowerShell 的激活脚本是 `Activate.ps1`**（不是 `activate`）：`.venv\Scripts\Activate.ps1`。
-      若报"未数字签名/禁止运行脚本"，当前窗口临时放行：`Set-ExecutionPolicy -Scope Process RemoteSigned`，再激活。激活成功前面会有 `(.venv)`。
-    - 懒人版：不激活，直接点名 `.venv\Scripts\python.exe run_demo.py`。README「快速开始」已补详细步骤。
-
----
-
-## 五、关键资料索引（本文件夹内的原始调研材料）
-
-| 文件 | 用途 |
+| 模块 | 事实状态 |
 | --- | --- |
-| `面向隐性广告识别的智能体（Agent）架构重构与多模态协同演进路径深度研究报告.md` | 转向 Agent 架构的主论证，目标架构来源 |
-| `大学生创新创业训练计划项目申报书-...doc` | 项目身份/团队/原始技术方案/预算/时间线 |
-| `2508.10143v1.pdf` | MCP 编排多智能体检测虚假信息（架构模板，F1=0.964） |
-| `2603.20351v1.pdf` | MANA：清华，移动端广告检测多模态智能体（**有开源代码**） |
-| `MemGPT Towards LLMs as Operating Systems.pdf` | 分层记忆设计基础 |
-| `基于一对多关系的多模态虚假新闻检测.pdf` / `多模态混合注意力机制的虚假新闻检测研究.pdf` | 图文一致性/跨模态融合技巧 |
-| [HKUDS/LightRAG](https://github.com/HKUDS/LightRAG) | P3 法规 RAG 的可选图谱+向量检索对照；以官方 API/Core 文档为学习入口 |
+| LangGraph骨架 | `Supervisor → NLP/视觉/行为 → Judge` 可运行 |
+| 文本能力 | 关键词唯一事实来源、6维权重、LLM/规则降级 |
+| 视觉基础 | YOLO11、EasyOCR、焦点分析、惰性依赖、缓存 |
+| 工具契约 | `ToolResult` 四态：`ok/degraded/skipped/error` |
+| P2工具舱 | 7/7 ready：文本意图、情绪、OCR、图文一致、商品/Logo、主题漂移、评论异常 |
+| 视觉复用 | `VisionContext` 按内容哈希缓存，一次推理供多个视觉工具复用 |
+| 工具运行边界 | `LocalToolGateway`、带运行元数据的`ToolResult`、超时/错误归一化与输入指纹 |
+| Capability Planner | 按模态、最低样本数、调用预算和单工具超时生成确定性计划 |
+| Function Calling | 工具白名单、参数校验、重复调用拒绝、有限重试、计划预算/单工具与总时间预算、独立计数和结构化轨迹 |
+| 证据/运行契约 | `EvidenceItem/EvidenceBundle/VerdictReport/RunMetadata`；覆盖、冲突、缺失要求和run event |
+| Detection MCP | 官方MCP Python SDK v1低层Server；7工具可经stdio发现/调用，并有Local/MCP一致性和错误测试 |
+| 法规RAG基础 | Chroma离线检索、确定性本地hash embedding、引用守卫和30题合成评测fixture |
+| CreatorShift基础 | 同creator且严格早于目标时间的HistoryView；mean/max/EMA池化和可解释shift结果 |
+| API | FastAPI `/health`、`/analyze` 起步接口 |
+| 默认回归 | 合并前P2工作区`142 passed, 2 skipped`；合并并恢复全部P2工作后`171 passed, 2 skipped` |
+| 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
 
----
+### 4.2 尚未完成
 
-## 六、技术栈速记
+- 当前Agent没有真正使用全部7个P2工具：NLP和视觉Agent仍包含重复/旧逻辑。
+- `AdCheckState` 仍以松散 `dict` 为主，没有接P1权威schema。
+- Behavior Agent仍是关键词占位；CreatorShift研究内核已存在，但尚未接入PostRecord、真实历史特征或Agent。
+- Judge仍使用固定 `0.6/0.25/0.15` 权重，没有证据充分性门、披露证据和校准。
+- Function Calling、运行追踪和Capability Plan已经独立可测，但尚未接入LangGraph主链。
+- Detection MCP Server已经可运行，但`MCPToolGateway`、主图MCP模式和本地回落尚未实现。
+- 法规RAG当前只有合成fixture和离线检索基础；尚无真实权威法规语料、知识MCP Server或Judge后报告接入。
+- A2A和平台URL适配尚未进入当前主代码。
+- Web首页只是API入口说明，不是研究工作台。
 
-LangGraph（StateGraph/节点/边/compile/invoke） · LangChain + langchain-openai（OpenAI 兼容端点，DeepSeek/Qwen/OpenAI 可互换，改 base_url+model 即可） · Pydantic 结构化输出 · FastAPI + uvicorn · LangSmith（轨迹/Dataset+Evaluation） · Chroma（既定起步向量库） · LightRAG（仅 P3 法规检索独立对照候选，未实施） · 评估：P/R/F1/AUC-ROC + 消融 + Cohen's κ。
+### 4.3 2026-07-26合并与独立模块验收
+
+- 合并前P2工作区基线：`142 passed, 2 skipped`。
+- 仅含已提交P2与最新P1的合并态：`87 passed, 2 skipped`。
+- 恢复全部合并前P2工作后的默认全量：`171 passed, 2 skipped`。
+- P1数据、契约、编排、MCP、RAG与CreatorShift重点测试：`109 passed`。
+- `pip check`：`No broken requirements found.`。
+- 两个P1资产校验入口均为 `VALIDATION PASSED`：30条内容、30条补充标注，标签分布为明广5、暗广12、非广8、`out_of_scope` 3、`uncertain` 2。
+- `compileall`、FastAPI健康入口导入调用、冲突标记扫描和工作区差异检查均通过。
+- 合并前stash与恢复后工作区均为67个路径，逐路径集合完全一致。
+- Detection MCP真实stdio测试覆盖：7工具发现、实际工具调用、未知/非法调用错误映射、Local/MCP关键字段一致。
+- RAG 30题合成基线：Recall@5 `0.65`；直接题 `0.90`；跨文档题 `0.40`；无答案误引率 `0`。这些数字只验证检索工程，不是法律知识质量结论。
+- CreatorShift测试覆盖跨creator、未来/同时间泄漏、重复帖子、历史不足、三种池化和可解释差异。
+- 独立P2模块仍未读取P1 Schema；本次“双基线同时通过”只证明合并未破坏两侧现有行为，不能替代正式Schema适配和端到端主链验收。
+
+## 5. P1数据资产事实
+
+远端最新P1成果已经合并到本地P2，但“资产合并”不等于M1验收完成。
+
+### 5.1 已有资产
+
+- `data/schema/data_schema_v1.json`：JSON Schema Draft 2020-12，当前权威字段标准。
+- `docs/data_schema.md`：schema交付说明。
+- `data/synthetic/simulated_posts_v1.json`：30条全合成内容、参考标注和补充标注，只用于冒烟与校验。
+- `scripts/data/validate_submission_assets.py`：标准库校验器。
+- `data-tooling/`：独立数据工具舱，包含Schema v1.0/v1.1、同一份30条合成fixture、采集、清洗/去重、人工标注、隐私扫描、κ计算、金标构建、按博主划分等脚本。
+- `data-tooling/validate_submission_assets.py`：合并时修复了迁移后仓库根目录计算错误，并新增真实子进程回归测试。
+- `implicit-ad-agent/scripts/data/`：P1同时保留的一份脚本副本；当前与`data-tooling/`存在重复维护风险。
+- 标注规范、补充标注schema、合规登记、数据卡和采集说明文档。
+
+### 5.2 未过关项
+
+- 最新P1最终树**没有跟踪**先前文档提到的598条微信公众号候选记录和6697个媒体文件；`implicit-ad-agent/data/` 当前没有已跟踪文件。旧文档中的这些数字是历史记录，不是当前仓库可验证资产。
+- 若这些候选资产仍需使用，必须从合规的外部备份恢复或重新采集，再运行迁移、隐私扫描和Schema校验；不能把Git历史中曾存在过当作当前可用。
+- 当前可验证数据只有30条合成fixture，远未达到M1候选池≥3000、金标≥1500的数量门槛。
+- 真实候选数据的格式、ID、provenance、privacy、media引用和条款状态当前均无在库证据可验收。
+- Schema v1.0与`data-tooling/schema/data_schema_v1_1.json`并存，尚未完成兼容评审与唯一运行版本冻结。
+- `data-tooling/`与`implicit-ad-agent/scripts/data/`存在脚本副本，继续并行修改会产生漂移。
+- 当前标注规范只有少量边界案例，未达到≥20条。
+- 尚无可确认的双人独立标注、最终κ≥0.6、仲裁包、金标v1和零泄漏划分报告。
+- 任何恢复或新采集的真实内容在进入Git公开范围前，都必须重新完成条款核验、脱敏、直接身份/联系方式/URL参数和疑似秘密扫描。
+
+### 5.3 Schema使用原则
+
+当前提交资产校验以`data/schema/data_schema_v1.json`为唯一权威来源。代码中的Pydantic模型、采集适配器和测试fixture都应从它映射，不再另造平行字段表。
+
+`data-tooling/schema/data_schema_v1_1.json`只能作为兼容变更候选；如需支持B站或新增字段，必须完成v1.1评审、changelog和适配测试，不得直接修改v1.0后仍声称版本不变。
+
+## 6. 目标数据流
+
+```text
+手工/JSON/URL
+   → PlatformAdapter
+   → PostRecord + CaptureStatus
+   → Capability Planner
+   → Function Calling
+   → LocalToolGateway 或 MCPToolGateway
+   → EvidenceBundle
+   → Evidence Adequacy Gate
+   → Commercial Intent
+   → Disclosure Evidence
+   → Calibrated Judge
+   → 明广/暗广/非广/需复核
+   → LegalRetriever（Chroma基线，LightRAG仅A/B候选）
+   → VerdictReport
+```
+
+CreatorShift只允许读取 `published_at < target_time` 的同一创作者历史。缺历史返回 `unavailable/skipped`，不能按0分参与Judge。
+
+## 7. 四人主责
+
+| 方向 | 主责 |
+| --- | --- |
+| L：Agent系统与服务 | Supervisor、Function Calling、Judge、A2A、FastAPI、集成 |
+| N：文本与知识层 | 文本工具、RAG、法规/平台规则、报告生成 |
+| V：多模态与协议工具 | 视觉工具、VisionContext、MCP Server、视觉证据 |
+| D：数据与研究评估 | P1收口、平台适配、CreatorShift数据、指标与论文 |
+
+Owner负责交付，Reviewer必须来自另一方向。共享契约由L维护，但字段变更必须经数据Owner和至少一个工具Owner评审。
+
+## 8. 接手后的执行顺序
+
+1. 先审阅合并提交`98cb599`和当前工作区；确认无误后再删除`codex-pre-p1-merge-2026-07-26` stash。
+2. 将现有未提交P2工作按契约、编排/Function Calling、MCP、RAG、CreatorShift和文档拆成独立可Review提交，不要把二进制文档或根目录临时Schema误混进代码提交。
+3. 决定`data-tooling/`与`implicit-ad-agent/scripts/data/`的唯一维护来源；在决定前不要同时修改两份脚本。
+4. 以P1 v1.0 Schema映射并冻结 `PostRecord / CaptureStatus`，复核现有Evidence/Verdict运行契约。
+5. 为现有7工具增加正式EvidenceAdapter，将NLP/视觉Agent切到ToolGateway与现有Function Calling。
+6. 接入Evidence Adequacy Gate、DisclosureEvidence和新Judge，再重构LangGraph主链。
+7. 将现有Detection MCP、法规RAG和CreatorShift内核分别接到统一分析服务；保持local路径为默认和降级实现。
+8. 从合规外部来源恢复或重新建立真实候选池，完成迁移、隐私扫描、平台补采、双标、κ、仲裁、金标与零泄漏划分。
+9. M1与M2.5通过后再启动真实法规语料、知识MCP、A2A和网页工作台的端到端验收。
+
+文件级细节和短期验收见 `docs/现有代码修改大纲.md`。
+
+## 9. 常用验证命令
+
+```powershell
+cd implicit-ad-agent
+
+# 安装基础依赖与本轮可选模块
+.\.venv\Scripts\python.exe -m pip install -e ".[mcp,rag]"
+
+# 默认零网络回归
+.\.venv\Scripts\python.exe -m pytest -q
+
+# P1数据与本轮重点模块
+.\.venv\Scripts\python.exe -m pytest tests\data tests\contracts tests\orchestration tests\protocols\mcp tests\rag tests\creator_shift -q
+
+# Detection MCP Server（stdio）
+.\.venv\Scripts\python.exe -m impad.protocols.mcp.detection_server
+
+# 真实视觉（显式opt-in）
+.\.venv\Scripts\python.exe -m pytest -m vision_integration -q
+
+# 固定工具演示
+.\.venv\Scripts\python.exe run_tools_demo.py
+
+# 当前API
+.\.venv\Scripts\python.exe -m uvicorn app:app --reload
+```
+
+在仓库根目录运行两个P1零Key校验入口：
+
+```powershell
+.\implicit-ad-agent\.venv\Scripts\python.exe scripts\data\validate_submission_assets.py
+.\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
+```
+
+当前预期：全量`171 passed, 2 skipped`，重点模块`109 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验与P2默认回归。
+
+## 10. 不要重踩的坑
+
+- Windows中文路径下优先使用 `python -m ...` 或显式 `.venv\Scripts\python.exe`，不要依赖损坏的launcher exe。
+- 中文文件用UTF-8读取和写入。
+- 默认测试不得读取真实API Key、联网或加载真实视觉模型。
+- `json_mode + 英文字段名 + Pydantic校验` 是国产OpenAI兼容端点的现有稳定路径；Function Calling只用于工具选择，不等于必须改掉最终结构化输出策略。
+- 工具跳过、图片缺失、历史不足不是负向证据。
+- RAG无可靠检索结果时返回空引用，不得补写条款号。
+- 当前RAG语料是明确标记的合成测试fixture，不得在报告或论文中当作真实法规评测。
+- `mcp`与`chromadb`是可选依赖；契约层不得因未安装可选依赖而无法导入。
+- CreatorShift当前输出是简单历史基线证据，不是校准概率，也不能直接决定暗广。
+- A2A必须是独立Agent服务间的真实任务交换；同一进程内函数互调不能算A2A验收。
+- 不要继续引用“仓库现有598条候选和6697个媒体”作为当前事实；最新P1树已不包含这些资产。
+- 不要只改`data-tooling/`或`implicit-ad-agent/scripts/data/`其中一份后假设另一份会自动同步。
+- 不把真实用户名、头像、手机号、群二维码、精确URL参数、密钥或内部地址提交到公开仓库。
+- 不使用测试集调Prompt、关键词、阈值或CreatorShift窗口。
+- 当前工作区有未提交修改，禁止 `git reset --hard`、覆盖式checkout或批量清理。
+
+## 11. 文档职责
+
+- `README.md`：面向新开发者和最终开源用户的入口。
+- `HANDOFF.md`：当前事实、分支、风险和下一步。
+- `docs/隐性广告识别项目_说明书.md`：架构、模块、数据流、错误处理、评估与边界。
+- `docs/隐性广告识别项目_分阶段计划表.md`：日期、Owner、里程碑和降级决策。
+- `docs/现有代码修改大纲.md`：当前文件如何迁移、P1如何衔接及短期代码顺序。
+
+新事实优先更新HANDOFF；稳定设计更新说明书；日期与Owner变化更新阶段表；公开使用方法更新README。
