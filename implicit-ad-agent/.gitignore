@@ -2,7 +2,10 @@
 .env
 .venv/
 venv/
-
+/文献/
+/资料/
+/data/run_outputs/v2_0726/
+/data/media/
 # Python
 __pycache__/
 *.pyc
@@ -19,5 +22,23 @@ data/raw/
 .idea/
 .vscode/
 
-#资料
+# 资料
 .资料/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Jupyter
+*.ipynb_checkpoints/
+
+# 日志
+*.log
+
+#html
+*.html
+/data/run_outputs/tmp_1784556667/
+
+*.zip
+*.7z
+/data/run_outputs/v2_0726_bs4/
