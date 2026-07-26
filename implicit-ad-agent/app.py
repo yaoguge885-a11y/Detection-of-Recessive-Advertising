@@ -3,8 +3,7 @@
 本地启动：
     uvicorn app:app --reload
 然后浏览器打开 http://127.0.0.1:8000/docs 直接在网页上试。
-注意：/analyze 用的是 LLM 图（graph.py），需先配好 .env。
-（想零成本先跑通，把下面 import 改成 impad.hello_graph 即可。）
+注意：/analyze 使用确定性 P2.5 图（graph.py），默认不需要 Key 或网络。
 """
 from __future__ import annotations
 from fastapi import FastAPI

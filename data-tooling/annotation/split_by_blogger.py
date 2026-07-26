@@ -46,63 +46,87 @@ def write_ids(post_ids: List[str], path: Path) -> None:
 
 
 def build_split_groups(records: List[Dict]) -> Dict[str, List[str]]:
-    """构建划分组，以 blogger_id 为最小分组，同时考虑 content_group_id 约束。
-    
-    逻辑：
-    1. 首先按 blogger_id 建组
-    2. 收集所有含 content_group_id 的帖子
-    3. 将同一 content_group_id 的帖子强制放入同一组（取第一个出现的 blogger_id 的组）
-    4. 合并 blogger 组（同 content_group 的帖子合并到同一 blogger 组）
-    
-    Returns: {group_key: [post_id, ...]}
-    """
-    # Step 1: 按 blogger_id 分组
-    blogger_groups: Dict[str, List[str]] = defaultdict(list)
+    """Build creator/content-group connected components for leakage-safe splits."""
+    parent: Dict[str, str] = {}
+
+    def find(node: str) -> str:
+        parent.setdefault(node, node)
+        if parent[node] != node:
+            parent[node] = find(parent[node])
+        return parent[node]
+
+    def union(left: str, right: str) -> None:
+        left_root = find(left)
+        right_root = find(right)
+        if left_root != right_root:
+            parent[right_root] = left_root
+
     for record in records:
-        bid = record.get("blogger_id", "unknown")
-        pid = record.get("post_id", "")
-        if pid:
-            blogger_groups[bid].append(pid)
+        post_id = str(record.get("post_id", ""))
+        if not post_id:
+            continue
+        creator_node = f"creator:{_creator_key(record, post_id)}"
+        find(creator_node)
+        content_group = record.get("content_group_id")
+        if content_group:
+            union(creator_node, f"content:{content_group}")
 
-    # Step 2: 收集 content_group 映射
-    content_groups: Dict[str, List[str]] = defaultdict(list)
-    pid_to_content_group: Dict[str, str] = {}
+    groups: Dict[str, List[str]] = defaultdict(list)
     for record in records:
-        cg = record.get("content_group_id")
-        pid = record.get("post_id", "")
-        if cg and pid:
-            content_groups[cg].append(pid)
-            pid_to_content_group[pid] = cg
+        post_id = str(record.get("post_id", ""))
+        if not post_id:
+            continue
+        creator_node = f"creator:{_creator_key(record, post_id)}"
+        groups[find(creator_node)].append(post_id)
 
-    # Step 3: 将同 content_group 的帖子分配到同一个 blogger 组
-    # 找到每个 content_group 中第一个帖子的 blogger_id，将整组帖子归入该 blogger 组
-    pid_to_blogger: Dict[str, str] = {}
-    for bid, pids in blogger_groups.items():
-        for pid in pids:
-            pid_to_blogger[pid] = bid
+    return {
+        group_key: sorted(post_ids)
+        for group_key, post_ids in sorted(groups.items())
+    }
 
-    # 合并：对于每个 content_group，找到"主宰 blogger 组"并合并
-    merged_blogger_groups: Dict[str, set] = {bid: set(pids) for bid, pids in blogger_groups.items()}
-    cg_assignments: Dict[str, str] = {}  # cg → master_blogger
 
-    for cg, pids in content_groups.items():
-        # 找到该 content_group 中最常见的 blogger
-        blogger_votes = defaultdict(int)
-        for pid in pids:
-            bid = pid_to_blogger.get(pid, "unknown")
-            blogger_votes[bid] += 1
-        if blogger_votes:
-            master_blogger = max(blogger_votes, key=blogger_votes.get)
-            cg_assignments[cg] = master_blogger
-            # 将同 content_group 的帖子从其他 blogger 组移入 master 组
-            for pid in pids:
-                orig_bid = pid_to_blogger.get(pid, "unknown")
-                if orig_bid != master_blogger and orig_bid in merged_blogger_groups:
-                    merged_blogger_groups[orig_bid].discard(pid)
-                merged_blogger_groups[master_blogger].add(pid)
+def _creator_key(record: Dict, post_id: str) -> str:
+    creator = (
+        record.get("blogger_id")
+        or record.get("creator_id_hash")
+        or record.get("creator_id")
+    )
+    return str(creator) if creator else f"missing:{post_id}"
 
-    # 转回 list
-    return {bid: list(pids) for bid, pids in merged_blogger_groups.items()}
+
+def validate_split_leakage(
+    records: List[Dict],
+    assignments: Dict[str, List[str]],
+) -> Dict[str, int]:
+    """Count post, creator, and near-duplicate groups spanning split names."""
+    post_splits: Dict[str, set] = defaultdict(set)
+    for split_name, post_ids in assignments.items():
+        for post_id in post_ids:
+            post_splits[str(post_id)].add(split_name)
+
+    creator_splits: Dict[str, set] = defaultdict(set)
+    content_group_splits: Dict[str, set] = defaultdict(set)
+    for record in records:
+        post_id = str(record.get("post_id", ""))
+        for split_name in post_splits.get(post_id, set()):
+            creator_splits[_creator_key(record, post_id)].add(split_name)
+            content_group = record.get("content_group_id")
+            if content_group:
+                content_group_splits[str(content_group)].add(split_name)
+
+    post_leakage = sum(len(splits) > 1 for splits in post_splits.values())
+    creator_leakage = sum(
+        len(splits) > 1 for splits in creator_splits.values()
+    )
+    content_group_leakage = sum(
+        len(splits) > 1 for splits in content_group_splits.values()
+    )
+    return {
+        "post_leakage_count": post_leakage,
+        "creator_leakage_count": creator_leakage,
+        "content_group_leakage_count": content_group_leakage,
+        "near_duplicate_leakage_count": content_group_leakage,
+    }
 
 
 def split_groups(
@@ -132,10 +156,13 @@ def split_groups(
             to_assign = "train"
         else:
             deviations = {
-                key: (current[key] + (len(post_ids) if key == "train" else 0)) / max(total, 1) - target[key]
+                key: abs(
+                    (current[key] + len(post_ids)) / max(total, 1)
+                    - target[key]
+                )
                 for key in assignments
             }
-            to_assign = min(deviations, key=lambda k: deviations[k])
+            to_assign = min(deviations, key=deviations.get)
         
         assignments[to_assign].extend(post_ids)
 
@@ -176,21 +203,9 @@ def main(input_path: str, train_path: str, dev_path: str, test_path: str,
     print(f"   dev:   {stats['dev_posts']} ({stats['dev_pct']}%)")
     print(f"   test:  {stats['test_posts']} ({stats['test_pct']}%)")
 
-    # 泄漏检查
-    train_ids = set(splits["train"])
-    dev_ids = set(splits["dev"])
-    test_ids = set(splits["test"])
-    train_dev_overlap = train_ids & dev_ids
-    train_test_overlap = train_ids & test_ids
-    dev_test_overlap = dev_ids & test_ids
-    if train_dev_overlap or train_test_overlap or dev_test_overlap:
-        print(f"\n⚠️  泄漏警告:")
-        if train_dev_overlap:
-            print(f"   train ∩ dev: {len(train_dev_overlap)}")
-        if train_test_overlap:
-            print(f"   train ∩ test: {len(train_test_overlap)}")
-        if dev_test_overlap:
-            print(f"   dev ∩ test: {len(dev_test_overlap)}")
+    leakage = validate_split_leakage(records, splits)
+    if any(leakage.values()):
+        print(f"\n⚠️  泄漏警告: {leakage}")
 
     # 保存报告
     if report_path:
@@ -200,11 +215,7 @@ def main(input_path: str, train_path: str, dev_path: str, test_path: str,
             **stats,
             "content_group_constrained_posts": cg_count,
             "blogger_groups": len(groups),
-            "leakage": {
-                "train_dev_overlap": len(train_dev_overlap),
-                "train_test_overlap": len(train_test_overlap),
-                "dev_test_overlap": len(dev_test_overlap),
-            },
+            **leakage,
             "seed": seed,
         }
         with rp.open("w", encoding="utf-8") as f:

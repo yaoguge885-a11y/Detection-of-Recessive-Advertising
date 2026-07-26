@@ -14,24 +14,70 @@ v1.1 改进：
 import json
 import re
 import math
+import sys
 from collections import Counter
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+
+from jsonschema import Draft202012Validator, FormatChecker
+
+
+FORMAT_CHECKER = FormatChecker()
+
+
+@FORMAT_CHECKER.checks("date-time", raises=(TypeError, ValueError))
+def _is_rfc3339_datetime(value: object) -> bool:
+    if not isinstance(value, str):
+        return True
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+
+
+@FORMAT_CHECKER.checks("date", raises=(TypeError, ValueError))
+def _is_iso_date(value: object) -> bool:
+    if not isinstance(value, str):
+        return True
+    if len(value) != 10:
+        return False
+    date.fromisoformat(value)
+    return True
 
 
 # ═══════════════════════════════════════════════════════════════
 # Schema 加载
 # ═══════════════════════════════════════════════════════════════
 
-def load_authoritative_schema(project_root: Path, version: str = "1.1") -> Dict:
+def resolve_schema_path(
+    project_root: Path,
+    version: str = "1.0",
+    explicit_path: Optional[Path] = None,
+) -> Path:
+    """Resolve the schema in either the repository or standalone tool cabin."""
+    if explicit_path is not None:
+        path = explicit_path if explicit_path.is_absolute() else project_root / explicit_path
+        if path.is_file():
+            return path
+        raise FileNotFoundError(f"Schema file not found: {path}")
+
+    filename = "data_schema_v1.json" if version == "1.0" else "data_schema_v1_1.json"
+    candidates = (
+        project_root / "data" / "schema" / filename,
+        project_root / "data-tooling" / "schema" / filename,
+    )
+    for path in candidates:
+        if path.is_file():
+            return path
+    raise FileNotFoundError(f"Schema file not found for version {version}")
+
+
+def load_authoritative_schema(
+    project_root: Path,
+    version: str = "1.0",
+    explicit_path: Optional[Path] = None,
+) -> Dict:
     """从权威 schema 文件加载 schema 定义。"""
-    schema_map = {
-        "1.0": "data/schema/data_schema_v1.json",
-        "1.1": "data/schema/data_schema_v1_1.json",
-    }
-    schema_path = project_root / schema_map.get(version, schema_map["1.1"])
-    if not schema_path.exists():
-        raise FileNotFoundError(f"Schema file not found: {schema_path}")
+    schema_path = resolve_schema_path(project_root, version, explicit_path)
     with open(schema_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -181,80 +227,15 @@ def scan_sensitive_content(record: Dict) -> List[Dict[str, str]]:
 # ═══════════════════════════════════════════════════════════════
 
 def validate_record(record: Dict[str, Any], schema: Dict) -> List[str]:
-    """根据权威 schema 校验单条记录。"""
+    """Validate one complete record with the authoritative Draft 2020-12 schema."""
+    validator = Draft202012Validator(schema, format_checker=FORMAT_CHECKER)
     errors: List[str] = []
-    pid = record.get("post_id", "?")
-
-    required_fields = get_required_fields(schema)
-    valid_platforms = get_platform_enum(schema)
-    all_properties = get_property_names(schema)
-
-    # 1. 必填字段存在性
-    for field in required_fields:
-        if field not in record:
-            errors.append(f"missing required field: {field}")
-
-    # 2. post_id 格式
-    if "post_id" in record:
-        if not re.match(r"^post_[A-Za-z0-9_-]+$", str(record["post_id"])):
-            errors.append(f"post_id format invalid: {record['post_id']} (expected ^post_[A-Za-z0-9_-]+$)")
-
-    # 3. platform 枚举校验
-    if "platform" in record and valid_platforms:
-        if record["platform"] not in valid_platforms:
-            errors.append(f"platform '{record['platform']}' not in {valid_platforms}")
-
-    # 4. blogger_id 格式
-    if "blogger_id" in record:
-        bid = str(record.get("blogger_id", ""))
-        if not re.match(r"^blogger_[A-Za-z0-9_-]+$", bid):
-            errors.append(f"blogger_id format invalid: {bid}")
-
-    # 5. 类型校验
-    if "media" in record and not isinstance(record["media"], list):
-        errors.append("media must be a list")
-    if "comments" in record and not isinstance(record["comments"], list):
-        errors.append("comments must be a list")
-    if "blogger_history_refs" in record and not isinstance(record["blogger_history_refs"], list):
-        errors.append("blogger_history_refs must be a list")
-
-    # 6. media 内部结构校验（v1.0/v1.1 格式）
-    for i, m in enumerate(record.get("media", [])):
-        if not isinstance(m, dict):
-            errors.append(f"media[{i}] must be an object")
-            continue
-        for f in ("media_id", "type", "ref"):
-            if f not in m:
-                errors.append(f"media[{i}] missing {f}")
-
-    # 7. provenance 内部结构
-    provenance = record.get("provenance", {})
-    if isinstance(provenance, dict):
-        for f in ("source_ref_hash", "collected_at", "collector", "terms_checked_at"):
-            if f not in provenance:
-                errors.append(f"provenance missing {f}")
-
-    # 8. privacy 内部结构
-    privacy = record.get("privacy", {})
-    if isinstance(privacy, dict):
-        for f in ("anonymized", "contains_sensitive_data"):
-            if f not in privacy:
-                errors.append(f"privacy missing {f}")
-
-    # 9. comments 内部结构（如有）
-    for i, c in enumerate(record.get("comments", [])):
-        if not isinstance(c, dict):
-            errors.append(f"comments[{i}] must be an object")
-            continue
-        for f in ("comment_id", "author_id", "text", "like_count", "is_pinned"):
-            if f not in c:
-                errors.append(f"comments[{i}] missing {f}")
-
-    # 10. schema_version 一致性
-    schema_version = schema.get("$defs", {}).get("content_record", {}).get("properties", {}).get("schema_version", {}).get("const", "")
-    if schema_version and record.get("schema_version") != schema_version:
-        errors.append(f"schema_version mismatch: record={record.get('schema_version')}, expected={schema_version}")
-
+    for error in sorted(
+        validator.iter_errors(record),
+        key=lambda item: tuple(str(part) for part in item.absolute_path),
+    ):
+        location = "/".join(str(part) for part in error.absolute_path) or "<root>"
+        errors.append(f"{error.validator}: {location}: {error.message}")
     return errors
 
 
@@ -269,15 +250,11 @@ def load_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
             idx += 1
         if idx >= content_len:
             break
-        try:
-            obj, end = decoder.raw_decode(raw_text, idx)
-            yield obj
-            idx = end
-        except json.JSONDecodeError:
-            next_brace = raw_text.find("{", idx + 1)
-            if next_brace == -1:
-                break
-            idx = next_brace
+        obj, end = decoder.raw_decode(raw_text, idx)
+        if not isinstance(obj, dict):
+            raise TypeError(f"record must be an object at position {idx}")
+        yield obj
+        idx = end
 
 
 def write_jsonl(records: Iterable[Dict], path: Path) -> None:
@@ -287,9 +264,29 @@ def write_jsonl(records: Iterable[Dict], path: Path) -> None:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
-def main(path: str, target_schema: str = "1.1", privacy_scan: bool = False,
-         output_log: Optional[str] = None) -> int:
-    project_root = Path(__file__).resolve().parent.parent.parent
+def _repository_root() -> Path:
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "data" / "schema").is_dir() and (parent / "data-tooling").is_dir():
+            return parent
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def _configure_console_output() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+def main(
+    path: str,
+    target_schema: str = "1.0",
+    privacy_scan: bool = False,
+    report_path: Optional[str] = None,
+    schema_path: Optional[str] = None,
+) -> int:
+    _configure_console_output()
+    project_root = _repository_root()
     path_obj = Path(path)
     if not path_obj.is_absolute():
         path_obj = project_root / path
@@ -299,14 +296,14 @@ def main(path: str, target_schema: str = "1.1", privacy_scan: bool = False,
         return 1
 
     # 加载权威 schema
-    schema = load_authoritative_schema(project_root, target_schema)
+    explicit_schema = Path(schema_path) if schema_path else None
+    schema = load_authoritative_schema(project_root, target_schema, explicit_schema)
     print(f"📋 使用 schema: data_schema_v{target_schema}.json")
 
     total = 0
     invalid = 0
-    warnings = 0
     privacy_findings_total = 0
-    valid_records = []
+    validator_counts: Counter[str] = Counter()
 
     for record in load_jsonl(path_obj):
         total += 1
@@ -322,16 +319,14 @@ def main(path: str, target_schema: str = "1.1", privacy_scan: bool = False,
         if errors or privacy_findings:
             if errors:
                 invalid += 1
-                print(f"\n[{record.get('post_id', 'unknown')}] ❌ errors:")
+                print(f"\n[record {total - 1}] ❌ errors:")
                 for error in errors:
+                    validator_counts[error.split(":", 1)[0]] += 1
                     print(f"  - {error}")
             if privacy_findings:
                 print(f"  🔒 隐私警告:")
                 for pf in privacy_findings:
                     print(f"    [{pf['severity']}] {pf['field']}: {pf['type']} ({pf['match']})")
-        else:
-            valid_records.append(record)
-
     # 摘要
     print(f"\n{'='*60}")
     print(f"📊 校验完成: {path_obj.name}")
@@ -343,18 +338,19 @@ def main(path: str, target_schema: str = "1.1", privacy_scan: bool = False,
     print(f"{'='*60}")
 
     # 保存校验日志
-    if output_log:
-        log_path = Path(output_log)
+    if report_path:
+        log_path = Path(report_path)
         if not log_path.is_absolute():
-            log_path = project_root / output_log
+            log_path = project_root / report_path
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8") as f:
             json.dump({
                 "validated_at": __import__("datetime").datetime.now().isoformat(),
                 "schema_version": target_schema,
-                "total": total,
-                "valid": total - invalid,
-                "invalid": invalid,
+                "total_records": total,
+                "valid_records": total - invalid,
+                "invalid_records": invalid,
+                "validator_counts": dict(sorted(validator_counts.items())),
                 "privacy_findings": privacy_findings_total if privacy_scan else "disabled",
             }, f, ensure_ascii=False, indent=2)
         print(f"📝 校验日志: {log_path}")
@@ -363,16 +359,23 @@ def main(path: str, target_schema: str = "1.1", privacy_scan: bool = False,
 
 
 if __name__ == "__main__":
-    import sys
     import argparse
     parser = argparse.ArgumentParser(description="Schema 校验器（读取权威 schema）")
     parser.add_argument("input", nargs="?", default="data/interim/candidates_v1.jsonl",
                         help="待校验的 JSONL 文件路径")
-    parser.add_argument("--target-schema", default="1.1", choices=["1.0", "1.1"],
+    parser.add_argument("--target-schema", default="1.0", choices=["1.0", "1.1"],
                         help="目标 schema 版本")
+    parser.add_argument("--schema", default=None,
+                        help="显式权威 schema 文件路径")
     parser.add_argument("--privacy-scan", action="store_true",
                         help="启用敏感信息扫描")
-    parser.add_argument("--output-log", default=None,
-                        help="校验日志输出路径")
+    parser.add_argument("--report", "--output-log", dest="report", default=None,
+                        help="聚合校验报告输出路径")
     args = parser.parse_args()
-    sys.exit(main(args.input, args.target_schema, args.privacy_scan, args.output_log))
+    sys.exit(main(
+        args.input,
+        args.target_schema,
+        args.privacy_scan,
+        args.report,
+        args.schema,
+    ))

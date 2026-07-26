@@ -7,14 +7,14 @@ from datetime import datetime
 from typing import Literal
 
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from .contracts import ToolEvidence, ToolResult
+from .contracts import StrictToolInput, ToolEvidence, ToolResult
 
 PRAISE = ("太好用了", "已下单", "求链接", "在哪里买", "必须买", "效果真好", "推荐")
 
 
-class CommentItem(BaseModel):
+class CommentItem(StrictToolInput):
     comment_id: str
     text: str
     created_at: str | None = None
@@ -23,7 +23,7 @@ class CommentItem(BaseModel):
     is_pinned: bool = False
 
 
-class CommentAnomalyInput(BaseModel):
+class CommentAnomalyInput(StrictToolInput):
     comments: list[CommentItem] = Field(default_factory=list)
 
 

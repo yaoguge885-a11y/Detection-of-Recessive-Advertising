@@ -49,10 +49,8 @@ def compute_sha256(file_path: Path) -> Optional[str]:
 
 
 def compute_phash(file_path: Path) -> Optional[str]:
-    """计算感知哈希（简化版：使用文件内容的 SHA-256 前 16 位作为代理）。
-    完整实现需要图像处理库（PIL + imagehash），此处提供占位。"""
-    sha = compute_sha256(file_path)
-    return sha[:16] if sha else None
+    """感知哈希尚无权威实现；不得用 SHA-256 截断值冒充。"""
+    return None
 
 
 def infer_media_type(ref: str) -> str:
@@ -119,26 +117,51 @@ def migrate_media(old_media: List[Dict], media_base: Path, skip_hash: bool = Fal
     return new_media
 
 
-def migrate_provenance(record: Dict) -> Dict:
+def migrate_provenance(record: Dict) -> Optional[Dict]:
     """从旧 _collected 字段迁移到 provenance。
-    无法确认的字段不伪造（填 null）。"""
-    collected = record.get("_collected", {})
+    无法确认必填事实时返回 None，由调用方拒绝该记录。"""
+    collected = record.get("_collected")
     if not isinstance(collected, dict):
-        collected = {}
+        return None
+
+    source_ref_hash = collected.get("source_ref_hash")
+    source_url = collected.get("source_url")
+    if not source_ref_hash and isinstance(source_url, str) and source_url:
+        source_ref_hash = hashlib.sha256(source_url.encode("utf-8")).hexdigest()
+
+    collected_at = collected.get("collected_at")
+    collector = collected.get("collector")
+    if not source_ref_hash or not collected_at or not collector:
+        return None
 
     return {
-        "source_ref_hash": collected.get("source_url", record.get("post_id", "")),
-        "collected_at": collected.get("collected_at") or datetime.now(CST).isoformat(),
-        "collector": collected.get("collector", "P1_migration"),
-        "terms_checked_at": collected.get("terms_checked_at"),  # 未核验前为 null
+        "source_ref_hash": source_ref_hash,
+        "collected_at": collected_at,
+        "collector": collector,
+        "terms_checked_at": collected.get("terms_checked_at"),
     }
 
 
 def migrate_privacy(record: Dict) -> Dict:
-    """从旧记录推断隐私状态。"""
+    """未经人工审计时使用保守隐私状态。"""
     return {
-        "anonymized": True,  # 假定已通过原始采集脱敏
-        "contains_sensitive_data": False,  # 需要后续扫描确认
+        "anonymized": False,
+        "contains_sensitive_data": True,
+    }
+
+
+def build_migration_meta(record: Dict, status: str) -> Dict:
+    """生成旁路迁移元数据；该对象不得嵌入严格 content_record。"""
+    collected = record.get("_collected")
+    llm_needs_review = bool(
+        collected.get("llm_needs_review", False)
+        if isinstance(collected, dict)
+        else record.get("llm_needs_review", False)
+    )
+    return {
+        "original_post_id": record.get("post_id"),
+        "status": status,
+        "llm_needs_review": llm_needs_review,
     }
 
 
@@ -156,6 +179,10 @@ def migrate_record(
     """
     old_id = record.get("post_id", "")
     if not old_id:
+        return None, "rejected"
+
+    provenance = migrate_provenance(record)
+    if provenance is None:
         return None, "rejected"
 
     new_id = generate_stable_post_id(old_id, salt)
@@ -182,7 +209,7 @@ def migrate_record(
         "media": migrate_media(record.get("media", []), media_base, skip_hash),
         "comments": record.get("comments", []),
         "blogger_history_refs": record.get("blogger_history_refs", []),
-        "provenance": migrate_provenance(record),
+        "provenance": provenance,
         "privacy": migrate_privacy(record),
     }
 
@@ -195,12 +222,6 @@ def migrate_record(
     llm_needs_review = record.get("llm_needs_review", False)
     if "_collected" in record and isinstance(record.get("_collected"), dict):
         llm_needs_review = record["_collected"].get("llm_needs_review", llm_needs_review)
-
-    new_record["_migration_meta"] = {
-        "original_post_id": old_id,
-        "migrated_at": datetime.now(CST).isoformat(),
-        "llm_needs_review": bool(llm_needs_review),
-    }
 
     # 判定状态
     status = "success"
@@ -292,8 +313,23 @@ def write_jsonl(records: List[Dict], path: Path) -> None:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
-def main():
+def _resolve_path(project_root: Path, value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else project_root / path
+
+
+def _configure_console_output() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+def main() -> int:
+    _configure_console_output()
     parser = argparse.ArgumentParser(description="P1 候选数据迁移到 v1.0/v1.1 schema")
+    parser.add_argument("--input-file", default=None,
+                        help="单个旧格式 JSONL/多对象流；设置后不扫描目录")
     parser.add_argument("--input-dir", default="data/annotations",
                         help="包含旧格式 JSON 标注/帖子文件的目录")
     parser.add_argument("--jsonl-dir", default="data/run_outputs",
@@ -302,9 +338,11 @@ def main():
                         help="输出规范化 JSONL 文件路径")
     parser.add_argument("--id-map", default="data/interim/id_mapping_v1.json",
                         help="ID 映射表输出路径")
+    parser.add_argument("--report", default=None,
+                        help="旁路迁移报告输出路径")
     parser.add_argument("--media-base", default="data",
                         help="媒体文件基础目录（用于计算 sha256/phash）")
-    parser.add_argument("--target-schema", default="1.1", choices=["1.0", "1.1"],
+    parser.add_argument("--target-schema", default="1.0", choices=["1.0", "1.1"],
                         help="目标 schema 版本")
     parser.add_argument("--salt", default="p1_migration_v1",
                         help="post_id 生成盐值")
@@ -313,28 +351,39 @@ def main():
     args = parser.parse_args()
 
     project_root = Path(__file__).resolve().parent.parent.parent
-    input_dir = project_root / args.input_dir
-    jsonl_dir = project_root / args.jsonl_dir
-    output_path = project_root / args.output
-    id_map_path = project_root / args.id_map
-    media_base = project_root / args.media_base
+    input_dir = _resolve_path(project_root, args.input_dir)
+    jsonl_dir = _resolve_path(project_root, args.jsonl_dir)
+    output_path = _resolve_path(project_root, args.output)
+    id_map_path = _resolve_path(project_root, args.id_map)
+    media_base = _resolve_path(project_root, args.media_base)
+    report_path = (
+        _resolve_path(project_root, args.report)
+        if args.report
+        else output_path.parent / f"{output_path.stem}_stats.json"
+    )
 
     # 加载所有候选记录
     print(f"📂 加载候选记录...")
-    print(f"   annotations dir: {input_dir}")
-    print(f"   jsonl dir: {jsonl_dir}")
-    candidates = load_all_candidates(input_dir, jsonl_dir)
+    if args.input_file:
+        input_path = _resolve_path(project_root, args.input_file)
+        candidates = load_jsonl(input_path)
+        print(f"   input file: {input_path}")
+    else:
+        print(f"   annotations dir: {input_dir}")
+        print(f"   jsonl dir: {jsonl_dir}")
+        candidates = load_all_candidates(input_dir, jsonl_dir)
     print(f"   共加载 {len(candidates)} 条候选记录")
 
     if not candidates:
         print("⚠️  未找到任何候选记录，退出")
-        return
+        return 1
 
     # 迁移
     id_mapping: Dict[str, str] = {}
     migrated: List[Dict] = []
     stats = {"success": 0, "degraded": 0, "rejected": 0}
     field_missing: Dict[str, int] = {}
+    migration_meta: List[Dict] = []
 
     total = len(candidates)
     for i, record in enumerate(candidates):
@@ -344,6 +393,7 @@ def main():
             record, id_mapping, args.salt, media_base, args.target_schema, args.skip_media_hash
         )
         stats[status] += 1
+        migration_meta.append(build_migration_meta(record, status))
         if new_record:
             migrated.append(new_record)
     print()  # newline after progress
@@ -392,16 +442,22 @@ def main():
     print(f"   media.phash:    {media_missing_counts['phash']} 个媒体项为 null")
     print(f"   media.ocr_text: {media_missing_counts['ocr_text']} 个媒体项为 null")
 
-    # 保存统计信息
-    stats_path = output_path.parent / f"{output_path.stem}_stats.json"
-    with stats_path.open("w", encoding="utf-8") as f:
+    # 保存不含正文和明文来源的旁路报告
+    original_ids = [str(record.get("post_id")) for record in candidates if record.get("post_id")]
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    with report_path.open("w", encoding="utf-8") as f:
         json.dump({
             "total_loaded": len(candidates),
+            "unique_original_post_ids": len(set(original_ids)),
+            "duplicate_input_rows": len(original_ids) - len(set(original_ids)),
             "migrated": stats,
             "field_missing": field_missing,
             "media_missing": media_missing_counts,
+            "record_statuses": migration_meta,
         }, f, ensure_ascii=False, indent=2)
+    print(f"   迁移报告: {report_path}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

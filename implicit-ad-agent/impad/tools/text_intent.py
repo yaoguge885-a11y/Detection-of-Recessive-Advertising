@@ -4,14 +4,14 @@ from __future__ import annotations
 from typing import Literal
 
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from .contracts import ToolEvidence, ToolResult
+from .contracts import StrictToolInput, ToolEvidence, ToolResult
 from .keywords import (EXPLICIT_AD_MARKERS, SOFT_AD_SIGNALS, ad_pressure,
                        compute_keyword_weights, keyword_hits)
 
 
-class TextIntentInput(BaseModel):
+class TextIntentInput(StrictToolInput):
     text: str = Field(min_length=1)
     comments: list[str] = Field(default_factory=list)
     language: str = "zh"

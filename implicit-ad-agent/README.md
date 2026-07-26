@@ -58,12 +58,14 @@
 **当前骨架（已实现）**：
 
 ```
-START → Supervisor（按输入排专家队列：纯文本跳过视觉、无历史跳过行为）
-          → NLP 专家（LLM；未配 Key 自动降级为规则，零成本可跑）
-          → 视觉专家（YOLO11 物体检测 + OCR 抠图内文字回灌关键词 + 加权焦点；未装依赖自动降级）
-          → 行为专家（占位规则，P3 接 EMA+Chroma 记忆）
-        → Judge（按专家可靠度加权聚合 + 低置信反思质询） → END
+START → Supervisor（P1/手工输入归一化 + Capability Plan）
+          → NLP 工具组（文本意图、情绪曲线、评论异常）
+          → 视觉工具组（OCR、图文一致性、商品/Logo；无本地图时跳过）
+          → 行为工具组（严格时间安全的主题漂移）
+        → EvidenceBundle → 充分性门 → 确定性 Judge → END
 ```
+
+当前主图默认零 Key、零网络；`skipped/error/缺失`只记录能力边界，不当作负向证据。
 
 ---
 
@@ -126,9 +128,8 @@ python -m pip install -r requirements.txt
 # 4) 零成本跑通（不需要任何 Key）
 python run_demo.py
 
-# 5) 配好 .env 后，用真正的 LLM 跑（会在 LangSmith 出轨迹）
-cp .env.example .env                 # 然后填入 Key
-python run_demo.py --llm
+# 5) 运行确定性 P2.5 主图
+python run_demo.py --llm             # 兼容旧参数名；不读取 Key
 
 # 6) 起后端服务
 python -m uvicorn app:app --reload   # 打开 http://127.0.0.1:8000/docs
@@ -151,12 +152,9 @@ python -m uvicorn app:app --reload   # 打开 http://127.0.0.1:8000/docs
 
 ---
 
-## 看 LangSmith 轨迹
+## 查看当前运行轨迹
 
-1. 去 https://smith.langchain.com 注册，拿 API Key。
-2. 把 Key 填进 `.env`，确认 `LANGSMITH_TRACING=true`。
-3. 运行 `python run_demo.py --llm`。
-4. 打开 LangSmith → 项目 `implicit-ad-agent` → 点开最新一条 run。
+P2.5主图把`function_call_proposed/tool_started/tool_completed`等事件写入结构化`RunMetadata`与`run_events`，默认不上传LangSmith。P3若重新接入LLM和外部可观测平台，需继续遵守脱敏与零泄漏边界。
 
 ---
 
@@ -165,22 +163,25 @@ python -m uvicorn app:app --reload   # 打开 http://127.0.0.1:8000/docs
 | 路径 | 作用 |
 | --- | --- |
 | `impad/hello_graph.py` | 零 Key 的最小图（规则占位），验证环境与轨迹 |
-| `impad/graph.py` | 多智能体图的装配（只搭骨架，不写业务逻辑） |
-| `impad/agents/supervisor.py` | 主控调度：按输入决定派哪些专家 + 条件路由 |
-| `impad/agents/nlp_agent.py` | NLP 专家：LLM 判意图/话术，无 Key 自动降级规则 |
-| `impad/agents/vision_agent.py` | 视觉专家：物体检测 + OCR 抠图内文字回灌关键词 + 焦点；缺依赖自动降级 |
-| `impad/agents/behavior_agent.py` | 行为专家（占位规则，P3 接 EMA+Chroma） |
-| `impad/agents/judge.py` | 加权聚合投票 + 低置信反思质询 |
+| `impad/graph.py` | P2.5结构化证据主图装配 |
+| `impad/adapters/` | P1 Schema和手工/旧输入到PostRecord的适配 |
+| `impad/contracts/` | Post、采集、证据、判定和运行元数据契约 |
+| `impad/orchestration/` | Capability Planner、Restricted Function Calling、Gateway、证据适配和充分性门 |
+| `impad/agents/supervisor.py` | 输入归一化、能力规划、同一run初始化与条件路由 |
+| `impad/agents/nlp_agent.py` | 文本意图、情绪和评论工具组 |
+| `impad/agents/vision_agent.py` | OCR、图文一致性和商品/Logo工具组 |
+| `impad/agents/behavior_agent.py` | 时间安全的主题漂移工具组 |
+| `impad/agents/judge.py` | EvidenceBundle驱动的保守确定性判定 |
 | `impad/tools/keywords.py` | 广告信号关键词清单 + 6 维可解释特征 |
 | `impad/tools/vision.py` | YOLO11 + EasyOCR + 焦点（重依赖惰性导入） |
 | `impad/state.py` | 图的共享状态定义 |
 | `impad/llm.py` | 厂商无关 LLM 客户端（OpenAI 兼容端点） |
 | `impad/config.py` | 读取 `.env` 的集中配置 |
-| `app.py` | FastAPI，`POST /analyze`（返回含各专家投票） |
-| `run_demo.py` | 一键跑样本；`--image path` 带图分析 |
+| `app.py` | FastAPI，`POST /analyze`调用确定性P2.5主图 |
+| `run_demo.py` | 一键跑样本；`--llm`保留为主图兼容参数，`--image path`带图分析 |
 | `samples/` | 固定测试帖子 + `images/` 测试图 |
 | `requirements-vision.txt` | 视觉专家的可选重依赖（不装则视觉自动降级） |
-| `tests/` | 冒烟测试 + 多智能体路由/聚合/关键词特征/视觉降级测试（全部零 Key） |
+| `tests/` | 契约、适配、工具、路由、证据、充分性、Judge和视觉降级测试（默认零 Key/零网络） |
 | `docs/` | 项目文档（标注规范、合规登记、数据集卡片、Schema 等） |
 | `资料/` | 技术总览、P1 执行指南、Docs 目录总结 |
 | `scripts/data/` | 数据采集/清洗/校验/划分脚本 |

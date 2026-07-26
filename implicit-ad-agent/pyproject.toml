@@ -5,23 +5,23 @@ description = "融合多模态行为特征与文本推断的隐性广告识别 �
 requires-python = ">=3.10"
 dependencies = [
     "langgraph>=0.2",
+    "langchain>=0.3",
     "langchain-core>=0.3",
     "langchain-openai>=0.2",
     "langsmith>=0.1",
     "python-dotenv>=1.0",
     "pydantic>=2.6",
+    "jsonschema>=4.22,<5",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
 ]
 
 [project.optional-dependencies]
-# 爬虫/数据采集 (scripts/data/crawler/)
 crawler = [
     "requests>=2.31",
     "beautifulsoup4>=4.12",
     "playwright>=1.45",
 ]
-# 视觉/OCR (impad/tools/vision.py, scripts/data/annotation/)
 vision = [
     "ultralytics>=8.3",
     "easyocr>=1.7",
@@ -31,18 +31,35 @@ vision = [
     "torch>=2.0",
     "pytesseract>=0.3",
 ]
-# 标注工具 (scripts/data/annotation/)
 annotation = [
     "flet>=0.22",
     "openai>=1.0",
 ]
-# 测试
 test = [
     "pytest>=8.0",
 ]
-# 全部安装: pip install -e ".[crawler,vision,annotation,test]"
+mcp = [
+    "mcp>=1.27,<2",
+]
+rag = [
+    "chromadb>=1.1,<2",
+]
 all = [
-    "implicit-ad-agent[crawler,vision,annotation,test]",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "playwright>=1.45",
+    "ultralytics>=8.3",
+    "easyocr>=1.7",
+    "opencv-python>=4.9",
+    "Pillow>=10.0",
+    "numpy>=1.26",
+    "torch>=2.0",
+    "pytesseract>=0.3",
+    "flet>=0.22",
+    "openai>=1.0",
+    "pytest>=8.0",
+    "mcp>=1.27,<2",
+    "chromadb>=1.1,<2",
 ]
 
 # 让 `pytest` 能从项目根目录 import impad 包

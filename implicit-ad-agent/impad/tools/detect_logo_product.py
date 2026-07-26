@@ -5,9 +5,9 @@ import re
 from typing import Literal
 
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
-from .contracts import ToolEvidence, ToolResult
+from .contracts import StrictToolInput, ToolEvidence, ToolResult
 from .vision import commercial_objects
 from .vision_context import (
     VisionContext,
@@ -22,7 +22,7 @@ _SALES_ONLY = re.compile(
 )
 
 
-class DetectLogoProductInput(BaseModel):
+class DetectLogoProductInput(StrictToolInput):
     image_path: str
     vision_context: VisionContext | None = None
     min_confidence: float = Field(default=0.25, ge=0, le=1)

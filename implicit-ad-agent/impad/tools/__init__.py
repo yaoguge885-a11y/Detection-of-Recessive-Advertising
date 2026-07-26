@@ -3,7 +3,20 @@
 按《说明书》P2 逐步扩充；公共入口见 registry.py。
 """
 
-from .registry import TOOLS_V1, TOOL_READINESS
+from .registry import (
+    TOOLS_V1,
+    TOOL_READINESS,
+    TOOL_SPEC_BY_NAME,
+    TOOL_SPECS_V1,
+    ToolSpec,
+)
 from .vision_context import VisionContext
 
-__all__ = ["TOOLS_V1", "TOOL_READINESS", "VisionContext"]
+__all__ = [
+    "TOOLS_V1",
+    "TOOL_READINESS",
+    "TOOL_SPEC_BY_NAME",
+    "TOOL_SPECS_V1",
+    "ToolSpec",
+    "VisionContext",
+]

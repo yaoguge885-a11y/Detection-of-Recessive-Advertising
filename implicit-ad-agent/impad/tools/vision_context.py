@@ -11,9 +11,10 @@ import re
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from . import vision
+from .contracts import StrictToolInput
 
 
 _REMOTE_SOURCE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
@@ -24,7 +25,7 @@ class VisionDependencyError(RuntimeError):
     """Raised when the optional local vision stack is not installed."""
 
 
-class VisionObject(BaseModel):
+class VisionObject(StrictToolInput):
     class_name: str
     confidence: float = Field(ge=0, le=1)
     bbox: list[int] = Field(min_length=4, max_length=4)
@@ -32,20 +33,20 @@ class VisionObject(BaseModel):
     center: list[int] | None = Field(default=None, min_length=2, max_length=2)
 
 
-class VisionTextBlock(BaseModel):
+class VisionTextBlock(StrictToolInput):
     text: str
     confidence: float = Field(ge=0, le=1)
     bbox: list[int] = Field(min_length=4, max_length=4)
 
 
-class VisionFocus(BaseModel):
+class VisionFocus(StrictToolInput):
     focus_point: list[int] | None = Field(default=None, min_length=2, max_length=2)
     confidence: float = Field(default=0.0, ge=0, le=1)
     method: str = "unknown"
     num_objects: int = Field(default=0, ge=0)
 
 
-class VisionContext(BaseModel):
+class VisionContext(StrictToolInput):
     """Serializable result of one local image analysis pass."""
 
     image_id: str

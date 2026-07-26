@@ -1,7 +1,12 @@
 import json
 
 from impad.tools.contracts import ToolResult
-from impad.tools.registry import TOOLS_V1, TOOL_READINESS
+from impad.tools.registry import (
+    TOOLS_V1,
+    TOOL_READINESS,
+    TOOL_SPEC_BY_NAME,
+    TOOL_SPECS_V1,
+)
 from impad.tools.vision_context import VisionContext
 
 
@@ -17,6 +22,22 @@ def test_registry_tools_have_docs_and_input_schemas():
     for item in TOOLS_V1:
         assert item.description
         assert item.args_schema is not None
+
+
+def test_registry_exposes_complete_runtime_metadata():
+    assert len(TOOL_SPECS_V1) == 7
+    assert set(TOOL_SPEC_BY_NAME) == {spec.name for spec in TOOL_SPECS_V1}
+    for spec in TOOL_SPECS_V1:
+        assert spec.input_schema["type"] == "object"
+        assert spec.default_timeout_seconds > 0
+        assert spec.mcp_name.startswith("detection.")
+        assert spec.function_calling["function"]["parameters"] == spec.input_schema
+        assert spec.function_calling["function"]["name"] == spec.name
+
+
+def test_registry_declares_real_minimum_samples():
+    assert TOOL_SPEC_BY_NAME["topic_drift"].minimum_samples["history"] == 3
+    assert TOOL_SPEC_BY_NAME["comment_anomaly"].minimum_samples["comments"] == 5
 
 
 def test_registry_tools_invoke_with_minimal_serializable_examples():

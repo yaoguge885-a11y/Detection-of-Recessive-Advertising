@@ -4,9 +4,9 @@ from __future__ import annotations
 from typing import Literal
 
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from .contracts import ToolEvidence, ToolResult
+from .contracts import StrictToolInput, ToolEvidence, ToolResult
 from .keywords import URGENCY_WORDS
 
 POSITIVE = ("开心", "喜欢", "满意", "好用", "惊喜", "幸福", "赞")
@@ -14,13 +14,13 @@ NEGATIVE = ("难过", "失望", "生气", "糟糕", "讨厌", "焦虑", "害怕"
 ANXIETY = ("焦虑", "害怕", "后悔", "错过", "容貌", "衰老", "健康", "脱发")
 
 
-class HistoryText(BaseModel):
+class HistoryText(StrictToolInput):
     post_id: str
     text: str
     published_at: str | None = None
 
 
-class SentimentCurveInput(BaseModel):
+class SentimentCurveInput(StrictToolInput):
     text: str = Field(min_length=1)
     history: list[HistoryText] = Field(default_factory=list)
 

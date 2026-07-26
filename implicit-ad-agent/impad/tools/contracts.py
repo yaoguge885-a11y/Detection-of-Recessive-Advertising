@@ -3,10 +3,17 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 ToolStatus = Literal["ok", "degraded", "skipped", "error"]
+ToolLimitationKind = Literal["capture", "evidence"]
+
+
+class StrictToolInput(BaseModel):
+    """Reject fields outside a tool's declared argument contract."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class ToolEvidence(BaseModel):
@@ -22,6 +29,15 @@ class ToolEvidence(BaseModel):
     comment_ids: list[str] = Field(default_factory=list)
 
 
+class ToolLimitation(BaseModel):
+    """A structured reason why capture or evidence is incomplete."""
+
+    kind: ToolLimitationKind
+    code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    source: str | None = None
+
+
 class ToolResult(BaseModel):
     """Common envelope used by every P2 tool result."""
 
@@ -33,4 +49,11 @@ class ToolResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     payload: dict[str, Any] = Field(default_factory=dict)
     model_info: str | None = None
+    call_id: str | None = None
+    run_id: str | None = None
+    latency_ms: int | None = Field(default=None, ge=0)
+    error_code: str | None = None
+    retryable: bool | None = None
+    input_fingerprint: str | None = None
+    limitations: list[ToolLimitation] = Field(default_factory=list)
 

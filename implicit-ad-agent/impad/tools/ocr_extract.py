@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Literal
 
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
-from .contracts import ToolEvidence, ToolResult
+from .contracts import StrictToolInput, ToolEvidence, ToolResult
 from .vision_context import (
     VisionContext,
     VisionDependencyError,
@@ -25,7 +25,7 @@ _SALES_PATTERNS = {
 }
 
 
-class OCRExtractInput(BaseModel):
+class OCRExtractInput(StrictToolInput):
     image_path: str
     vision_context: VisionContext | None = None
     min_confidence: float = Field(default=0.3, ge=0, le=1)

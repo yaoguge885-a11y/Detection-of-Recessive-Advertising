@@ -21,6 +21,7 @@ import hashlib
 import json
 import math
 import re
+import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -187,7 +188,20 @@ def _scan_text(text: str, field: str, findings: List[Dict]) -> None:
             })
 
 
-def classify_record(record: Dict, findings: List[Dict]) -> str:
+def redact_finding(finding: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove matched cleartext while retaining evidence useful for review."""
+    redacted = {key: value for key, value in finding.items() if key != "match"}
+    match = str(finding.get("match", ""))
+    redacted["match_hash"] = hashlib.sha256(match.encode("utf-8")).hexdigest()
+    redacted["match_length"] = len(match)
+    return redacted
+
+
+def classify_record(
+    record: Dict,
+    findings: List[Dict],
+    approved_post_ids: Optional[Set[str]] = None,
+) -> str:
     """根据扫描结果将记录分为 raw/interim/public 三层。
 
     - raw: 包含未脱敏的直接身份信息或密钥 → 不可对外
@@ -197,18 +211,34 @@ def classify_record(record: Dict, findings: List[Dict]) -> str:
     severities = [f["severity"] for f in findings]
     if "critical" in severities:
         return "raw"
-    if "high" in severities:
+    if findings:
+        return "interim"
+
+    privacy = record.get("privacy") or {}
+    provenance = record.get("provenance") or {}
+    post_id = str(record.get("post_id", ""))
+    approved = approved_post_ids or set()
+    if (
+        not privacy.get("anonymized")
+        or privacy.get("contains_sensitive_data") is not False
+        or not provenance.get("terms_checked_at")
+        or post_id not in approved
+    ):
         return "interim"
     return "public"
 
 
-def generate_public_allowlist(records: List[Dict], findings_map: Dict[str, List]) -> List[str]:
+def generate_public_allowlist(
+    records: List[Dict],
+    findings_map: Dict[str, List],
+    approved_post_ids: Optional[Set[str]] = None,
+) -> List[str]:
     """生成可对外发布的 post_id 列表。"""
     allowlist = []
     for r in records:
         pid = r.get("post_id", "")
         findings = findings_map.get(pid, [])
-        if classify_record(r, findings) == "public":
+        if classify_record(r, findings, approved_post_ids) == "public":
             allowlist.append(pid)
     return allowlist
 
@@ -217,7 +247,27 @@ def generate_public_allowlist(records: List[Dict], findings_map: Dict[str, List]
 # 主函数
 # ═══════════════════════════════════════════════════════════════
 
-def main():
+def _resolve_path(project_root: Path, value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else project_root / path
+
+
+def _load_approved_post_ids(path: Optional[Path]) -> Set[str]:
+    if path is None:
+        return set()
+    payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    post_ids = payload.get("post_ids", [])
+    if not isinstance(post_ids, list):
+        raise ValueError("approval file field 'post_ids' must be a list")
+    return {str(post_id) for post_id in post_ids}
+
+
+def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="隐私合规扫描")
     parser.add_argument("--input", default="data/interim/candidates_v1.jsonl",
                         help="输入 JSONL 文件")
@@ -225,12 +275,22 @@ def main():
                         help="报告输出目录")
     parser.add_argument("--public-allowlist", default="data/reports/public_allowlist.json",
                         help="对外发布许可清单输出路径")
+    parser.add_argument(
+        "--approval-file",
+        help="人工隐私审批 JSON；缺省时不允许任何记录进入 public 层",
+    )
     args = parser.parse_args()
 
     project_root = Path(__file__).resolve().parent.parent.parent
-    input_path = project_root / args.input
-    output_dir = project_root / args.output_dir
+    input_path = _resolve_path(project_root, args.input)
+    output_dir = _resolve_path(project_root, args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    approval_path = (
+        _resolve_path(project_root, args.approval_file)
+        if args.approval_file
+        else None
+    )
+    approved_post_ids = _load_approved_post_ids(approval_path)
 
     print(f"🔒 隐私合规扫描...")
     print(f"   输入: {input_path}")
@@ -238,7 +298,7 @@ def main():
     records = load_jsonl(input_path)
     if not records:
         print("⚠️  无记录可扫描")
-        return
+        return 2
 
     total_findings = 0
     findings_map: Dict[str, List[Dict]] = {}
@@ -252,7 +312,7 @@ def main():
         findings_map[pid] = findings
         total_findings += len(findings)
 
-        layer = classify_record(record, findings)
+        layer = classify_record(record, findings, approved_post_ids)
         layer_counts[layer] += 1
 
         for f in findings:
@@ -260,7 +320,11 @@ def main():
             type_counter[f["type"]] += 1
 
     # 生成对外发布许可清单
-    allowlist = generate_public_allowlist(records, findings_map)
+    allowlist = generate_public_allowlist(
+        records,
+        findings_map,
+        approved_post_ids,
+    )
 
     # 生成综合报告
     report = {
@@ -277,7 +341,7 @@ def main():
         "finding_types": dict(type_counter.most_common(20)),
         "public_allowlist_count": len(allowlist),
         "detailed_findings": {
-            pid: findings
+            pid: [redact_finding(finding) for finding in findings]
             for pid, findings in findings_map.items()
             if findings
         },
@@ -290,7 +354,7 @@ def main():
     print(f"\n📊 报告: {report_path}")
 
     # 保存许可清单
-    allowlist_path = project_root / args.public_allowlist
+    allowlist_path = _resolve_path(project_root, args.public_allowlist)
     allowlist_path.parent.mkdir(parents=True, exist_ok=True)
     with allowlist_path.open("w", encoding="utf-8") as f:
         json.dump({
@@ -314,7 +378,8 @@ def main():
     if layer_counts.get("raw", 0) > 0 or layer_counts.get("interim", 0) > 0:
         print(f"\n⚠️  警告: {layer_counts.get('raw', 0) + layer_counts.get('interim', 0)} 条记录未通过 public 层检查，")
         print(f"   这些记录不得对外发布。请审查 detailed_findings 并手动脱敏后重新扫描。")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -6,18 +6,18 @@ from collections import Counter
 from typing import Literal
 
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from .contracts import ToolEvidence, ToolResult
+from .contracts import StrictToolInput, ToolEvidence, ToolResult
 
 
-class TopicPost(BaseModel):
+class TopicPost(StrictToolInput):
     post_id: str
     text: str
     published_at: str | None = None
 
 
-class TopicDriftInput(BaseModel):
+class TopicDriftInput(StrictToolInput):
     post_id: str
     text: str = Field(min_length=1)
     published_at: str | None = None

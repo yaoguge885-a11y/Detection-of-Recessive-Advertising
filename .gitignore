@@ -35,6 +35,8 @@ chroma/
 .langgraph_api/
 *.sqlite3
 data/raw/
+data/interim/
+data/reports/m1/private/
 data/run_outputs/
 runs/
 

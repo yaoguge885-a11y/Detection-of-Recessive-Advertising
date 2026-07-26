@@ -3,6 +3,7 @@
 使用固定的小 fixture 验证迁移逻辑，不加载真实数据。
 """
 import json
+import subprocess
 import tempfile
 from pathlib import Path
 from typing import Dict, List
@@ -92,8 +93,10 @@ def old_format_record_llm_review() -> Dict:
 # 导入被测函数
 # ═══════════════════════════════════════════════════════════════
 
+from scripts.data.annotation import migrate_p1_candidates_to_v1 as migration_module
 from scripts.data.annotation.migrate_p1_candidates_to_v1 import (
     generate_stable_post_id,
+    compute_phash,
     infer_media_type,
     migrate_media,
     migrate_provenance,
@@ -193,6 +196,11 @@ class TestMediaMigration:
         assert result[0]["media_id"] == "media_0000"
         assert result[1]["media_id"] == "media_0001"
 
+    def test_phash_is_not_fabricated_from_sha256(self, tmp_path):
+        media_path = tmp_path / "image.jpg"
+        media_path.write_bytes(b"not-an-image-but-hashable")
+        assert compute_phash(media_path) is None
+
 
 # ═══════════════════════════════════════════════════════════════
 # Tests: provenance 迁移
@@ -201,17 +209,25 @@ class TestMediaMigration:
 class TestProvenanceMigration:
     def test_migrates_from_collected(self, old_format_record):
         """_collected 应迁移到 provenance。"""
+        old_format_record["_collected"]["source_ref_hash"] = "verified_source_hash"
         prov = migrate_provenance(old_format_record)
-        assert prov["source_ref_hash"] is not None
-        assert prov["collected_at"] is not None
+        assert prov["source_ref_hash"] == "verified_source_hash"
+        assert prov["collected_at"] == "2026-07-21T12:00:00+08:00"
         assert prov["collector"] == "P1_team"
         assert prov["terms_checked_at"] is None  # 原始为 None
 
+    def test_source_url_is_hashed_when_verified_hash_is_missing(self, old_format_record):
+        """来源 URL 只能派生不可逆哈希，不能写入 provenance 明文。"""
+        prov = migrate_provenance(old_format_record)
+        assert prov is not None
+        assert len(prov["source_ref_hash"]) == 64
+        assert prov["source_ref_hash"] != old_format_record["_collected"]["source_url"]
+        assert "https://" not in json.dumps(prov)
+
     def test_no_collected_field(self, old_format_record_no_collected):
-        """无 _collected 时提供默认值。"""
+        """无 _collected 时不能伪造 provenance。"""
         prov = migrate_provenance(old_format_record_no_collected)
-        assert prov["source_ref_hash"] is not None
-        assert prov["collector"] == "P1_migration"
+        assert prov is None
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -220,10 +236,12 @@ class TestProvenanceMigration:
 
 class TestPrivacyMigration:
     def test_default_privacy(self, old_format_record):
-        """隐私字段应有默认值。"""
+        """未经人工审计的迁移记录必须使用保守隐私状态。"""
         priv = migrate_privacy(old_format_record)
-        assert "anonymized" in priv
-        assert "contains_sensitive_data" in priv
+        assert priv == {
+            "anonymized": False,
+            "contains_sensitive_data": True,
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -245,7 +263,7 @@ class TestFullRecordMigration:
         assert new_record["content_group_id"] is None  # v1.1 新增
         assert "provenance" in new_record
         assert "privacy" in new_record
-        assert "_migration_meta" in new_record
+        assert "_migration_meta" not in new_record
 
     def test_migrate_degraded_llm_review(self, old_format_record_llm_review):
         """LLM 需复核的记录应标记为 degraded。"""
@@ -254,7 +272,28 @@ class TestFullRecordMigration:
             old_format_record_llm_review, id_map, "test_salt", Path("data"), "1.1"
         )
         assert status == "degraded"
-        assert new_record["_migration_meta"]["llm_needs_review"] is True
+        assert "_migration_meta" not in new_record
+        meta = migration_module.build_migration_meta(
+            old_format_record_llm_review, status
+        )
+        assert meta["llm_needs_review"] is True
+        assert meta["status"] == "degraded"
+
+    def test_migrate_rejected_when_required_provenance_is_missing(
+        self, old_format_record_no_collected
+    ):
+        id_map = {}
+        new_record, status = migrate_record(
+            old_format_record_no_collected,
+            id_map,
+            "test_salt",
+            Path("data"),
+            "1.0",
+            True,
+        )
+        assert new_record is None
+        assert status == "rejected"
+        assert id_map == {}
 
     def test_migrate_rejected_no_post_id(self):
         """无 post_id 的记录应被拒绝。"""
@@ -275,6 +314,12 @@ class TestFullRecordMigration:
 
     def test_platform_wechat_normalized(self, old_format_record_no_collected):
         """平台 'wechat' 应标准化为 'wechat_official_account'。"""
+        old_format_record_no_collected["_collected"] = {
+            "source_ref_hash": "source_hash",
+            "collected_at": "2026-07-21T12:00:00+08:00",
+            "collector": "P1_team",
+            "terms_checked_at": None,
+        }
         id_map = {}
         new_record, _ = migrate_record(
             old_format_record_no_collected, id_map, "test_salt", Path("data"), "1.1"
@@ -350,6 +395,51 @@ class TestJsonlIO:
             assert len(loaded) == 2
         finally:
             tmp_path.unlink(missing_ok=True)
+
+
+class TestMigrationCli:
+    def test_input_file_writes_strict_records_and_safe_report(
+        self, tmp_path, old_format_record
+    ):
+        input_path = tmp_path / "input.jsonl"
+        output_path = tmp_path / "candidates.jsonl"
+        id_map_path = tmp_path / "id_map.json"
+        report_path = tmp_path / "migration_report.json"
+        input_path.write_text(
+            json.dumps(old_format_record, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(Path(migration_module.__file__)),
+                "--input-file",
+                str(input_path),
+                "--output",
+                str(output_path),
+                "--id-map",
+                str(id_map_path),
+                "--report",
+                str(report_path),
+                "--target-schema",
+                "1.0",
+                "--skip-media-hash",
+            ],
+            capture_output=True,
+            check=False,
+        )
+
+        assert result.returncode == 0, (result.stdout + result.stderr).decode(
+            errors="replace"
+        )
+        migrated = load_jsonl(output_path)
+        assert len(migrated) == 1
+        assert "_migration_meta" not in migrated[0]
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        assert report["total_loaded"] == 1
+        assert report["migrated"]["success"] == 1
+        assert "source_url" not in json.dumps(report)
 
 
 # ═══════════════════════════════════════════════════════════════

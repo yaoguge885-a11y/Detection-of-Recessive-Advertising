@@ -6,11 +6,13 @@ v1.1 改进：
   - uncertain/out_of_scope 单独统计，不计入 κ
   - 输出完整分歧分析
 """
+import argparse
 import json
 import random
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 LABELS = ["明广", "暗广", "非广"]
 LABEL_INDEX = {label: idx for idx, label in enumerate(LABELS)}
@@ -36,13 +38,15 @@ def load_annotations(path: Path) -> Dict[str, str]:
             break
         try:
             obj, end = decoder.raw_decode(raw_text, idx)
-            data[obj["post_id"]] = obj["label"]
+            if isinstance(obj, dict) and "post_id" in obj and "label" in obj:
+                data[str(obj["post_id"])] = str(obj["label"])
             idx = end
-        except json.JSONDecodeError:
-            next_brace = raw_text.find("{", idx + 1)
-            if next_brace == -1:
-                break
-            idx = next_brace
+        except json.JSONDecodeError as exc:
+            raise json.JSONDecodeError(
+                f"failed to decode annotation JSON at position {idx}: {exc.msg}",
+                exc.doc,
+                exc.pos,
+            ) from exc
     return data
 
 
@@ -65,6 +69,8 @@ def cohen_kappa_ci(a: List[int], b: List[int], n_bootstrap: int = 2000) -> Tuple
     """返回 (kappa, lower_95, upper_95)。"""
     kappa = _cohen_kappa_from_arrays(a, b)
     n = len(a)
+    if n == 0:
+        return kappa, kappa, kappa
     pairs = list(zip(a, b))
     bootstraps = []
     rng = random.Random(42)
@@ -111,104 +117,96 @@ def analyze_disagreements(
     }
 
 
-def main(path_a: str, path_b: str) -> None:
-    a = load_annotations(Path(path_a))
-    b = load_annotations(Path(path_b))
+def calculate_agreement(
+    a: Mapping[str, str],
+    b: Mapping[str, str],
+    *,
+    formal_second_round: bool = False,
+) -> Dict[str, Any]:
+    """Return an aggregate agreement report without record identifiers."""
     common_ids = sorted(set(a) & set(b))
-    if not common_ids:
-        print("no overlapping post_id between annotations")
-        return
 
-    # 分离有效标签和特殊标签
-    valid_ids = []
-    special_stats = defaultdict(lambda: {"a": 0, "b": 0, "both": 0})
-
-    for pid in common_ids:
-        la = a[pid]
-        lb = b[pid]
-        if la in SPECIAL_LABELS or lb in SPECIAL_LABELS:
-            key = f"a={la}, b={lb}" if la != lb else la
-            if la in SPECIAL_LABELS:
-                special_stats[la]["a" if lb not in SPECIAL_LABELS else "both"] += 1
-            if lb in SPECIAL_LABELS:
-                special_stats[lb]["b" if la not in SPECIAL_LABELS else "both"] += 1
-            # "both" case handled above; normalize
-        else:
-            valid_ids.append(pid)
-
-    # ── κ 计算（仅有效三元标签）──
+    valid_ids = [
+        post_id
+        for post_id in common_ids
+        if a[post_id] in LABEL_INDEX and b[post_id] in LABEL_INDEX
+    ]
+    excluded_ids = [post_id for post_id in common_ids if post_id not in valid_ids]
     labels_a = [LABEL_INDEX[a[pid]] for pid in valid_ids]
     labels_b = [LABEL_INDEX[b[pid]] for pid in valid_ids]
-
-    kappa, ci_low, ci_high = cohen_kappa_ci(labels_a, labels_b)
+    if valid_ids:
+        kappa, ci_low, ci_high = cohen_kappa_ci(labels_a, labels_b)
+    else:
+        kappa = ci_low = ci_high = None
     matrix = build_confusion_matrix(labels_a, labels_b)
-
-    # 原始一致率
-    raw_agreement = sum(1 for i, j in zip(labels_a, labels_b) if i == j) / max(len(labels_a), 1)
-
-    # 分歧分析
-    disagreement_analysis = analyze_disagreements(
-        [a[pid] for pid in valid_ids],
-        [b[pid] for pid in valid_ids],
-        valid_ids,
+    raw_agreement = (
+        sum(1 for i, j in zip(labels_a, labels_b) if i == j) / len(valid_ids)
+        if valid_ids
+        else None
     )
-
-    print(f"📊 标注一致性分析")
-    print(f"{'='*60}")
-    print(f"   共同标注样本: {len(common_ids)}")
-    print(f"   有效三元标签: {len(valid_ids)} (用于 κ 计算)")
-    print(f"   Cohen's κ:    {kappa:.4f}  (95% CI: {ci_low:.4f} – {ci_high:.4f})")
-    print(f"   原始一致率:   {raw_agreement:.1%}")
-    print(f"")
-
-    print(f"confusion matrix (rows=A, cols=B)")
-    print(f"\t" + "\t".join(LABELS))
-    for label, row in zip(LABELS, matrix):
-        print(f"{label}\t" + "\t".join(str(x) for x in row))
-
-    print(f"\n📋 特殊标签统计 (不计入 κ):")
-    for label in sorted(SPECIAL_LABELS):
-        s = special_stats.get(label, {})
-        print(f"   {label}: A={s.get('a', 0)}, B={s.get('b', 0)}, both={s.get('both', 0)}")
-
-    print(f"\n🔍 分歧分析:")
-    print(f"   分歧样本: {disagreement_analysis['total_disagreements']}")
-    if disagreement_analysis["disagreement_types"]:
-        print(f"   分歧类型:")
-        for pair, count in sorted(disagreement_analysis["disagreement_types"].items()):
-            print(f"     {pair}: {count}")
-
-    # κ 阈值检查
-    if kappa < 0.6:
-        print(f"\n⚠️  κ = {kappa:.4f} < 0.6，标注一致性未达标。建议复盘分歧并修订标注指南。")
-
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 3:
-        print("usage: python calculate_agreement.py annotator_a.jsonl annotator_b.jsonl")
-        raise SystemExit(1)
-    main(sys.argv[1], sys.argv[2])
-
-    # 各类别一致率
-    print("\nper-class agreement:")
+    per_class: Dict[str, Dict[str, Any]] = {}
     for i, label in enumerate(LABELS):
         total_a = sum(matrix[i])
         agreed = matrix[i][i]
-        rate = agreed / total_a if total_a else 0
-        print(f"  {label}: {agreed}/{total_a} = {rate:.1%}")
+        per_class[label] = {
+            "agreed": agreed,
+            "annotator_a_total": total_a,
+            "rate": agreed / total_a if total_a else None,
+        }
 
-    # 分歧详情
-    print("\n--- 分歧样本 ---")
-    for post_id in common_ids:
-        if a[post_id] == b[post_id]:
-            continue
-        print(f"  {post_id}: A={a[post_id]}  B={b[post_id]}")
+    excluded_label_counts: Counter[str] = Counter()
+    for post_id in excluded_ids:
+        if a[post_id] not in LABEL_INDEX:
+            excluded_label_counts[f"a:{a[post_id]}"] += 1
+        if b[post_id] not in LABEL_INDEX:
+            excluded_label_counts[f"b:{b[post_id]}"] += 1
+
+    return {
+        "common_pair_count": len(common_ids),
+        "valid_pair_count": len(valid_ids),
+        "excluded_pair_count": len(excluded_ids),
+        "excluded_label_counts": dict(sorted(excluded_label_counts.items())),
+        "kappa": kappa,
+        "kappa_ci_95": {"lower": ci_low, "upper": ci_high},
+        "raw_agreement": raw_agreement,
+        "labels": LABELS,
+        "confusion_matrix": matrix,
+        "per_class_agreement": per_class,
+        "formal_second_round": formal_second_round,
+    }
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+
+    parser = argparse.ArgumentParser(description="计算双人标注 Cohen's kappa")
+    parser.add_argument("annotator_a")
+    parser.add_argument("annotator_b")
+    parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--formal-second-round",
+        action="store_true",
+        help="仅在本次输入确为第二轮盲标时使用",
+    )
+    args = parser.parse_args(argv)
+
+    report = calculate_agreement(
+        load_annotations(Path(args.annotator_a)),
+        load_annotations(Path(args.annotator_b)),
+        formal_second_round=args.formal_second_round,
+    )
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 3:
-        print("usage: python calculate_agreement.py path_a.jsonl path_b.jsonl")
-        raise SystemExit(1)
-    main(sys.argv[1], sys.argv[2])
+    raise SystemExit(main())

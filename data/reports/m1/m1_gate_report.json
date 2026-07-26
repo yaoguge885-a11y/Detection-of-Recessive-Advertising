@@ -1,0 +1,47 @@
+{
+  "checks": {
+    "agreement": {
+      "observed": 1.0,
+      "required": "formal second-round Cohen kappa >= 0.6",
+      "status": "review_required"
+    },
+    "annotation_guide": {
+      "observed": 24,
+      "required": 20,
+      "status": "passed"
+    },
+    "candidate_pool": {
+      "observed": 282,
+      "required": 3000,
+      "status": "failed"
+    },
+    "compliance": {
+      "observed": {
+        "privacy_approved": false,
+        "terms_complete": false
+      },
+      "required": "privacy approved and source terms complete",
+      "status": "review_required"
+    },
+    "dataset_card": {
+      "observed": false,
+      "required": true,
+      "status": "failed"
+    },
+    "gold": {
+      "observed": 0,
+      "required": 1500,
+      "status": "failed"
+    },
+    "split_leakage": {
+      "observed": {
+        "creator_leakage_count": null,
+        "near_duplicate_leakage_count": null
+      },
+      "required": "both counts equal 0",
+      "status": "missing"
+    }
+  },
+  "gate": "M1",
+  "passed": false
+}
