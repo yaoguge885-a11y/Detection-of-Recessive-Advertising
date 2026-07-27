@@ -33,6 +33,8 @@ class AdCheckState(TypedDict, total=False):
     evidence_bundle: EvidenceBundle
     verdict_report: VerdictReport
     agent_outputs: dict[str, dict[str, Any]]
+    tool_gateway: Any
+    runtime_mode: str
 
     # Compatibility presentation fields. They are derived, not authoritative.
     agent_votes: dict[str, dict[str, Any]]

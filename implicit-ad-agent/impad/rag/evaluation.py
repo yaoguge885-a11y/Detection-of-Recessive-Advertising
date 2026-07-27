@@ -40,6 +40,7 @@ class LegalRetrievalQuestionResult(BaseModel):
     expected_keys: list[str]
     retrieved_keys: list[str]
     recall: float = Field(ge=0, le=1)
+    reciprocal_rank: float = Field(ge=0, le=1)
     false_citation: bool
     latency_ms: float = Field(ge=0)
 
@@ -51,6 +52,8 @@ class LegalRetrievalMetrics(BaseModel):
     answerable_questions: int = Field(ge=0)
     abstention_questions: int = Field(ge=0)
     recall_at_5: float = Field(ge=0, le=1)
+    mrr_at_5: float = Field(ge=0, le=1)
+    citation_precision_at_5: float = Field(ge=0, le=1)
     direct_recall_at_5: float = Field(ge=0, le=1)
     cross_document_recall_at_5: float = Field(ge=0, le=1)
     false_citation_rate: float = Field(ge=0, le=1)
@@ -100,12 +103,20 @@ def evaluate_retriever(
         false_citation = (
             question.category == "abstention" and bool(retrieved_keys)
         )
+        relevant_ranks = [
+            index + 1
+            for index, key in enumerate(retrieved_keys)
+            if key in expected
+        ]
         results.append(LegalRetrievalQuestionResult(
             question_id=question.question_id,
             category=question.category,
             expected_keys=question.expected_keys,
             retrieved_keys=retrieved_keys,
             recall=recall,
+            reciprocal_rank=(
+                1.0 / min(relevant_ranks) if relevant_ranks else 0.0
+            ),
             false_citation=false_citation,
             latency_ms=latency_ms,
         ))
@@ -129,6 +140,18 @@ def evaluate_retriever(
         answerable_questions=len(answerable),
         abstention_questions=len(abstention),
         recall_at_5=_mean([result.recall for result in answerable]),
+        mrr_at_5=_mean([
+            result.reciprocal_rank for result in answerable
+        ]),
+        citation_precision_at_5=_mean([
+            (
+                len(set(result.expected_keys) & set(result.retrieved_keys))
+                / len(result.retrieved_keys)
+                if result.retrieved_keys
+                else 0.0
+            )
+            for result in answerable
+        ]),
         direct_recall_at_5=_mean([result.recall for result in direct]),
         cross_document_recall_at_5=_mean([
             result.recall for result in cross_document

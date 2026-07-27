@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "implicit-ad-agent"
 version = "0.1.0"
@@ -68,3 +72,9 @@ pythonpath = ["."]
 markers = [
     "vision_integration: runs the installed YOLO/EasyOCR stack on real local images",
 ]
+
+[tool.setuptools.packages.find]
+include = ["impad*"]
+
+[tool.setuptools.package-data]
+"impad.rag" = ["data/*.json"]

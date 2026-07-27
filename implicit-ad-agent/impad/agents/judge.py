@@ -38,6 +38,11 @@ def judge(state: AdCheckState) -> AdCheckState:
     has_error = any(
         result.status == "error" for result in bundle.tool_results
     )
+    gateway = state.get("tool_gateway")
+    fallback_count = int(getattr(gateway, "fallback_count", 0))
+    runtime_mode = metadata.runtime_mode
+    if fallback_count and runtime_mode == "mcp":
+        runtime_mode = "hybrid"
     metadata = metadata.model_copy(update={
         "status": "degraded" if has_error else "completed",
         "finished_at": finished_at,
@@ -46,6 +51,8 @@ def judge(state: AdCheckState) -> AdCheckState:
             result.tool_name: result.tool_version
             for result in bundle.tool_results
         },
+        "fallback_count": fallback_count,
+        "runtime_mode": runtime_mode,
     })
     evidence = [
         f"[{item.tool_name}] {item.kind}: "

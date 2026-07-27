@@ -1,0 +1,104 @@
+{
+  "benchmark_version": "official-smoke-v1-2026-07-27",
+  "questions": [
+    {
+      "question_id": "official_01",
+      "category": "direct",
+      "query": "利用网站、网页、互联网应用程序等互联网媒介，直接或者间接地推销商品或者服务的商业广告活动",
+      "expected_keys": ["samr_internet_ad_measures_2023#第二条"]
+    },
+    {
+      "question_id": "official_02",
+      "category": "direct",
+      "query": "介绍健康、养生知识时不得同时出现购物链接",
+      "expected_keys": ["samr_internet_ad_measures_2023#第八条"]
+    },
+    {
+      "question_id": "official_03",
+      "category": "direct",
+      "query": "体验分享、消费测评并附加购物链接，应当显著标明广告",
+      "expected_keys": ["samr_internet_ad_measures_2023#第九条"]
+    },
+    {
+      "question_id": "official_04",
+      "category": "direct",
+      "query": "互联网广告不具有可识别性的处罚依据",
+      "expected_keys": ["samr_internet_ad_measures_2023#第二十五条"]
+    },
+    {
+      "question_id": "official_05",
+      "category": "direct",
+      "query": "商品经营者或者服务提供者通过一定媒介推销商品或者服务的商业广告活动",
+      "expected_keys": ["samr_advertising_law_2021#第二条"]
+    },
+    {
+      "question_id": "official_06",
+      "category": "direct",
+      "query": "广告应当具有可识别性，能够使消费者辨明其为广告",
+      "expected_keys": ["samr_advertising_law_2021#第十四条"]
+    },
+    {
+      "question_id": "official_07",
+      "category": "direct",
+      "query": "互联网信息服务提供者不得以介绍健康养生知识变相发布医疗药品保健食品广告",
+      "expected_keys": ["samr_advertising_law_2021#第十九条"]
+    },
+    {
+      "question_id": "official_08",
+      "category": "cross_document",
+      "query": "广告可识别性、显著标明广告并与非广告信息相区别",
+      "expected_keys": [
+        "samr_internet_ad_measures_2023#第九条",
+        "samr_advertising_law_2021#第十四条"
+      ]
+    },
+    {
+      "question_id": "official_09",
+      "category": "cross_document",
+      "query": "健康养生知识形式的医疗药品保健食品变相广告",
+      "expected_keys": [
+        "samr_internet_ad_measures_2023#第八条",
+        "samr_advertising_law_2021#第十九条"
+      ]
+    },
+    {
+      "question_id": "official_10",
+      "category": "cross_document",
+      "query": "直接或者间接推销商品服务的商业广告活动定义",
+      "expected_keys": [
+        "samr_internet_ad_measures_2023#第二条",
+        "samr_advertising_law_2021#第二条"
+      ]
+    },
+    {
+      "question_id": "official_11",
+      "category": "abstention",
+      "query": "篮球比赛加时赛规则",
+      "expected_keys": []
+    },
+    {
+      "question_id": "official_12",
+      "category": "abstention",
+      "query": "天气预报中的降水概率",
+      "expected_keys": []
+    },
+    {
+      "question_id": "official_13",
+      "category": "abstention",
+      "query": "操作系统进程调度算法",
+      "expected_keys": []
+    },
+    {
+      "question_id": "official_14",
+      "category": "abstention",
+      "query": "古典音乐和声分析",
+      "expected_keys": []
+    },
+    {
+      "question_id": "official_15",
+      "category": "abstention",
+      "query": "植物光合作用实验",
+      "expected_keys": []
+    }
+  ]
+}
