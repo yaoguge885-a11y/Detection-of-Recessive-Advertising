@@ -65,6 +65,28 @@ def _extract_initial_state(html: str) -> Optional[Dict]:
             return None
 
 
+def _append_response_comments(result: Dict, html: str) -> None:
+    """Normalize comment API payloads appended by the browser collector."""
+    for raw in re.findall(r"<!--XHS_COMMENTS:(.*?)-->", html, re.DOTALL):
+        try:
+            payloads = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        for payload in payloads if isinstance(payloads, list) else [payloads]:
+            data = payload.get("data", {}) if isinstance(payload, dict) else {}
+            candidates = data.get("comments") or data.get("commentList") or data.get("list") or []
+            for item in candidates:
+                user = item.get("user") or {}
+                result["comments_raw"].append({
+                    "comment_id": str(item.get("id") or item.get("commentId") or ""),
+                    "author_id": str(user.get("userId") or user.get("id") or ""),
+                    "text": item.get("content") or item.get("text") or "",
+                    "picture_urls": [],
+                    "like_count": int(item.get("likeCount") or item.get("like_count") or 0),
+                    "is_pinned": bool(item.get("pinned") or item.get("isPinned")),
+                })
+
+
 # ═══════════════════════════════════════════════════════════════
 # 主提取函数
 # ═══════════════════════════════════════════════════════════════
@@ -107,6 +129,7 @@ def extract_xhs_note(html: str) -> Dict:
 
     init_state = _extract_initial_state(html)
     if not init_state:
+        _append_response_comments(result, html)
         return result
 
     try:
@@ -234,4 +257,5 @@ def extract_xhs_note(html: str) -> Dict:
     except Exception:
         pass
 
+    _append_response_comments(result, html)
     return result
