@@ -250,58 +250,99 @@ def build_post_record(
     terms_checked_at: Optional[str],
     llm_meta: Optional[Dict] = None,
     comments: Optional[List[Dict]] = None,
+    source_type: str = "manual_public_collection",
+    content_group_id: Optional[str] = None,
 ) -> Dict:
-    """构建一条规范化的帖子记录。
+    """构建一条 v1.1 Schema 规范的帖子记录。
 
-    Args:
-        url: 原始 URL
-        publisher_name: 发布者名称（用于脱敏）
-        publisher_id: 发布者平台 ID
-        title: 标题
-        body_text: 带 <图片N> 标记的正文
-        media_records: 媒体文件引用列表
-        published_at: ISO 8601 发布时间
-        history_post_ids: 同博主历史帖子 ID 列表
-        salt: 脱敏盐值
-        collector: 采集者标识
-        terms_checked_at: 条款检查日期
-        llm_meta: LLM 提取元数据（可选）
-        comments: 标准化评论列表（可选）
+    严格遵循 data-tooling/schema/data_schema_v1_1.json 的 content_record 定义。
 
     Returns:
-        OrderedDict 格式的帖子记录
+        OrderedDict 格式的 v1.1 帖子记录
     """
     source_ref_hash = stable_hash(url, salt, length=32)
-    blogger_id = stable_hash(publisher_id or publisher_name or url, salt, length=24)
-    post_id = stable_hash(url, salt, length=24)
+    blogger_id = "blogger_" + stable_hash(publisher_id or publisher_name or url, salt, length=24)
+    post_id = "post_" + stable_hash(url, salt, length=32)
 
     if not published_at:
         published_at = None
 
+    # ── 规范化 media 数组为 v1.1 格式 ──
+    media_v1 = []
+    for i, m in enumerate(media_records or []):
+        media_item = collections.OrderedDict()
+        media_item["media_id"] = f"media_{post_id}_{i:03d}"
+        # 视频类型
+        if m.get("_media_type") == "video":
+            media_item["type"] = "video"
+        elif m.get("ref") and any(m.get("ref", "").lower().endswith(ext)
+                                   for ext in (".mp4", ".mov", ".avi", ".webm")):
+            media_item["type"] = "video"
+        else:
+            media_item["type"] = "image"
+        media_item["ref"] = m.get("ref")
+        media_item["sha256"] = m.get("sha256")
+        media_item["phash"] = m.get("phash")
+        media_item["ocr_text"] = m.get("ocr_text")
+        # 保留扩展字段（source_url, caption 等）
+        if m.get("source_url"):
+            media_item["source_url"] = m["source_url"]
+        if m.get("caption"):
+            media_item["caption"] = m["caption"]
+        if m.get("is_content") is not None:
+            media_item["is_content"] = m["is_content"]
+        media_v1.append(media_item)
+
+    # ── 规范化 comments 为 v1.1 格式 ──
+    comments_v1 = []
+    for i, c in enumerate(comments or []):
+        comment_item = collections.OrderedDict()
+        comment_item["comment_id"] = c.get("comment_id", f"comment_{post_id}_{i:03d}")
+        comment_item["author_id"] = c.get("author_id", "")
+        comment_item["text"] = c.get("text", "")
+        comment_item["like_count"] = int(c.get("like_count", 0))
+        comment_item["is_pinned"] = bool(c.get("is_pinned", False))
+        comments_v1.append(comment_item)
+
+    # ── provenance ──
+    provenance = collections.OrderedDict()
+    provenance["source_ref_hash"] = source_ref_hash
+    provenance["collected_at"] = datetime.now(CST).strftime("%Y-%m-%dT%H:%M:%S+08:00")
+    provenance["collector"] = collector
+    provenance["terms_checked_at"] = terms_checked_at
+    # 保留 LLM 元数据
+    if llm_meta:
+        provenance["llm_mode"] = "html_direct"
+        provenance["llm_needs_review"] = llm_meta.get("needs_review", True)
+        provenance["llm_confidence"] = llm_meta.get("confidence", 0)
+        if llm_meta.get("notes"):
+            provenance["llm_notes"] = llm_meta["notes"][:2000]
+
+    # ── privacy ──
+    privacy = collections.OrderedDict()
+    privacy["anonymized"] = True
+    privacy["contains_sensitive_data"] = False
+
+    # ── 组装主记录 ──
     record = collections.OrderedDict()
+    record["schema_version"] = "1.1"
     record["post_id"] = post_id
     record["platform"] = platform_from_url(url)
+    record["source_type"] = source_type
     record["blogger_id"] = blogger_id
     record["published_at"] = published_at
     record["title"] = title if title else None
+    record["content_group_id"] = content_group_id
     record["text"] = body_text
-    record["media"] = media_records
-    record["comments"] = comments or []
+    record["media"] = media_v1
+    record["comments"] = comments_v1
     record["blogger_history_refs"] = history_post_ids or []
+    record["provenance"] = provenance
+    record["privacy"] = privacy
 
-    collected = collections.OrderedDict()
-    collected["source_url"] = url
-    collected["source_ref_hash"] = source_ref_hash
-    collected["collected_at"] = datetime.now(CST).strftime("%Y-%m-%dT%H:%M:%S+08:00")
-    collected["collector"] = collector
-    collected["terms_checked_at"] = terms_checked_at
-    if llm_meta:
-        collected["llm_mode"] = "html_direct"
-        collected["llm_needs_review"] = llm_meta.get("needs_review", True)
-        collected["llm_confidence"] = llm_meta.get("confidence", 0)
-        if llm_meta.get("notes"):
-            collected["llm_notes"] = llm_meta["notes"][:2000]
-    record["_collected"] = collected
+    # 向后兼容：保留旧字段
+    record["_collected"] = provenance.copy()
+    record["_collected"]["source_url"] = url
 
     return record
 

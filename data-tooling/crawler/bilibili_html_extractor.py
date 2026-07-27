@@ -92,17 +92,38 @@ def _extract_domain(url: str) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 def _extract_json_from_html(html: str, key: str = "__INITIAL_STATE__") -> Optional[Dict]:
-    """从 HTML 中提取 window.__INITIAL_STATE__ 或类似 JSON 数据。"""
-    pattern = rf"window\.{key}\s*=\s*(.*?);\s*(?:\(function|var\s+\w+|window\.)"
-    m = re.search(pattern, html, re.DOTALL)
-    if not m:
-        # 宽松匹配：找到 = {...}; 后跟函数定义
-        m2 = re.search(rf"window\.{key}\s*=\s*(.*?);\s*\n", html, re.DOTALL)
-        if not m2:
-            return None
-        json_str = m2.group(1)
-    else:
-        json_str = m.group(1)
+    """从 HTML 中提取 window.__INITIAL_STATE__ 或类似 JSON 数据。
+
+    使用括号计数法可靠提取嵌套 JSON 对象。
+    """
+    # 找到 window.__INITIAL_STATE__ = 的位置
+    search = f"window.{key}"
+    idx = html.find(search)
+    if idx == -1:
+        return None
+
+    # 从 = 号后的第一个 { 开始计数括号
+    eq_idx = html.find("=", idx)
+    if eq_idx == -1:
+        return None
+    brace_start = html.find("{", eq_idx)
+    if brace_start == -1:
+        return None
+
+    depth = 0
+    end = brace_start
+    for i, ch in enumerate(html[brace_start:], brace_start):
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+
+    json_str = html[brace_start:end]
+    # 清理 undefined
+    json_str = json_str.replace("undefined", "null")
 
     try:
         return json.loads(json_str)
@@ -336,15 +357,17 @@ def extract_bilibili_article(html: str) -> Dict:
         except Exception:
             pass
 
-    # 文章正文容器
+    # 文章正文容器 - 更精确的选择器
     article_body = (
         soup.find("div", class_="article-content") or
         soup.find("div", id="read-article-holder") or
-        soup.find("article") or
-        soup.find("div", class_="read-content")
+        soup.find("div", class_=lambda c: c and "read-content" in str(c).lower() if c else False) or
+        soup.find("article")
     )
+
+    # 没有找到文章容器时返回空（不要回退到body，会混入导航UI）
     if not article_body:
-        article_body = soup.find("body")
+        return result
 
     # DOM 遍历提取文本和图片
     paragraphs = []

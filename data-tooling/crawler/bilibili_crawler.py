@@ -46,6 +46,19 @@ _crawler_dir = Path(__file__).resolve().parent
 if str(_crawler_dir) not in sys.path:
     sys.path.insert(0, str(_crawler_dir))
 
+
+# ═══════════════════════════════════════════════════════════════
+# 浏览器启动辅助
+# ═══════════════════════════════════════════════════════════════
+
+def _build_launch_args(proxy: Optional[str] = None) -> dict:
+    """构建 Playwright chromium.launch 参数，可选代理。"""
+    args = ["--disable-blink-features=AutomationControlled", "--no-sandbox"]
+    if proxy:
+        args.append(f"--proxy-server={proxy}")
+    return {"headless": True, "args": args}
+
+
 # ═══════════════════════════════════════════════════════════════
 # wbi 签名
 # ═══════════════════════════════════════════════════════════════
@@ -67,12 +80,13 @@ def _fetch_wbi_keys(session: requests.Session) -> tuple:
         )
         data = resp.json().get("data", {})
         wbi_img = data.get("wbi_img", {})
-        img_key = wbi_img.get("img_key", "")
-        sub_key = wbi_img.get("sub_key", "")
-        if img_key:
-            _wbi_cache["img_key"] = img_key.split("/")[-1].split(".")[0]
-        if sub_key:
-            _wbi_cache["sub_key"] = sub_key.split("/")[-1].split(".")[0]
+        # 字段名是 img_url / sub_url（非 img_key / sub_key）
+        img_url = wbi_img.get("img_url", "") or wbi_img.get("img_key", "")
+        sub_url = wbi_img.get("sub_url", "") or wbi_img.get("sub_key", "")
+        if img_url:
+            _wbi_cache["img_key"] = img_url.split("/")[-1].split(".")[0]
+        if sub_url:
+            _wbi_cache["sub_key"] = sub_url.split("/")[-1].split(".")[0]
         _wbi_cache["expires"] = now + 1800
     except Exception as e:
         print(f"  [wbi] nav 接口失败: {e}")
@@ -116,96 +130,201 @@ def bilibili_wbi_sign(params: dict, session: requests.Session) -> dict:
 def discover_bilibili_posts(
     space_url: str,
     max_items: int = 80,
-    session: Optional[requests.Session] = None,
+    proxy: Optional[str] = None,
 ) -> List[Dict]:
-    """从 B站作者空间页发现内容列表。
+    """从 B站作者空间发现内容列表。
 
-    返回: [{url, title, content_type, published_at, author_name, author_mid}, ...]
+    核心策略：通过 Playwright 加载 B站空间子页面（/video, /article, /dynamic），
+    拦截前端自动发起的 API 响应获取内容列表。利用真实浏览器环境稳定绕过风控。
+
+    Returns: [{url, title, content_type, published_at, author_name, author_mid}, ...]
     """
-    if session is None:
-        session = requests.Session()
+    from playwright.sync_api import sync_playwright
 
-    # 解析 mid
     mid = _extract_mid_from_url(space_url)
     if not mid:
         raise ValueError(f"无法从URL提取 mid: {space_url}")
 
     all_items: List[Dict] = []
+    author_name = ""
 
-    # ── 1. 视频列表 ──
-    print(f"  发现视频列表 (mid={mid})...")
-    for page in range(1, 6):
-        params = {"mid": mid, "ps": 50, "pn": page, "order": "pubdate"}
-        signed = bilibili_wbi_sign(params, session)
+    with sync_playwright() as p:
+        browser = p.chromium.launch(**_build_launch_args(proxy))
+        context = browser.new_context(
+            user_agent=USER_AGENT,
+            viewport={"width": 1366, "height": 768},
+            locale="zh-CN",
+            timezone_id="Asia/Shanghai",
+        )
+        # 反检测：隐藏自动化标记
+        context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            Object.defineProperty(navigator, 'languages', {get: () => ['zh-CN', 'zh', 'en']});
+            delete window.__playwright__binding__;
+            delete window.__pwInitScripts;
+        """)
+        page = context.new_page()
+
+        # 注册全局响应拦截
+        video_items = []
+        article_items = []
+        _api_call_count = 0
+
+        def _on_resp(resp):
+            nonlocal _api_call_count
+            url = resp.url
+            if "api.bilibili.com" in url:
+                _api_call_count += 1
+            if "api.bilibili.com/x/space/wbi/arc/search" in url:
+                try:
+                    body = resp.json()
+                    code = body.get("code", -1)
+                    if code == 0:
+                        vlist = body.get("data", {}).get("list", {}).get("vlist", [])
+                        print(f"    [API] video code=0, {len(vlist)} items")
+                        for v in vlist:
+                            video_items.append(v)
+                    else:
+                        print(f"    [API] video code={code} msg={body.get('message','')[:60]}")
+                except Exception as ex:
+                    print(f"    [API] video parse err: {ex}")
+            elif "api.bilibili.com/x/space/article" in url:
+                try:
+                    body = resp.json()
+                    code = body.get("code", -1)
+                    if code == 0:
+                        arts = body.get("data", {}).get("articles", [])
+                        print(f"    [API] article code=0, {len(arts)} items")
+                        for a in arts:
+                            article_items.append(a)
+                    else:
+                        print(f"    [API] article code={code} msg={body.get('message','')[:60]}")
+                except Exception as ex:
+                    print(f"    [API] article parse err: {ex}")
+
+        page.on("response", _on_resp)
+
+        # ── 1. 加载主页，从 __INITIAL_STATE__ 提取视频和数据 ──
+        print("  加载作者主页提取数据...")
         try:
-            resp = session.get(
-                "https://api.bilibili.com/x/space/wbi/arc/search",
-                params=signed,
-                headers={"User-Agent": USER_AGENT, "Referer": f"https://space.bilibili.com/{mid}"},
-                timeout=15,
-            )
-            data = resp.json()
-            vlist = data.get("data", {}).get("list", {}).get("vlist", [])
-            if not vlist:
-                break
-            for v in vlist:
-                bvid = v.get("bvid", "")
-                if bvid:
-                    all_items.append({
-                        "url": f"https://www.bilibili.com/video/{bvid}",
-                        "title": v.get("title", ""),
-                        "content_type": "video",
-                        "published_at": _ts_to_iso(v.get("created", 0)),
-                        "author_name": v.get("author", ""),
-                        "author_mid": str(v.get("mid", mid)),
-                        "aid": v.get("aid"),
-                        "bvid": bvid,
-                    })
-        except Exception as e:
-            print(f"    视频API page {page} 失败: {e}")
-            break
-        time.sleep(0.5)
+            page.goto(f"https://space.bilibili.com/{mid}",
+                      wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(3000)
+            page_title = page.title()
+            print(f"    页面: {page_title[:60]}, API: {_api_call_count}次")
 
-    # ── 2. 专栏列表 ──
-    print(f"  发现专栏列表...")
-    for page in range(1, 5):
+            # 尝试从 __INITIAL_STATE__ 提取
+            html = page.content()
+            import re as _re
+            m = _re.search(r'window\.__INITIAL_STATE__\s*=\s*(\{.*?\});\s*\(function', html, _re.DOTALL)
+            if m:
+                import json as _json
+                try:
+                    state = _json.loads(m.group(1))
+                    # 提取视频列表
+                    video_sections = state.get("videoList", []) or state.get("sections", [])
+                    for sec in video_sections:
+                        items = sec.get("items", []) or sec.get("videos", [])
+                        for v in items:
+                            bvid = v.get("bvid", "")
+                            if bvid:
+                                video_items.append(v)
+                    print(f"    __INITIAL_STATE__: {len(video_items)} 视频")
+                    # 提取作者名
+                    author_name = state.get("info", {}).get("name", "") or author_name
+                except Exception as ex:
+                    print(f"    __INITIAL_STATE__ parse: {ex}")
+            else:
+                print("    __INITIAL_STATE__ 未找到，回退到API拦截")
+
+            # 回退: 如果 __INITIAL_STATE__ 没有数据，导航到视频页触发API
+            if not video_items:
+                print("    回退到 /video 页触发API...")
+                page.goto(f"https://space.bilibili.com/{mid}/video",
+                          wait_until="networkidle", timeout=30000)
+                page.wait_for_timeout(3000)
+        except Exception as e:
+            print(f"    主页异常: {e}")
+        print(f"    视频: {len(video_items)} 条")
+
+        # ── 3. 导航到 /article 触发专栏列表API ──
+        print("  发现专栏列表...")
         try:
-            resp = session.get(
-                "https://api.bilibili.com/x/space/article",
-                params={"mid": mid, "pn": page, "ps": 30, "sort": "publish_time"},
-                headers={"User-Agent": USER_AGENT, "Referer": f"https://space.bilibili.com/{mid}"},
-                timeout=15,
-            )
-            data = resp.json()
-            articles = data.get("data", {}).get("articles", [])
-            if not articles:
-                break
-            for art in articles:
-                cv_id = art.get("id")
-                if cv_id:
-                    all_items.append({
-                        "url": f"https://www.bilibili.com/read/cv{cv_id}",
-                        "title": art.get("title", ""),
-                        "content_type": "article",
-                        "published_at": _ts_to_iso(art.get("publish_time", 0)),
-                        "author_name": art.get("author_name", ""),
-                        "author_mid": str(art.get("author", {}).get("mid", mid)),
-                        "cv_id": cv_id,
-                    })
+            page.goto(f"https://space.bilibili.com/{mid}/article",
+                      wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(2000)
         except Exception as e:
-            print(f"    专栏API page {page} 失败: {e}")
-            break
-        time.sleep(0.5)
+            print(f"    专栏页加载异常: {e}")
+        print(f"    专栏: {len(article_items)} 条")
 
-    # ── 3. 动态列表 (Playwright) ──
-    print(f"  发现动态列表 (Playwright)...")
-    try:
-        dynamic_items = _discover_dynamics_playwright(mid, max_items=min(max_items, 60))
-        all_items.extend(dynamic_items)
-    except Exception as e:
-        print(f"    动态列表失败: {e}")
+        # 构建视频条目
+        for v in video_items:
+            bvid = v.get("bvid", "")
+            if bvid:
+                all_items.append({
+                    "url": f"https://www.bilibili.com/video/{bvid}",
+                    "title": v.get("title", ""),
+                    "content_type": "video",
+                    "published_at": _ts_to_iso(v.get("created", 0)),
+                    "author_name": v.get("author", "") or author_name,
+                    "author_mid": str(v.get("mid", mid)),
+                    "aid": v.get("aid"), "bvid": bvid,
+                })
 
-    # ── 去重、排序、截取 ──
+        # 构建专栏条目
+        for art in article_items:
+            cv_id = art.get("id")
+            if cv_id:
+                all_items.append({
+                    "url": f"https://www.bilibili.com/read/cv{cv_id}",
+                    "title": art.get("title", ""),
+                    "content_type": "article",
+                    "published_at": _ts_to_iso(art.get("publish_time", 0)),
+                    "author_name": art.get("author_name", "") or author_name,
+                    "author_mid": str(art.get("author", {}).get("mid", mid)),
+                    "cv_id": cv_id,
+                })
+
+        # ── 4. 动态列表 ──
+        print("  发现动态列表...")
+        try:
+            from bs4 import BeautifulSoup
+            page.goto(f"https://space.bilibili.com/{mid}/dynamic",
+                      wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(3000)
+            for _ in range(6):
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(1500)
+
+            soup = BeautifulSoup(page.content(), "html.parser")
+            dyn_links = soup.select('a[href*="t.bilibili.com/"]')
+            seen_dyn = set()
+            for a in dyn_links:
+                href = a.get("href", "")
+                m = re.search(r't\.bilibili\.com/(\d+)', href)
+                if not m:
+                    continue
+                dyn_id = m.group(1)
+                if dyn_id in seen_dyn:
+                    continue
+                seen_dyn.add(dyn_id)
+                all_items.append({
+                    "url": f"https://t.bilibili.com/{dyn_id}",
+                    "title": a.get_text(strip=True)[:80],
+                    "content_type": "opus",
+                    "published_at": None,
+                    "author_name": author_name,
+                    "author_mid": mid,
+                    "dynamic_id": dyn_id,
+                })
+            print(f"    动态: {len(seen_dyn)} 条")
+        except Exception as e:
+            print(f"    动态发现失败: {e}")
+
+        browser.close()
+
+    # ── 去重、截取 ──
     seen = set()
     unique = []
     for item in all_items:
@@ -215,9 +334,7 @@ def discover_bilibili_posts(
 
     unique.sort(key=lambda x: x.get("published_at") or "", reverse=True)
     result = unique[:max_items]
-
-    author_name = result[0]["author_name"] if result else ""
-    print(f"  ✓ 总计发现 {len(unique)} 条（去重），截取 {len(result)} 条 (作者: {author_name})")
+    print(f"  [OK] 总计 {len(unique)} 条, 截取 {len(result)} 条 (作者: {author_name})")
     return result
 
 
@@ -230,6 +347,35 @@ def _extract_mid_from_url(url: str) -> Optional[str]:
     if m:
         return m.group(1)
     return None
+
+
+def _detect_content_type(url: str) -> str:
+    """从URL判断B站内容类型。"""
+    if "/video/" in url or "bilibili.com/video/" in url:
+        return "video"
+    if "t.bilibili.com/" in url:
+        return "opus"
+    if "/read/cv" in url:
+        return "article"
+    return "video"
+
+
+def _extract_bvid(url: str) -> Optional[str]:
+    """从B站视频URL提取bvid。"""
+    m = re.search(r"/video/(BV[a-zA-Z0-9]+)", url)
+    return m.group(1) if m else None
+
+
+def _extract_dynamic_id(url: str) -> Optional[str]:
+    """从B站动态URL提取dynamic_id。"""
+    m = re.search(r"t\.bilibili\.com/(\d+)", url)
+    return m.group(1) if m else None
+
+
+def _extract_cv_id(url: str) -> Optional[str]:
+    """从B站专栏URL提取cv_id。"""
+    m = re.search(r"/read/cv(\d+)", url)
+    return m.group(1) if m else None
 
 
 def _ts_to_iso(ts) -> Optional[str]:
@@ -326,13 +472,18 @@ def fetch_bilibili_comments(
         try:
             resp = session.get(
                 "https://api.bilibili.com/x/v2/reply",
-                params={"type": comment_type, "oid": oid, "pn": page, "ps": 50, "sort": 1},
+                params={"type": comment_type, "oid": oid, "pn": page, "ps": 20, "sort": 1},
                 headers={"User-Agent": USER_AGENT, "Referer": "https://www.bilibili.com"},
                 timeout=15,
             )
             data = resp.json()
+            code = data.get("code", -1)
+            if code != 0:
+                print(f"    [comment-api] code={code} msg={data.get('message','')}")
+                break
             replies = data.get("data", {}).get("replies", [])
             if not replies:
+                print(f"    [comment-api] 0 replies at page {page} (total={len(comments)})")
                 break
 
             for reply in replies:
@@ -408,14 +559,14 @@ def crawl_one_bilibili_post(
     try:
         html = _fetch_page_playwright(url)
     except Exception as e:
-        print(f"    ✗ 页面获取失败: {e}")
+        print(f"    [ERR] 页面获取失败: {e}")
         return _error_record(url, author_name, author_mid, str(e), salt, collector)
 
     # ── 2. BS4 提取 ──
     try:
         extracted = extract_from_bilibili_html(html, content_type)
     except Exception as e:
-        print(f"    ✗ BS4提取失败: {e}")
+        print(f"    [ERR] BS4提取失败: {e}")
         return _error_record(url, author_name, author_mid, str(e), salt, collector)
 
     title = extracted.get("title") or item.get("title") or ""
@@ -448,8 +599,9 @@ def crawl_one_bilibili_post(
     # ── 4. 评论抓取 ──
     comments = []
     comment_type = _get_comment_type(content_type)
-    oid = _get_oid(item, extracted, content_type)
+    oid = _get_oid(item, extracted, content_type, session)
     if oid and comment_type:
+        print(f"    [comment] type={comment_type} oid={oid}")
         try:
             raw_comments = fetch_bilibili_comments(str(oid), comment_type, session, max_comments)
             for rc in raw_comments:
@@ -500,10 +652,26 @@ def _get_comment_type(content_type: str) -> Optional[int]:
     return {"video": 1, "article": 12, "opus": 17}.get(content_type)
 
 
-def _get_oid(item: Dict, extracted: Dict, content_type: str) -> Optional[str]:
-    """获取评论API所需的oid。"""
+def _get_oid(item: Dict, extracted: Dict, content_type: str, session: requests.Session) -> Optional[str]:
+    """获取评论API所需的oid。视频用aid，专栏用cv_id，动态用dynamic_id。"""
     if content_type == "video":
-        return str(extracted.get("aid") or item.get("aid") or "")
+        oid = extracted.get("aid") or item.get("aid") or ""
+        # 如果 aid 缺失，通过 bvid 从 view API 获取
+        if not oid:
+            bvid = extracted.get("bvid") or item.get("bvid") or ""
+            if bvid:
+                try:
+                    resp = session.get(
+                        f"https://api.bilibili.com/x/web-interface/view?bvid={bvid}",
+                        headers={"User-Agent": USER_AGENT, "Referer": "https://www.bilibili.com"},
+                        timeout=10)
+                    data = resp.json()
+                    oid = str(data.get("data", {}).get("aid") or "")
+                    if oid:
+                        print(f"    [aid] bvid={bvid} -> aid={oid}")
+                except Exception:
+                    pass
+        return oid
     elif content_type == "article":
         return str(extracted.get("cv_id") or item.get("cv_id") or "")
     elif content_type == "opus":
@@ -567,6 +735,7 @@ def main() -> int:
     parser.add_argument("--no-images", action="store_true", help="跳过图片下载")
     parser.add_argument("--no-comments", action="store_true", help="跳过评论抓取")
     parser.add_argument("--terms-checked-at", default=None, help="条款检查日期")
+    parser.add_argument("--proxy", default=None, help="HTTP/HTTPS代理地址 (如 http://127.0.0.1:7890)")
     args = parser.parse_args()
 
     from dotenv import load_dotenv
@@ -593,26 +762,46 @@ def main() -> int:
 
     run_dir.mkdir(parents=True, exist_ok=True)
     media_base_dir.mkdir(parents=True, exist_ok=True)
-    print(f"📁 运行目录: {run_dir}")
-    print(f"📁 媒体目录: {media_base_dir}")
+    print(f"[RUN DIR] {run_dir}")
+    print(f"[MEDIA]   {media_base_dir}")
 
-    # ── 1. URL 发现 ──
+    # ── 0. 检测是否为单条内容URL（非空间页）──
+    is_single_url = not ("space.bilibili.com" in args.url or "/space" in args.url)
+
+    if is_single_url:
+        # 直接从视频/文章/动态URL抓取单条
+        content_type = _detect_content_type(args.url)
+        item = {
+            "url": args.url,
+            "title": "",
+            "content_type": content_type,
+            "author_name": "",
+            "author_mid": "",
+            "bvid": _extract_bvid(args.url) if content_type == "video" else None,
+            "dynamic_id": _extract_dynamic_id(args.url) if content_type == "opus" else None,
+            "cv_id": _extract_cv_id(args.url) if content_type == "article" else None,
+        }
+        items = [item]
+        print(f"[SINGLE] 单条抓取模式: {content_type} | {args.url}")
+    else:
+        # ── 1. URL 发现 ──
+        print(f"\n[DISCOVER] {args.url}")
+        items = discover_bilibili_posts(args.url, max_items=args.max_items, proxy=args.proxy)
+        if not items:
+            print("未发现任何内容，退出。")
+            return 1
+
     session = requests.Session()
-    print(f"\n🔍 发现内容: {args.url}")
-    items = discover_bilibili_posts(args.url, max_items=args.max_items, session=session)
-    if not items:
-        print("未发现任何内容，退出。")
-        return 1
 
     # 保存 URL 列表
     urls_file = run_dir / "urls.txt"
     with urls_file.open("w", encoding="utf-8") as f:
         for it in items:
             f.write(f"{it['url']}\t{it.get('title','')}\t{it.get('author_name','')}\n")
-    print(f"📋 URL列表: {urls_file} ({len(items)} 条)")
+    print(f"[URLS] {urls_file} ({len(items)} 条)")
 
     # ── 2. 逐条抓取 ──
-    print(f"\n📥 开始抓取 {len(items)} 条内容...")
+    print(f"\n[CRAWL] 开始抓取 {len(items)} 条内容...")
     records_written = 0
 
     for i, item in enumerate(items, 1):
@@ -628,16 +817,16 @@ def main() -> int:
                 json.dump(record, f, ensure_ascii=False, indent=2)
                 f.write("\n")
             records_written += 1
-            print(f"  ✓ 已保存 ({records_written})")
+            print(f"  [OK] 已保存 ({records_written})")
         except Exception as e:
-            print(f"  ✗ 失败: {e}")
+            print(f"  [ERR] 失败: {e}")
 
         # 礼貌延迟
         delay = random.uniform(1.0, 3.0)
         time.sleep(delay)
 
     print(f"\n{'='*60}")
-    print(f"✅ 完成: {records_written} 条 → {output_path}")
+    print(f"[DONE] {records_written} 条 -> {output_path}")
     print(f"  运行目录: {run_dir}")
 
     return 0

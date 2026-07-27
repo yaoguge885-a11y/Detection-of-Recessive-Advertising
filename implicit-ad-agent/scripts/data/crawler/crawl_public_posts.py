@@ -31,6 +31,12 @@ load_dotenv()
 
 # 确保项目根目录在 path 中，使得 scripts.data 和 impad 可被 import
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
+# 也加入 data-tooling/crawler 目录以导入 crawler_utils
+_crawler_utils_dir = str(Path(__file__).resolve().parent.parent.parent.parent.parent / "data-tooling" / "crawler")
+if _crawler_utils_dir not in sys.path:
+    sys.path.insert(0, _crawler_utils_dir)
+# 复用共享的 build_post_record（v1.1 Schema 格式）
+from crawler_utils import build_post_record  # noqa: E402
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 CST = timezone(timedelta(hours=8))  # 中国标准时间
@@ -432,74 +438,6 @@ def fetch_url(url: str) -> str:
     resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=30)
     resp.raise_for_status()
     return resp.text
-
-
-def build_post_record(
-    url: str,
-    publisher_name: str,
-    publisher_id: str,
-    title: str,
-    body_text: str,
-    media_records: List[Dict],
-    published_at: Optional[str],
-    history_post_ids: Optional[List[str]],
-    salt: str,
-    collector: str,
-    terms_checked_at: Optional[str],
-    llm_meta: Optional[Dict] = None,
-) -> Dict:
-    """构建一条规范化的帖子记录。
-
-    返回的 JSON 对象按逻辑分组排列，字段顺序即为人工阅读顺序：
-      标识 → 时间 → 内容 → 媒体 → 评论 → 历史 → 元数据
-
-    blogger_history_refs 为 post_id 字符串列表（从博主搜索结果的
-    其他文章 URL 派生），仅包含发布于当前帖之前的文章。
-
-    llm_meta: 双 LLM 验证元数据（--use-llm 时填充），含 verified / confidence / needs_review
-    """
-    import collections
-
-    source_ref_hash = stable_hash(url, salt, length=32)
-    blogger_id = stable_hash(publisher_id or publisher_name or url, salt, length=24)
-    post_id = stable_hash(url, salt, length=24)
-
-    # 发布时间：优先用页面提取的，否则标记为 null
-    if not published_at:
-        published_at = None  # 明确表示未知，不用采集时间冒充
-
-    record = collections.OrderedDict()
-    # ── 标识 ──
-    record["post_id"] = post_id
-    record["platform"] = platform_from_url(url)
-    record["blogger_id"] = blogger_id
-    # ── 时间 ──
-    record["published_at"] = published_at
-    # ── 内容 ──
-    record["title"] = title if title else None
-    record["text"] = body_text
-    # ── 媒体 ──
-    record["media"] = media_records
-    # ── 评论 ──
-    record["comments"] = []
-    # ── 博主历史（post_id 字符串列表）──
-    record["blogger_history_refs"] = history_post_ids or []
-    # ── 采集元数据 ──
-    collected = collections.OrderedDict()
-    collected["source_url"] = url
-    collected["source_ref_hash"] = source_ref_hash
-    collected["collected_at"] = datetime.now(CST).strftime("%Y-%m-%dT%H:%M:%S+08:00")
-    collected["collector"] = collector
-    collected["terms_checked_at"] = terms_checked_at
-    if llm_meta:
-        collected["llm_mode"] = "html_direct"  # 标记为 HTML 直分析模式
-        collected["llm_needs_review"] = llm_meta.get("needs_review", True)
-        collected["llm_confidence"] = llm_meta.get("confidence", 0)
-        if llm_meta.get("notes"):
-            collected["llm_notes"] = llm_meta["notes"][:2000]
-    record["_collected"] = collected
-
-    return record
 
 
 def load_urls(path: Path) -> List[Dict[str, str]]:
