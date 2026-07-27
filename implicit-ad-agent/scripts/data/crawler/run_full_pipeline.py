@@ -332,7 +332,7 @@ def main():
     # ── 自动创建带时间戳的运行子目录 ──
     ts = int(time.time())
     ts_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(ts))
-    platform = "wechat_official_account"  # 公众号固定平台
+    platform = "wechat"  # 公众号固定平台
     run_dir = outdir / f"{platform}_{ts_str}"
     run_dir.mkdir(parents=True, exist_ok=True)
     print(f"📁 运行目录: {run_dir}")

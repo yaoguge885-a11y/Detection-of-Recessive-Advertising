@@ -4,11 +4,11 @@
 
 用法示例：
   # 单公众号
-  python scripts/data/crawler/run_full_pipeline.py --mode sogou --source "公众号名称" --output-dir data/run_outputs
+  python data-tooling/crawler/run_full_pipeline.py --mode sogou --source "公众号名称" --output-dir data/run_outputs
   # 从文章 URL 出发
-  python scripts/data/crawler/run_full_pipeline.py --mode article --source "https://mp.weixin.qq.com/s/.." --output-dir data/run_outputs
+  python data-tooling/crawler/run_full_pipeline.py --mode article --source "https://mp.weixin.qq.com/s/.." --output-dir data/run_outputs
   # 批量公众号：从 txt 文件按行读取作者名，依次搜索
-  python scripts/data/crawler/run_full_pipeline.py --mode sogou --accounts-file data/accounts.txt --output-dir data/run_outputs
+  python data-tooling/crawler/run_full_pipeline.py --mode sogou --accounts-file data/accounts.txt --output-dir data/run_outputs
 
 流水线步骤（仅爬虫，清洗/去重/校验后续单独执行）：
   1) 抓取文章 URL 列表
@@ -68,7 +68,7 @@ def merge_url_files(tmp_dir: Path, url_files: list, output: Path) -> None:
 def _build_crawl_cmd(python: str, account_url_file: Path, account_output: Path, args) -> list:
     """构建单个公众号的抓取命令。"""
     cmd = [
-        python, "scripts/data/crawler/crawl_public_posts.py",
+        python, "data-tooling/crawler/crawl_public_posts.py",
         "--input", str(account_url_file),
         "--output", str(account_output),
         "--history-urls", str(account_url_file),
@@ -83,6 +83,12 @@ def _build_crawl_cmd(python: str, account_url_file: Path, account_output: Path, 
         cmd.append("--use-bs4")
     if args.terms_checked_at:
         cmd.extend(["--terms-checked-at", args.terms_checked_at])
+    if getattr(args, "retry_rounds", None):
+        cmd.extend(["--retry-rounds", str(args.retry_rounds)])
+    if getattr(args, "delay_min", None):
+        cmd.extend(["--delay-min", str(args.delay_min)])
+    if getattr(args, "delay_max", None):
+        cmd.extend(["--delay-max", str(args.delay_max)])
     return cmd
 
 
@@ -318,6 +324,9 @@ def main():
                         help="断点续传：指定 tmp 目录路径，跳过搜索从该目录的 URL 文件直接抓取")
     parser.add_argument("--workers", type=int, default=3,
                         help="批量模式并发 worker 数（默认 3，每个 worker 处理一个公众号）")
+    parser.add_argument("--retry-rounds", type=int, default=3, help="单篇文章抓取失败重试轮数 (默认3轮)")
+    parser.add_argument("--delay-min", type=float, default=2.0, help="文章间抓取间隔最小秒数 (默认2.0)")
+    parser.add_argument("--delay-max", type=float, default=5.0, help="文章间抓取间隔最大秒数 (默认5.0)")
     args = parser.parse_args()
 
     # 校验参数
@@ -332,9 +341,9 @@ def main():
     # ── 自动创建带时间戳的运行子目录 ──
     ts = int(time.time())
     ts_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(ts))
-    platform_map = {"article": "wechat_official_account", "sogou": "wechat_official_account",
+    platform_map = {"article": "wechat", "sogou": "wechat",
                      "bilibili": "bilibili", "xiaohongshu": "xiaohongshu"}
-    platform = platform_map.get(args.mode, "wechat_official_account")
+    platform = platform_map.get(args.mode, "wechat")
     run_dir = outdir / f"{platform}_{ts_str}"
     run_dir.mkdir(parents=True, exist_ok=True)
     print(f"📁 运行目录: {run_dir}")
@@ -442,7 +451,7 @@ def main():
             print(f"{'='*60}")
             account_url_file = tmp / f"urls_{i:04d}.txt"
             cmd = [
-                python, "scripts/data/crawler/sogou_wechat_crawler.py",
+                python, "data-tooling/crawler/sogou_wechat_crawler.py",
                 "--account", account,
                 "--max-articles", str(args.max_articles),
                 "--output", str(account_url_file),
@@ -460,7 +469,7 @@ def main():
 
     elif args.mode == "article":
         cmd = [
-            python, "scripts/data/crawler/crawl_wechat_from_article.py",
+            python, "data-tooling/crawler/crawl_wechat_from_article.py",
             "--url", args.source,
             "--output", str(urls_file),
         ]
@@ -473,7 +482,7 @@ def main():
     elif args.mode == "bilibili":
         # ─── B站模式: 直接调 bilibili_crawler.py ───
         cmd = [
-            python, "scripts/data/crawler/bilibili_crawler.py",
+            python, "data-tooling/crawler/bilibili_crawler.py",
             "--url", args.source,
             "--max-items", str(args.max_articles),
             "--output-dir", str(outdir),
@@ -489,7 +498,7 @@ def main():
     elif args.mode == "xiaohongshu":
         # ─── 小红书模式: 直接调 xiaohongshu_crawler.py ───
         cmd = [
-            python, "scripts/data/crawler/xiaohongshu_crawler.py",
+            python, "data-tooling/crawler/xiaohongshu_crawler.py",
             "--url", args.source,
             "--max-items", str(args.max_articles),
             "--output-dir", str(outdir),
@@ -506,7 +515,7 @@ def main():
 
     else:  # sogou 单公众号
         cmd = [
-            python, "scripts/data/crawler/sogou_wechat_crawler.py",
+            python, "data-tooling/crawler/sogou_wechat_crawler.py",
             "--account", args.source,
             "--max-articles", str(args.max_articles),
             "--output", str(urls_file),
@@ -516,7 +525,7 @@ def main():
     # ── Step 2: 抓取内容 + 匿名化（传入全部 URL 列表作为博主历史）──
     anonymized = run_dir / "anonymized_posts.jsonl"
     cmd = [
-        python, "scripts/data/crawler/crawl_public_posts.py",
+        python, "data-tooling/crawler/crawl_public_posts.py",
         "--input", str(urls_file),
         "--output", str(anonymized),
         "--history-urls", str(urls_file),     # ← 全部 URL 作为博主历史
@@ -527,8 +536,16 @@ def main():
         cmd.append("--no-images")
     if args.use_llm:
         cmd.append("--use-llm")
+    if getattr(args, "use_bs4", False):
+        cmd.append("--use-bs4")
     if args.terms_checked_at:
         cmd.extend(["--terms-checked-at", args.terms_checked_at])
+    if getattr(args, "retry_rounds", None):
+        cmd.extend(["--retry-rounds", str(args.retry_rounds)])
+    if getattr(args, "delay_min", None):
+        cmd.extend(["--delay-min", str(args.delay_min)])
+    if getattr(args, "delay_max", None):
+        cmd.extend(["--delay-max", str(args.delay_max)])
     run(cmd)
 
     # ── 完成 ──

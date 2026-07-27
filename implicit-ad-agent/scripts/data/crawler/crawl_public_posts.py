@@ -354,7 +354,7 @@ def clean_body_text(raw_text: str, title: str) -> str:
 
 def platform_from_url(url: str) -> str:
     if "mp.weixin.qq.com" in url or "weixin.qq.com" in url:
-        return "wechat_official_account"
+        return "wechat"
     if "weibo.com" in url or "m.weibo.cn" in url:
         return "weibo_public_account"
     return "web_public"

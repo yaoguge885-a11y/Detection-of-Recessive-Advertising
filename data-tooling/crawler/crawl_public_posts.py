@@ -355,7 +355,7 @@ def clean_body_text(raw_text: str, title: str) -> str:
 
 def platform_from_url(url: str) -> str:
     if "mp.weixin.qq.com" in url or "weixin.qq.com" in url:
-        return "wechat_official_account"
+        return "wechat"
     if "weibo.com" in url or "m.weibo.cn" in url:
         return "weibo_public_account"
     return "web_public"
@@ -479,6 +479,9 @@ def main() -> int:
     parser.add_argument("--use-bs4", action="store_true", help="Use BeautifulSoup DOM walker (no LLM cost) for clean text + image positioning")
     parser.add_argument("--collector", default="D", help="Collector identifier")
     parser.add_argument("--terms-checked-at", default=None, help="Terms check date (YYYY-MM-DD)")
+    parser.add_argument("--retry-rounds", type=int, default=3, help="单篇文章抓取失败重试轮数 (默认3轮)")
+    parser.add_argument("--delay-min", type=float, default=2.0, help="文章间抓取间隔最小秒数 (默认2.0)")
+    parser.add_argument("--delay-max", type=float, default=5.0, help="文章间抓取间隔最大秒数 (默认5.0)")
     args = parser.parse_args()
 
     salt = get_salt()
@@ -519,146 +522,183 @@ def main() -> int:
     indent = None if args.compact else 2
 
     records_written = 0
-    for item in urls:
-        url = item["url"]
-        publisher_name = item["publisher_name"]
-        publisher_id = item["publisher_id"]
-        try:
-            print(f"\n{'='*60}")
-            print(f"Fetching: {url[:100]}...")
+    total_items = len(urls)
+    seen_urls = set()
 
-            # 跳过验证页面 URL
-            if _is_captcha_url(url):
-                print(f"  ⏭ 跳过（验证页面 URL）")
-                continue
+    for round_num in range(1, args.retry_rounds + 1):
+        remaining = [it for it in urls if it["url"] not in seen_urls]
+        if not remaining:
+            break
+        print(f"\n{'#'*60}")
+        print(f"### 第 {round_num}/{args.retry_rounds} 轮: 待抓取 {len(remaining)}/{total_items} 篇")
+        print(f"{'#'*60}")
 
-            html = fetch_url(url)
+        round_failed = []
+        for idx, item in enumerate(remaining, 1):
+            url = item["url"]
+            publisher_name = item["publisher_name"]
+            publisher_id = item["publisher_id"]
 
-            # 跳过返回验证页面的内容
-            if _is_verification_page(html):
-                print(f"  ⏭ 跳过（页面为微信环境验证，非文章正文）")
-                continue
+            try:
+                print(f"\n{'='*60}")
+                print(f"[轮{round_num} {idx}/{len(remaining)}] {url[:100]}...")
 
-            # 1. 提取标题
-            title = extract_title(html)
-            print(f"  title: {title[:60]}")
+                # 跳过验证页面 URL
+                if _is_captcha_url(url):
+                    print(f"  ⏭ 跳过（验证页面 URL）")
+                    seen_urls.add(url)
+                    continue
 
-            # 2. 提取真实发布时间
-            published_at = extract_publish_date(html)
-            print(f"  published: {published_at or '(unknown)'}")
+                html = fetch_url(url)
 
-            # 3. 正文提取与清洗
-            raw_text = extract_text(html)
-            body_text = clean_body_text(raw_text, title)
-            print(f"  text: {len(body_text)} chars")
+                # 跳过返回验证页面的内容
+                if _is_verification_page(html):
+                    print(f"  ⏭ 跳过（页面为微信环境验证，非文章正文）")
+                    seen_urls.add(url)
+                    continue
 
-            # 4. 图片 URL 提取
-            image_urls = extract_image_urls(html) if not args.no_images else []
-            print(f"  images: {len(image_urls)} found")
+                # 1. 提取标题
+                title = extract_title(html)
+                print(f"  title: {title[:60]}")
 
-            # 5. BS4 结构提取（可选，无 LLM 成本）
-            bs4_result = None
-            if args.use_bs4 and html:
-                from scripts.data.crawler.html_structure_extractor import extract_from_html
-                try:
-                    bs4_result = extract_from_html(html)
-                    if bs4_result.get("title"):
-                        title = bs4_result["title"]
-                        print(f"  [BS4] title: {title[:60]}")
-                    if bs4_result.get("clean_text"):
-                        body_text = bs4_result["clean_text"]
-                        print(f"  [BS4] clean text: {len(body_text)} chars")
-                    if bs4_result.get("needs_review"):
-                        print(f"  [BS4] 需复核: {bs4_result.get('notes', '')[:80]}")
-                except Exception as exc:
-                    print(f"  [BS4] 失败: {exc}, 回退到正则清洗")
+                # 2. 提取真实发布时间
+                published_at = extract_publish_date(html)
+                print(f"  published: {published_at or '(unknown)'}")
 
-            # 6. LLM 分析（可选）：从原始 HTML 直接提取纯净正文 + 图片标注 + <图片N> 标记
-            llm_result = None
-            if args.use_llm and html and not bs4_result:
-                from scripts.data.crawler.llm_image_extractor import llm_extract_from_html
-                try:
-                    llm_result = llm_extract_from_html(html, image_urls)
-                    # 用 LLM 提取的标题（如更准确）
-                    if llm_result.get("title"):
-                        title = llm_result["title"]
-                        print(f"  [LLM] title: {title[:60]}")
-                    # 用 LLM 提取的纯净正文替换
-                    if llm_result.get("clean_text"):
-                        body_text = llm_result["clean_text"]
-                        print(f"  [LLM] clean text: {len(body_text)} chars")
-                    if llm_result.get("needs_review"):
-                        print(f"  [LLM] 需复核: 置信度 {llm_result.get('confidence', 0):.2f}")
-                except Exception as exc:
-                    print(f"  [LLM] 失败: {exc}, 回退到正则清洗")
+                # 3. 正文提取与清洗（正则兜底）
+                raw_text = extract_text(html)
+                body_text = clean_body_text(raw_text, title)
+                print(f"  [regex] text: {len(body_text)} chars")
 
-            # 7. 图片下载
-            if args.no_images:
-                media_records = []
-                print("  images: skipped (--no-images)")
-            else:
-                post_id = stable_hash(url, salt, length=24)
-                media_records = download_images(image_urls, post_id, media_base_dir, session)
-                print(f"  images: {len(media_records)} downloaded")
+                # 4. 图片 URL 提取
+                image_urls = extract_image_urls(html) if not args.no_images else []
+                print(f"  images: {len(image_urls)} found")
 
-                # 将 BS4 提取的标注合并到 media 记录中
+                # 5. BS4 结构提取（可选，无 LLM 成本）
+                bs4_result = None
+                if args.use_bs4 and html:
+                    from html_structure_extractor import extract_from_html
+                    try:
+                        bs4_result = extract_from_html(html)
+                        if bs4_result.get("title"):
+                            title = bs4_result["title"]
+                            print(f"  [BS4] title: {title[:60]}")
+                        if bs4_result.get("clean_text"):
+                            body_text = bs4_result["clean_text"]
+                            print(f"  [BS4] clean text: {len(body_text)} chars")
+                        if bs4_result.get("needs_review"):
+                            print(f"  [BS4] 需复核: {bs4_result.get('notes', '')[:80]}")
+                    except Exception as exc:
+                        print(f"  [BS4] 失败: {exc}, 回退到正则清洗")
+
+                # 6. LLM 分析（可选）：与 BS4 联合使用，交叉验证文本质量
+                llm_result = None
+                if args.use_llm and html:
+                    from llm_image_extractor import llm_extract_from_html
+                    try:
+                        llm_result = llm_extract_from_html(html, image_urls)
+                        # LLM 标题与 BS4 交叉参考
+                        if llm_result.get("title") and not bs4_result:
+                            title = llm_result["title"]
+                            print(f"  [LLM] title: {title[:60]}")
+                        # LLM 正文：优先采用（通常更干净），BS4 结果作为回退
+                        if llm_result.get("clean_text"):
+                            body_text = llm_result["clean_text"]
+                            print(f"  [LLM] clean text: {len(body_text)} chars")
+                        elif not bs4_result:
+                            print(f"  [LLM] 未提取到正文，保留现有结果")
+                        if llm_result.get("needs_review"):
+                            print(f"  [LLM] 需复核: 置信度 {llm_result.get('confidence', 0):.2f}")
+                    except Exception as exc:
+                        print(f"  [LLM] 失败: {exc}, 回退到 {'BS4' if bs4_result else '正则'}结果")
+
+                # 7. 保证正文内包含标题（若缺失则前置）
+                if title and title not in body_text:
+                    body_text = title + "\n\n" + body_text
+                    print(f"  [title] 前置标题到正文")
+
+                # 8. 图片下载
+                if args.no_images:
+                    media_records = []
+                    print("  images: skipped (--no-images)")
+                else:
+                    post_id = stable_hash(url, salt, length=24)
+                    media_records = download_images(image_urls, post_id, media_base_dir, session)
+                    print(f"  images: {len(media_records)} downloaded")
+
+                    # BS4 + LLM 合并 enrichment：BS4 提供结构定位，LLM 提供语义标注
+                    all_enrichments = []
+                    if bs4_result:
+                        all_enrichments.extend(bs4_result.get("media_enrichments", []))
+                    if llm_result:
+                        llm_enrichments = llm_result.get("media_enrichments", [])
+                        # LLM 标注覆盖 BS4 同索引的标注（LLM 语义更准确）
+                        llm_indices = {e.get("index", -1) for e in llm_enrichments}
+                        bs4_only = [e for e in all_enrichments if e.get("index", -1) not in llm_indices]
+                        all_enrichments = llm_enrichments + bs4_only
+
+                    for enrichment in all_enrichments:
+                        idx = enrichment.get("index", -1)
+                        if 0 <= idx < len(media_records):
+                            # 不覆盖已有的 caption（LLM 优先）
+                            if enrichment.get("caption") and not media_records[idx].get("caption"):
+                                media_records[idx]["caption"] = enrichment.get("caption")
+                            if "is_content" in enrichment:
+                                media_records[idx]["is_content"] = enrichment.get("is_content", True)
+                    print(f"  [merge] BS4+LLM enrichments: {len(all_enrichments)} total")
+
+                # 9. 博主历史
+                history_post_ids = [
+                    stable_hash(h_url, salt, length=24)
+                    for h_url in all_history_urls
+                    if h_url != url
+                ]
+
+                # 10. 构建记录（合并 BS4 + LLM 元数据）
+                extraction_meta = {}
                 if bs4_result:
-                    enrichments = bs4_result.get("media_enrichments", [])
-                    for enrichment in enrichments:
-                        idx = enrichment.get("index", -1)
-                        if 0 <= idx < len(media_records):
-                            media_records[idx]["caption"] = enrichment.get("caption")
-                            media_records[idx]["is_content"] = enrichment.get("is_content", True)
-                    print(f"  [BS4] media enrichments: {len(enrichments)}")
-
-                # 将 LLM 提取的标注合并到 media 记录中
+                    extraction_meta.update(bs4_result)
                 if llm_result:
-                    enrichments = llm_result.get("media_enrichments", [])
-                    for enrichment in enrichments:
-                        idx = enrichment.get("index", -1)
-                        if 0 <= idx < len(media_records):
-                            media_records[idx]["caption"] = enrichment.get("caption")
-                            media_records[idx]["is_content"] = enrichment.get("is_content", True)
-                    captions_found = sum(
-                        1 for e in enrichments if e.get("caption")
-                    )
-                    print(f"  [LLM] captions extracted: {captions_found}/{len(image_urls)}")
+                    extraction_meta.update(llm_result)
+                if not extraction_meta:
+                    extraction_meta = None
 
-            # 8. 博主历史
-            history_post_ids = [
-                stable_hash(h_url, salt, length=24)
-                for h_url in all_history_urls
-                if h_url != url
-            ]
+                record = build_post_record(
+                    url=url,
+                    publisher_name=publisher_name,
+                    publisher_id=publisher_id,
+                    title=title,
+                    body_text=body_text,
+                    media_records=media_records,
+                    published_at=published_at,
+                    history_post_ids=history_post_ids,
+                    llm_meta=extraction_meta,
+                    salt=salt,
+                    collector=args.collector,
+                    terms_checked_at=args.terms_checked_at,
+                )
 
-            # 9. 构建记录（BS4 优先于 LLM 的元数据）
-            extraction_meta = bs4_result or llm_result
-            record = build_post_record(
-                url=url,
-                publisher_name=publisher_name,
-                publisher_id=publisher_id,
-                title=title,
-                body_text=body_text,
-                media_records=media_records,
-                published_at=published_at,
-                history_post_ids=history_post_ids,
-                llm_meta=extraction_meta,
-                salt=salt,
-                collector=args.collector,
-                terms_checked_at=args.terms_checked_at,
-            )
+                # 11. 输出（每条记录之间用空行分隔，方便阅读）
+                with output_path.open("a", encoding="utf-8") as stream:
+                    if records_written > 0:
+                        stream.write("\n")  # 记录间空行
+                    json.dump(record, stream, ensure_ascii=False, indent=indent)
+                    stream.write("\n")
+                records_written += 1
+                seen_urls.add(url)
+                print(f"  ✓ saved (history: {len(history_post_ids)} refs)")
 
-            # 10. 输出（每条记录之间用空行分隔，方便阅读）
-            with output_path.open("a", encoding="utf-8") as stream:
-                if records_written > 0:
-                    stream.write("\n")  # 记录间空行
-                json.dump(record, stream, ensure_ascii=False, indent=indent)
-                stream.write("\n")
-            records_written += 1
-            print(f"  ✓ saved (history: {len(history_post_ids)} refs)")
+            except Exception as exc:
+                print(f"  ✗ failed: {exc}", file=sys.stderr)
+                round_failed.append(item)
 
-        except Exception as exc:
-            print(f"  ✗ failed: {exc}", file=sys.stderr)
+            # 礼貌延迟
+            delay = random.uniform(args.delay_min, args.delay_max)
+            time.sleep(delay)
+
+        urls = round_failed  # 下一轮只重试失败的
+        if round_failed:
+            print(f"\n  ⚠ 第 {round_num} 轮完成，{len(round_failed)} 篇失败待重试")
 
     print(f"\n{'='*60}")
     print(f"Done. {records_written} records → {output_path}")

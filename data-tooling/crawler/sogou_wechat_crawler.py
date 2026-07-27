@@ -32,6 +32,8 @@ def crawl_sogou_wechat(account_name: str, max_articles: int = 50, max_pages: int
         )
         page = context.new_page()
         
+        consecutive_empty = 0  # 连续空页计数器
+        
         for page_num in range(1, max_pages + 1):
             if len(results) >= max_articles:
                 break
@@ -44,7 +46,11 @@ def crawl_sogou_wechat(account_name: str, max_articles: int = 50, max_pages: int
                 time.sleep(3)
             except Exception as e:
                 print(f"  Failed: {e}")
-                break
+                consecutive_empty += 1
+                if consecutive_empty >= 5:
+                    print(f"  连续 {consecutive_empty} 页加载失败，终止搜索")
+                    break
+                continue
             
             soup = BeautifulSoup(page.content(), "html.parser")
             
@@ -75,13 +81,26 @@ def crawl_sogou_wechat(account_name: str, max_articles: int = 50, max_pages: int
                 
                 entries.append({"title": title, "link": link, "publisher": publisher})
             
+            # 早停：连续 5 页没有任何条目时终止
+            if not entries:
+                consecutive_empty += 1
+                print(f"  本页无任何条目（连续空页 {consecutive_empty}/5）")
+                if consecutive_empty >= 5:
+                    print(f"  连续 {consecutive_empty} 页无内容，终止搜索")
+                    break
+                continue
+            else:
+                consecutive_empty = 0  # 有内容则重置
+            
             # Filter by account name
             matching = [e for e in entries if account_name.lower() in e["publisher"].lower()]
             print(f"  {len(entries)} results, {len(matching)} from '{account_name}'")
             
             if not matching:
-                print("  No more matching results, stopping.")
-                break
+                print("  No matching results on this page, continuing...")
+                continue
+            else:
+                consecutive_empty = 0
             
             # Resolve redirect links
             for entry in matching:
