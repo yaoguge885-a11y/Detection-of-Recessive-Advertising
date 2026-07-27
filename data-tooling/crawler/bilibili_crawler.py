@@ -246,40 +246,51 @@ def discover_bilibili_posts(
                 page.evaluate(f"window.scrollBy(0, {step_px})")
                 page.wait_for_timeout(delay_ms + random.randint(0, 300))
 
-        # ── 1. 加载视频列表：慢速滚动触发API ──
-        print("  发现视频列表 (慢速滚动)...")
-        max_retries = 2
-        for attempt in range(max_retries):
+        # ── 1. 视频列表：渐进式重试 + DOM回退 ──
+        print("  发现视频列表...")
+        # 渐进式重试间隔（秒）：逐步加长等待模拟真人
+        retry_delays = [2, 5, 8, 12]
+        # 多种视频页入口切换
+        video_urls = [
+            f"https://space.bilibili.com/{mid}/video?tid=0&pn=1&keyword=&order=pubdate",
+            f"https://space.bilibili.com/{mid}/video",
+            f"https://space.bilibili.com/{mid}?from=video",  # 从主页触发
+        ]
+        
+        for attempt in range(len(retry_delays) + 1):
+            if len(video_items) >= 5:
+                break
+            url_idx = attempt % len(video_urls)
+            v_url = video_urls[url_idx]
             try:
-                page.goto(f"https://space.bilibili.com/{mid}/video?tid=0&pn=1&keyword=&order=pubdate",
-                          wait_until="domcontentloaded", timeout=30000)
-                page.wait_for_timeout(2000)
-                # 慢速滚动触发懒加载API
+                if attempt > 0:
+                    wait = retry_delays[attempt - 1] + random.uniform(0, 3)
+                    print(f"    重试 {attempt+1}/{len(retry_delays)+1}, 等待 {wait:.0f}s... ({v_url.split('/')[-1][:30]})")
+                    time.sleep(wait)
+                
+                page.goto(v_url, wait_until="domcontentloaded", timeout=30000)
+                page.wait_for_timeout(3000)
                 _slow_scroll(page, steps=10, step_px=500, delay_ms=800)
                 page.wait_for_timeout(2000)
                 
                 page_title = page.title()
                 print(f"    页面: {page_title[:50]}, API: {_api_call_count}次, 视频: {len(video_items)}")
-                
-                if video_items:
-                    break
-                if attempt < max_retries - 1:
-                    print(f"    未获取到视频，重试 ({attempt+2}/{max_retries})...")
-                    time.sleep(random.uniform(2, 4))
             except Exception as e:
-                print(f"    视频页异常 (attempt {attempt+1}): {e}")
-                if attempt < max_retries - 1:
-                    time.sleep(random.uniform(3, 5))
-        print(f"    视频: {len(video_items)} 条")
-
-        # DOM回退：API全被封时从页面HTML提取视频链接
-        if not video_items:
-            print("    尝试 DOM 回退提取视频...")
+                print(f"    视频页异常: {e}")
+        
+        # DOM回退：API全封时从HTML提取（保底至少得5-10条）
+        if len(video_items) < 5:
+            print(f"    API仅获{len(video_items)}条，启动 DOM 深度回退...")
             try:
                 from bs4 import BeautifulSoup
                 page.goto(f"https://space.bilibili.com/{mid}/video", wait_until="domcontentloaded", timeout=20000)
                 page.wait_for_timeout(3000)
-                _slow_scroll(page, steps=8, step_px=400, delay_ms=600)
+                # 深度滚动多次
+                for _ in range(12):
+                    page.evaluate("window.scrollBy(0, 600)")
+                    page.wait_for_timeout(800)
+                page.wait_for_timeout(2000)
+                
                 soup = BeautifulSoup(page.content(), "html.parser")
                 seen_bv = set()
                 for a in soup.select('a[href*="/video/BV"]'):
@@ -289,31 +300,47 @@ def discover_bilibili_posts(
                         bvid = m.group(1)
                         if bvid not in seen_bv:
                             seen_bv.add(bvid)
-                            video_items.append({"bvid": bvid, "title": a.get("title", a.get_text(strip=True))[:80], "aid": None, "author": "", "mid": mid, "created": 0})
-                print(f"    DOM回退: {len(video_items)} 条")
+                            video_items.append({
+                                "bvid": bvid,
+                                "title": a.get("title") or a.get_text(strip=True)[:80],
+                                "aid": None, "author": "", "mid": mid, "created": 0,
+                            })
+                print(f"    DOM回退: {len(video_items)} 条视频")
             except Exception as e:
                 print(f"    DOM回退失败: {e}")
+        
+        print(f"    视频总计: {len(video_items)} 条")
 
-        # ── 2. 专栏列表：慢速滚动触发API ──
+        # ── 2. 专栏列表：渐进式重试 + DOM回退 ──
         print("  发现专栏列表...")
-        try:
-            page.goto(f"https://space.bilibili.com/{mid}/article",
-                      wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(2000)
-            _slow_scroll(page, steps=6, step_px=400, delay_ms=700)
-            page.wait_for_timeout(2000)
-        except Exception as e:
-            print(f"    专栏页异常: {e}")
-        print(f"    专栏: {len(article_items)} 条")
+        article_retry_delays = [2, 4, 7]
+        for attempt in range(len(article_retry_delays) + 1):
+            if len(article_items) >= 3:
+                break
+            try:
+                if attempt > 0:
+                    w = article_retry_delays[attempt - 1] + random.uniform(0, 2)
+                    print(f"    专栏重试 {attempt+1}, 等待 {w:.0f}s...")
+                    time.sleep(w)
+                page.goto(f"https://space.bilibili.com/{mid}/article",
+                          wait_until="domcontentloaded", timeout=30000)
+                page.wait_for_timeout(2000)
+                _slow_scroll(page, steps=8, step_px=400, delay_ms=700)
+                page.wait_for_timeout(1500)
+            except Exception as e:
+                print(f"    专栏页异常: {e}")
+        print(f"    专栏API: {len(article_items)} 条")
 
         # DOM回退专栏
-        if not article_items:
+        if len(article_items) < 3:
             print("    尝试 DOM 回退提取专栏...")
             try:
                 from bs4 import BeautifulSoup
                 page.goto(f"https://space.bilibili.com/{mid}/article", wait_until="domcontentloaded", timeout=20000)
                 page.wait_for_timeout(2000)
-                _slow_scroll(page, steps=6, step_px=400, delay_ms=600)
+                for _ in range(10):
+                    page.evaluate("window.scrollBy(0, 500)")
+                    page.wait_for_timeout(700)
                 soup = BeautifulSoup(page.content(), "html.parser")
                 seen_cv = set()
                 for a in soup.select('a[href*="/read/cv"]'):
@@ -324,9 +351,10 @@ def discover_bilibili_posts(
                         if cv_id not in seen_cv:
                             seen_cv.add(cv_id)
                             article_items.append({"id": cv_id, "title": a.get_text(strip=True)[:80], "author_name": "", "publish_time": 0})
-                print(f"    DOM回退专栏: {len(article_items)} 条")
+                print(f"    DOM回退: {len(article_items)} 条专栏")
             except Exception as e:
-                print(f"    DOM回退专栏失败: {e}")
+                print(f"    DOM回退失败: {e}")
+        print(f"    专栏总计: {len(article_items)} 条")
 
         # 构建视频条目
         for v in video_items:
@@ -356,28 +384,34 @@ def discover_bilibili_posts(
                     "cv_id": cv_id,
                 })
 
-        # ── 4. 动态/opus列表：多轮滚动触发分页API ──
-        print("  发现动态列表 (API分页)...")
-        try:
-            page.goto(f"https://space.bilibili.com/{mid}/dynamic",
-                      wait_until="domcontentloaded", timeout=30000)
-            page.wait_for_timeout(3000)
-
-            # 多轮滚动触发 feed/space API 分页加载
-            scroll_rounds = 15  # 足够滚动到触发多页
-            for s in range(scroll_rounds):
-                page.evaluate("window.scrollBy(0, 600)")
-                page.wait_for_timeout(800 + random.randint(0, 400))
-                if (s + 1) % 5 == 0:
-                    print(f"    滚动 {s+1}/{scroll_rounds}, 已截获 {len(dynamic_items)} 条动态")
-            
-            page.wait_for_timeout(2000)
-            print(f"    动态API: {len(dynamic_items)} 条")
-        except Exception as e:
-            print(f"    动态API失败: {e}")
+        # ── 3. 动态/opus列表：渐进式重试 + DOM回退 ──
+        print("  发现动态列表...")
+        dyn_retry_delays = [2, 5, 8]
+        dyn_urls = [
+            f"https://space.bilibili.com/{mid}/dynamic",
+            f"https://space.bilibili.com/{mid}?from=dynamic",
+        ]
+        for attempt in range(len(dyn_retry_delays) + 1):
+            if len(dynamic_items) >= 5:
+                break
+            url_idx = attempt % len(dyn_urls)
+            try:
+                if attempt > 0:
+                    w = dyn_retry_delays[attempt - 1] + random.uniform(0, 3)
+                    print(f"    动态重试 {attempt+1}, 等待 {w:.0f}s...")
+                    time.sleep(w)
+                page.goto(dyn_urls[url_idx], wait_until="domcontentloaded", timeout=30000)
+                page.wait_for_timeout(3000)
+                for s in range(12):
+                    page.evaluate("window.scrollBy(0, 600)")
+                    page.wait_for_timeout(800 + random.randint(0, 300))
+                page.wait_for_timeout(2000)
+            except Exception as e:
+                print(f"    动态页异常: {e}")
+        print(f"    动态API: {len(dynamic_items)} 条")
 
         # DOM回退动态
-        if not dynamic_items:
+        if len(dynamic_items) < 3:
             print("    尝试 DOM 回退提取动态...")
             try:
                 from bs4 import BeautifulSoup
@@ -1016,58 +1050,54 @@ def main() -> int:
     print(f"[RUN DIR] {run_dir}")
     print(f"[MEDIA]   {media_base_dir}")
 
-    # ── 构建 items 列表 ──
+    # ── 构建 items 列表（记录空间页便于重试）──
+    space_urls = []  # 空间页URL列表
+    single_items = []
+    
     if args.input:
-        # 从文件读取URL列表
         input_path = Path(args.input)
         urls_raw = [l.strip() for l in input_path.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
-        items = []
         for u in urls_raw:
-            # 检测是否为空间页URL：自动批量展开
             if "space.bilibili.com" in u:
-                print(f"  [EXPAND] 空间页: {u}")
-                try:
-                    expanded = discover_bilibili_posts(u, max_items=args.max_items, proxy=args.proxy)
-                    items.extend(expanded)
-                    print(f"    -> 展开 {len(expanded)} 条")
-                except Exception as e:
-                    print(f"    -> 展开失败: {e}")
-                continue
-            # 普通内容URL
-            ct = _detect_content_type(u)
-            items.append({
-                "url": u,
-                "title": "",
-                "content_type": ct,
-                "author_name": "",
-                "author_mid": "",
-                "bvid": _extract_bvid(u) if ct == "video" else None,
-                "dynamic_id": _extract_dynamic_id(u) if ct == "opus" else None,
-                "cv_id": _extract_cv_id(u) if ct == "article" else None,
-            })
-        print(f"[INPUT] 从文件加载 {len(items)} 条URL: {args.input}")
+                space_urls.append(u)
+            else:
+                ct = _detect_content_type(u)
+                single_items.append({
+                    "url": u, "title": "", "content_type": ct,
+                    "author_name": "", "author_mid": "",
+                    "bvid": _extract_bvid(u) if ct == "video" else None,
+                    "dynamic_id": _extract_dynamic_id(u) if ct == "opus" else None,
+                    "cv_id": _extract_cv_id(u) if ct == "article" else None,
+                })
+        print(f"[INPUT] {len(space_urls)} 个空间页 + {len(single_items)} 条单URL")
     elif not ("space.bilibili.com" in args.url or "/space" in args.url):
-        # 单条内容URL
-        content_type = _detect_content_type(args.url)
-        item = {
-            "url": args.url,
-            "title": "",
-            "content_type": content_type,
-            "author_name": "",
-            "author_mid": "",
-            "bvid": _extract_bvid(args.url) if content_type == "video" else None,
-            "dynamic_id": _extract_dynamic_id(args.url) if content_type == "opus" else None,
-            "cv_id": _extract_cv_id(args.url) if content_type == "article" else None,
-        }
-        items = [item]
-        print(f"[SINGLE] 单条抓取模式: {content_type} | {args.url}")
+        ct = _detect_content_type(args.url)
+        single_items = [{"url": args.url, "title": "", "content_type": ct, "author_name": "", "author_mid": "",
+                          "bvid": _extract_bvid(args.url) if ct == "video" else None,
+                          "dynamic_id": _extract_dynamic_id(args.url) if ct == "opus" else None,
+                          "cv_id": _extract_cv_id(args.url) if ct == "article" else None}]
+        print(f"[SINGLE] {ct} | {args.url}")
     else:
-        # ── 1. URL 发现 ──
-        print(f"\n[DISCOVER] {args.url}")
-        items = discover_bilibili_posts(args.url, max_items=args.max_items, proxy=args.proxy)
-        if not items:
-            print("未发现任何内容，退出。")
-            return 1
+        space_urls = [args.url]
+
+    # ── 展开空间页（支持多轮重试）──
+    def expand_spaces(urls, round_label=""):
+        items = []
+        for u in urls:
+            print(f"  [EXPAND{round_label}] {u}")
+            try:
+                expanded = discover_bilibili_posts(u, max_items=args.max_items, proxy=args.proxy)
+                items.extend(expanded)
+                print(f"    -> {len(expanded)} 条")
+            except Exception as e:
+                print(f"    -> 失败: {e}")
+        return items
+
+    items = expand_spaces(space_urls) + single_items
+    
+    if not items:
+        print("未发现任何内容，退出。")
+        return 1
 
     session = requests.Session()
 
@@ -1081,13 +1111,13 @@ def main() -> int:
     # ── 2. 多轮抓取：失败的重试 ──
     total_items = len(items)
     records_written = 0
-    failed_items = list(range(total_items))  # 初始所有待抓
-    seen_urls = set()  # 去重
+    failed_items = list(items)  # 初始所有待抓（dict列表）
+    seen_urls = set()
 
     for round_num in range(1, args.retry_rounds + 1):
         if not failed_items:
             break
-        remaining = [items[i] for i in failed_items if items[i]["url"] not in seen_urls]
+        remaining = [it for it in failed_items if it["url"] not in seen_urls]
         if not remaining:
             break
         print(f"\n=== 第 {round_num}/{args.retry_rounds} 轮: 待抓取 {len(remaining)} 条 ===")
@@ -1122,6 +1152,32 @@ def main() -> int:
             time.sleep(delay)
 
         failed_items = new_failed
+        
+        # ── 空间页重展开：产出不足的账号重新发现 ──
+        if space_urls and round_num < args.retry_rounds:
+            space_counts = {u: 0 for u in space_urls}
+            for it in items:
+                mid = it.get("author_mid", "")
+                if mid:
+                    for su in space_urls:
+                        if _extract_mid_from_url(su) == mid:
+                            space_counts[su] += 1
+                            break
+            deficient = [su for su, cnt in space_counts.items() if cnt < 3]
+            if deficient:
+                print(f"\n  产出不足的空间页 ({len(deficient)}个)，重新展开...")
+                new_expanded = expand_spaces(deficient, round_label=f" R{round_num}")
+                if new_expanded:
+                    existing_urls = seen_urls | {it["url"] for it in items}
+                    new_count = 0
+                    for ne in new_expanded:
+                        if ne["url"] not in existing_urls:
+                            failed_items.append(ne)
+                            items.append(ne)
+                            new_count += 1
+                    print(f"    -> 新增 {new_count} 条")
+                    total_items = len(items)  # 更新总数
+        
         if failed_items and round_num < args.retry_rounds:
             wait = random.uniform(5, 15)
             print(f"\n  本轮 {len(failed_items)} 条失败，{wait:.0f}s 后重试...")
