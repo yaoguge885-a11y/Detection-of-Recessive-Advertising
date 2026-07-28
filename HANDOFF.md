@@ -1,7 +1,7 @@
 # HANDOFF：隐性广告识别项目
 
-> 面向下一位接手开发者的事实交接。最后更新：2026-07-26（M1代码治理收口与真实数据试运行后）。
-> 先读本文件，再读 `docs/隐性广告识别项目_说明书.md`、`docs/隐性广告识别项目_分阶段计划表.md` 和 `docs/现有代码修改大纲.md`。
+> 面向下一位接手开发者的事实交接。最后更新：2026-07-27（P3合并与统一CLI收口后）。
+> 先读本文件，再读 `docs/隐性广告识别项目_说明书.md`、`docs/隐性广告识别项目_分阶段计划表.md` 和 `docs/superpowers/` 下已确认的设计/实施记录。
 
 ## 1. 一句话目标
 
@@ -39,11 +39,11 @@
 - P1远程分支：`origin/P1-·-数据地基与标注规范`，本次拉取到的最新提交为 `6679671d35abf6d4bd9f17ec92f5585397244202`。
 - 本地P1→P2合并提交：`98cb599e280d97dddf779cfaa1b0a90d4f2b7608`；两个父提交分别是原P2 `76fb13f` 与最新P1 `6679671`。
 - 已用 `git merge-base --is-ancestor` 验证 `6679671` 是当前P2的祖先；两边历史均被保留。
-- P1合并和本轮P2.5改造都只存在于本地，没有推送远端P2。
-- 合并前的67个未提交/未跟踪P2文件已逐路径恢复；本轮又在同一工作树加入P1输入适配、证据适配、充分性门和主图接入。当前改动均未暂存、未提交，不得覆盖、清理或重置。
+- P3实现提交`c3ed82d`已通过合并提交`1aad3f2`进入当前P2，`origin/P2_Tool-Compartment-Model-Tooling`已指向该合并提交。
+- P2.5/M1代码准入、P3工程MVP和统一CLI改动均已按职责提交；本地新增设计、计划和CLI提交尚未推送，接手时以`git status --short --branch`和`git log`复核。
 - 安全备份仍保留在 `stash@{0}`：`codex-pre-p1-merge-2026-07-26`，对象为 `6c0bfedd4c8d990a5ffccd8a089bb3ee9bafcba3`。确认工作区无误前不要删除。
 
-不要从最新 `main` 重新建空目录复制文件，也不要再次把P1整分支覆盖到P2。后续开发直接从当前P2继续，并将现有未提交模块按职责拆成可Review提交。
+不要从最新 `main` 重新建空目录复制文件，也不要再次把P1或P3整分支覆盖到P2。后续开发直接从当前P2继续，保留无关修改并按职责拆成可Review提交。
 
 ## 4. 当前代码状态
 
@@ -68,10 +68,14 @@
 | 证据/运行契约 | `EvidenceItem/EvidenceBundle/VerdictReport/RunMetadata`；覆盖、冲突、缺失要求和run event |
 | 充分性门与Judge | 已移除`0.6/0.25/0.15`投票；先检查采集/工具/冲突，再分离商业意图与披露；多图片未全覆盖、OCR实际不可用或未知披露均转需复核 |
 | Detection MCP | 官方MCP Python SDK v1低层Server；7工具可经stdio发现/调用，并有Local/MCP一致性和错误测试 |
-| 法规RAG基础 | Chroma离线检索、确定性本地hash embedding、引用守卫和30题合成评测fixture |
+| MCP运行模式 | `MCPToolGateway`保持ToolResult契约，stdio失败时本地回落并记录hybrid/fallback_count |
+| 法规RAG基础 | 小规模官方法规语料、Chroma离线检索、确定性本地hash embedding、引用守卫，以及合成与官方冒烟评测fixture |
+| 知识与报告 | Knowledge MCP、Judge后LawEvidence、Markdown报告和JSON run持久化已接入 |
 | CreatorShift基础 | 同creator且严格早于目标时间的HistoryView；mean/max/EMA池化和可解释shift结果 |
-| API | FastAPI `/health`、`/analyze` 起步接口；当前确定性P2.5主图默认不需Key，尚未拆成统一分析服务与正式路由层 |
-| 默认回归 | 当前零Key/零网络全量`227 passed, 2 skipped`；P2.5准入重点`116 passed` |
+| 统一分析服务 | `AnalysisService`统一主图、Judge后法规检索、报告和run持久化；API与CLI共用 |
+| API与run查询 | `/api/v1/analyze`、`/api/v1/runs/{run_id}`、`/api/v1/capabilities`及兼容`/analyze`共用服务 |
+| 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、coverage/review_rate已有离线实现 |
+| 默认回归 | 当前零Key/零网络全量`276 passed, 2 skipped`；P3聚焦`16 passed` |
 | 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
 
 ### 4.2 P2.5缺口关闭状态
@@ -83,8 +87,8 @@
 | Behavior为关键词占位 | P2.5部分关闭：已切到正式topic_drift工具；CreatorShift真实特征、模型和Agent接入按阶段留在P4 |
 | Judge固定权重 | P2.5已关闭：固定专家投票已删除，加入充分性门、商业意图/披露分离和保守确定性Judge；经验校准按阶段留在P4 |
 | Function Calling/追踪未接主图 | 已关闭：现有专家工具组写入同一run_id、ToolResult和run event |
-| MCPToolGateway/主图MCP回落 | 按阶段留在P3，不属于P2.5准入门 |
-| 真实法规语料/知识MCP/报告接入 | 按阶段留在P3 |
+| MCPToolGateway/主图MCP回落 | 已关闭：主图支持local/mcp，失败回落本地并记录hybrid与fallback_count |
+| 官方法规基线/知识MCP/报告接入 | 工程MVP已关闭：小规模官方条款、Knowledge MCP、Judge后检索、引用报告和run查询可运行；不代表完整法律覆盖 |
 | A2A和平台URL | 按阶段留在P5 |
 | Web研究工作台 | 按阶段留在P5；当前首页仍只是API入口说明 |
 | M1审计与事实门 | 代码侧已关闭：新增安全聚合审计、统一M1门禁和结构化报告；不足、缺失或非正式证据均不能误通过 |
@@ -93,7 +97,7 @@
 ### 4.3 尚未完成
 
 - **M1数据关口仍未通过**：本地外部数据已完成只读审计，只有282个唯一候选、15个创作者；无正式Gold、第二轮盲标、无泄漏切分、条款完成证明或隐私人工审批。P2.5及M1工具代码已具备开始P3工程开发的接口，但不能把这写成“P3正式阶段已通过”。
-- **P3**：统一`services/analyze.py`和API schema/routes、MCPToolGateway与本地回落、真实法规语料和Knowledge MCP、Judge后RAG/报告接入、持久化run查询与可观测性。
+- **P3工程MVP已完成，但正式阶段门仍受M1事实证据约束**：统一服务、API/CLI、MCP回落、Knowledge MCP、官方法规工程基线、报告、run查询、追踪和分类指标已通过离线测试；远程MCP可达性、法规覆盖质量和真实数据效果尚未证明。
 - **P4**：CreatorShift真实历史特征/模型/Agent接入，Judge验证集校准、阈值与risk-coverage实验。
 - **P5**：A2A远程专家、小红书/B站URL适配、研究工作台和local/A2A对照。
 
@@ -120,7 +124,7 @@
 - EvidenceAdapter覆盖7/7 ToolResult；`skipped/error/absence/insufficient`均不生成EvidenceItem。
 - Evidence Adequacy Gate覆盖缺文本、提供但不可用的图片、图片工具错误、工具报告的图文冲突、多图片覆盖不足、OCR能力不可用和视频/音频等未支持媒体；缺失的可选历史/评论不记负分。
 - Judge严格执行：商业意图不足→非广；意图成立+已披露→明广；意图成立+未披露且披露面已完整采集并成功OCR→暗广；未知披露/冲突/关键缺失→需复核。
-- P2.5重点命令：`116 passed`；当前全量：`227 passed, 2 skipped`；`pip check`、`compileall`、FastAPI健康/分析入口和两套P1资产校验均通过。
+- P2.5重点命令：`116 passed`；该日当时全量：`227 passed, 2 skipped`；`pip check`、`compileall`、FastAPI健康/分析入口和两套P1资产校验均通过。当前代码基线见4.7。
 - 以上测试证明代码接口和离线工程行为，不证明真实数据规模、论文分类精度、经验校准或真实法规质量。
 
 ### 4.6 2026-07-26 M1代码治理与真实数据试运行
@@ -133,7 +137,15 @@
 - pilot一致性：两份文件有36个共同有效标注ID，22对为双方都采用三元标签的κ样本；κ=1.0、95% bootstrap区间[1.0, 1.0]，但样本中暗广为0且`formal_second_round=false`，因此只能作工具试跑，不能作M1正式κ或Gold证据。
 - 标注指南新增24个结构化边界案例，达到指南数量项；当前Dataset Card明确记录数据、隐私、条款、切分和规模限制。
 - M1门禁退出码为2且`passed=false`：指南通过；候选规模、Gold和Dataset Card失败；正式一致性与合规需复核；切分证据缺失。
-- 当前验收：数据测试`62 passed`；默认全量`260 passed, 2 skipped`；`pip check`、`compileall`、两套P1资产校验和6组镜像文件字节一致性均通过。
+- 该日验收：数据测试`62 passed`；当时默认全量`260 passed, 2 skipped`；`pip check`、`compileall`、两套P1资产校验和6组镜像文件字节一致性均通过。当前代码基线见4.7。
+
+### 4.7 2026-07-27 P3合并与统一CLI收口验收
+
+- P3实现提交`c3ed82d`经合并提交`1aad3f2`进入当前P2分支。
+- `AnalysisService`统一本地/MCP主图、Judge后法规检索、Markdown报告和JSON run持久化。
+- FastAPI版本化分析、能力和run查询接口与`run_demo.py`共用同一服务；`--llm`仅保留为零Key兼容参数。
+- P3聚焦测试`16 passed`；默认全量`276 passed, 2 skipped`；`pip check`、`compileall`和两个P1资产校验器通过。
+- 上述结果证明P3工程MVP和离线契约行为，不证明M1数据门、远程MCP部署、法规覆盖质量、论文分类精度或CreatorShift增益。
 
 ## 5. P1数据资产事实
 
@@ -204,15 +216,11 @@ Owner负责交付，Reviewer必须来自另一方向。共享契约由L维护，
 
 ## 8. 接手后的执行顺序
 
-1. 先审阅合并提交`98cb599`、P2.5计划`docs/superpowers/plans/2026-07-26-p2-5-p3-readiness-gate.md`和当前工作区；确认无误后再删除`codex-pre-p1-merge-2026-07-26` stash。
-2. 将现有未提交工作按P2工具元数据、独立契约/编排模块、P2.5输入与证据链、MCP、RAG、CreatorShift和文档拆成可Review提交；不要混入二进制文档或根目录临时Schema。
+1. 保持P3工程MVP回归稳定，不重写七工具、证据主链或统一服务。
+2. 并行完成M1外部事实工作：≥3000唯一合规候选、来源条款与人工隐私审批、第二轮盲标、仲裁、≥1500 Gold和零泄漏切分。
 3. 决定`data-tooling/`与`implicit-ad-agent/scripts/data/`的唯一维护来源；在决定前每次修改都必须同步镜像并运行字节一致性测试。
-4. P2.5和M1工具代码准入已经完成，不要重写7工具或放宽事实门；P3工程开发从统一分析服务、MCPToolGateway、Knowledge MCP/真实RAG接入和正式报告链开始。
-5. 同步推进M1外部工作：补足到≥3000个唯一合规候选，完成来源条款和人工隐私审批、第二轮盲标、仲裁、≥1500 Gold及创作者/content-group零泄漏切分。
-6. 只有M1事实门通过后，才能把项目阶段正式标记为P3通过；当前“可开始P3开发”仅指代码接口已就绪。
-7. CreatorShift真实模型与Judge经验校准留在P4；A2A、URL适配和Web工作台留在P5，不提前混进P3首个提交。
-
-文件级细节和短期验收见 `docs/现有代码修改大纲.md`。
+4. M1通过后进入P4真实CreatorShift特征/模型、Judge校准和risk-coverage实验。
+5. P5再实现A2A、URL适配、批量API和Web工作台；LightRAG保持非阻塞A/B候选。
 
 ## 9. 常用验证命令
 
@@ -254,7 +262,7 @@ cd implicit-ad-agent
 .\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
 ```
 
-当前预期：全量`260 passed, 2 skipped`，M1数据治理`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归。
+当前预期：全量`276 passed, 2 skipped`，P3聚焦`16 passed`，M1数据治理`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归。
 
 M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的PowerShell命令见`data-tooling/README.md`。当前门禁预期退出码为2；在外部证据补齐前，不要把它改成成功预期。
 
@@ -266,7 +274,7 @@ M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的Powe
 - 当前P2.5主图默认使用确定性工具选择，不读取`.env`中的Key；后续若在P3重新启用LLM选择，`json_mode + 英文字段名 + Pydantic校验`仍是国产OpenAI兼容端点的输出兼容策略。
 - 工具跳过、图片缺失、历史不足不是负向证据。
 - RAG无可靠检索结果时返回空引用，不得补写条款号。
-- 当前RAG语料是明确标记的合成测试fixture，不得在报告或论文中当作真实法规评测。
+- 当前RAG同时包含小规模官方条款语料和合成评测fixture；二者用于工程回归，不得写成完整法规覆盖或法律质量结论。
 - `mcp`与`chromadb`是可选依赖；契约层不得因未安装可选依赖而无法导入。
 - CreatorShift当前输出是简单历史基线证据，不是校准概率，也不能直接决定暗广。
 - A2A必须是独立Agent服务间的真实任务交换；同一进程内函数互调不能算A2A验收。
@@ -275,7 +283,7 @@ M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的Powe
 - 不要只改`data-tooling/`或`implicit-ad-agent/scripts/data/`其中一份后假设另一份会自动同步。
 - 不把真实用户名、头像、手机号、群二维码、精确URL参数、密钥或内部地址提交到公开仓库。
 - 不使用测试集调Prompt、关键词、阈值或CreatorShift窗口。
-- 当前工作区有未提交修改，禁止 `git reset --hard`、覆盖式checkout或批量清理。
+- 工作区如有无关修改，必须保留并分文件暂存；禁止 `git reset --hard`、覆盖式checkout或批量清理。
 
 ## 11. 文档职责
 
@@ -283,6 +291,6 @@ M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的Powe
 - `HANDOFF.md`：当前事实、分支、风险和下一步。
 - `docs/隐性广告识别项目_说明书.md`：架构、模块、数据流、错误处理、评估与边界。
 - `docs/隐性广告识别项目_分阶段计划表.md`：日期、Owner、里程碑和降级决策。
-- `docs/现有代码修改大纲.md`：当前文件如何迁移、P1如何衔接及短期代码顺序。
+- `docs/superpowers/specs/`与`docs/superpowers/plans/`：已确认设计、实施边界和可复现执行步骤。
 
 新事实优先更新HANDOFF；稳定设计更新说明书；日期与Owner变化更新阶段表；公开使用方法更新README。

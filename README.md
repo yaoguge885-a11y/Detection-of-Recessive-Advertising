@@ -69,21 +69,21 @@
 - **A2A** 是正式交付的可切换分布式专家模式，不替代默认本地模式。
 - **RAG** 为结论提供法规和平台规则引用，不直接参与训练标签，也不把检索结果当分类真值。
 
-## 当前事实快照（2026-07-26）
+## 当前事实快照（2026-07-27）
 
 | 模块 | 当前状态 | 下一步 |
 | --- | --- | --- |
-| LangGraph P2.5主链 | `PostRecord → Capability Plan → 七工具组 → EvidenceBundle → 充分性门 → Judge`可运行 | P3拆统一分析服务并接知识层 |
-| P2工具舱 | 7/7工具ready；严格受限Function Calling、运行级预算与LocalToolGateway已接主图 | P3实现MCPToolGateway与本地回落 |
+| LangGraph/P3主链 | `PostRecord → Capability Plan → 七工具组 → EvidenceBundle → 充分性门 → Judge → 法规检索 → 报告/run持久化`可运行 | P4再接真实CreatorShift特征与校准 |
+| P2工具舱 | 7/7工具ready；Local/MCP共用ToolResult契约，MCP失败可回落本地 | 保持真实视觉和远程部署显式opt-in |
 | 视觉环境 | YOLO/EasyOCR与RTX 4060 Laptop GPU实测通过 | 保持真实视觉测试显式opt-in |
 | P1数据资产 | 远端最新P1已合入本地P2；含schema、30条合成样例和独立`data-tooling/` | 完成真实候选数据的合规、双标、κ与划分验收 |
 | CreatorShift | 已有防未来泄漏的历史视图、mean/max/EMA基线和shift结果；行为组已接时间安全topic_drift | P4接真实历史特征、模型和校准 |
-| RAG/MCP/A2A | 法规RAG离线基线和Detection MCP已实现；知识MCP、主图MCP回落和A2A尚未接入 | P3接知识/MCP，P5再建设A2A专家模式 |
-| Web/API | FastAPI确定性P2.5起步接口存在 | P3拆正式API服务；P5再接URL与研究工作台 |
+| RAG/MCP/A2A | Detection MCP、MCPToolGateway回落、Knowledge MCP和小规模官方法规语料基线已实现；A2A未实现 | 扩语料与LightRAG仅做受控后续实验，P5建设A2A |
+| Web/API/CLI | 统一AnalysisService、版本化单条分析/run查询API和CLI演示已接入 | P5再接批量、URL与研究工作台 |
 
 远端 [`P1-·-数据地基与标注规范`](https://github.com/yaoguge885-a11y/Detection-of-Recessive-Advertising/tree/P1-%C2%B7-%E6%95%B0%E6%8D%AE%E5%9C%B0%E5%9F%BA%E4%B8%8E%E6%A0%87%E6%B3%A8%E8%A7%84%E8%8C%83) 的最新提交 `6679671` 已通过合并提交 `98cb599` 进入本地P2。`data/schema/data_schema_v1.json` 是当前提交资产校验所使用的权威字段标准；`data-tooling/schema/data_schema_v1_1.json` 是数据工具舱中待走兼容评审的后续版本，二者不能混用。
 
-本地零Key全量回归当前为 `227 passed, 2 skipped`，P2.5准入重点为`116 passed`。真实视觉、LLM和联网采集均是显式可选测试。
+本地零Key全量回归当前为 `276 passed, 2 skipped`，其中P3统一服务、API、MCP回落、Knowledge MCP、官方法规基线、评估指标和CLI闭环均有聚焦测试。真实视觉、远程MCP、LLM和联网采集仍是显式可选路径。
 
 ## P1数据地基
 
@@ -145,13 +145,12 @@ cd implicit-ad-agent
 | `data-tooling/` | 独立采集、标注、迁移、隐私与数据质量工具舱 |
 | `docs/隐性广告识别项目_说明书.md` | 目标架构、设计边界与验收原则 |
 | `docs/隐性广告识别项目_分阶段计划表.md` | 阶段、日期、Owner、里程碑与降级策略 |
-| `docs/现有代码修改大纲.md` | 从当前代码迁移到目标架构的文件级改造范围与短期顺序 |
 | `HANDOFF.md` | 当前分支、已完成事实、风险与接手步骤 |
 
 ## 路线概览
 
 1. **P1收口 + P2.5证据整合**：冻结schema握手，完成数据迁移、证据契约、Function Calling和现有7工具接入。
-2. **P3证据型Agent MVP**：本地端到端报告、Chroma法规RAG、MCP工具服务与可观测轨迹。
+2. **P3证据型Agent MVP**：工程MVP已完成本地端到端报告、官方法规Chroma基线、MCP工具/知识服务与可观测轨迹；正式阶段结论仍受M1事实门约束。
 3. **P4 CreatorShift研究**：纵向偏好变化、校准Judge、强基线与泄漏安全评估。
 4. **P5产品与分布式模式**：网页端、小红书/B站URL适配、A2A专家模式。
 5. **P6开源与论文**：完整实验、浏览器插件冲刺、复现文档、论文/答辩/软著材料。
@@ -166,4 +165,4 @@ cd implicit-ad-agent
 - 无可靠RAG证据时不生成法规引用；信息不足时允许拒绝分类并列出缺失项。
 - 数据采集遵守来源条款、最小必要、脱敏与可追溯原则。
 
-更完整的设计与执行顺序见 `docs/` 下的说明书、阶段计划和代码修改大纲。
+更完整的设计与执行顺序见 `docs/` 下的说明书、阶段计划、superpowers设计与实施记录。
