@@ -108,6 +108,7 @@ def choose_sample(
     excluded_ids: Set[str],
     required_platforms: Sequence[str] = (),
     required_media_states: Sequence[str] = (),
+    required_post_ids: Sequence[str] = (),
 ) -> List[Dict[str, Any]]:
     """Select a deterministic, creator-balanced sample without excluded IDs."""
     available = [record for record in candidates if str(record["post_id"]) not in excluded_ids]
@@ -116,9 +117,22 @@ def choose_sample(
     if len(available) < count:
         raise ValueError(f"only {len(available)} non-overlapping candidates are available")
 
+    anchor_ids = list(required_post_ids)
+    if len(set(anchor_ids)) != len(anchor_ids):
+        raise ValueError("required post IDs must not contain duplicates")
+    if len(anchor_ids) > count:
+        raise ValueError("sample count is smaller than required post ID coverage")
+    available_by_id = {str(record["post_id"]): record for record in available}
+    unavailable_anchors = [post_id for post_id in anchor_ids if post_id not in available_by_id]
+    if unavailable_anchors:
+        raise ValueError(
+            "required post IDs are missing from eligible candidates: "
+            + ", ".join(sorted(unavailable_anchors))
+        )
+
     rng = random.Random(seed)
-    selected: List[Dict[str, Any]] = []
-    selected_ids: Set[str] = set()
+    selected = [available_by_id[post_id] for post_id in anchor_ids]
+    selected_ids = set(anchor_ids)
     _select_one_per_group(
         available,
         lambda record: str(record.get("platform", "unknown")),
@@ -178,6 +192,7 @@ def build_manifest(
     previous_manifest: Optional[Path] = None,
     required_platforms: Sequence[str] = (),
     required_media_states: Sequence[str] = (),
+    required_post_ids: Sequence[str] = (),
 ) -> Dict[str, Any]:
     if batch_kind not in {"pilot", "formal_kappa", "formal_gold", "calibration"}:
         raise ValueError(f"unsupported batch kind: {batch_kind}")
@@ -195,6 +210,7 @@ def build_manifest(
         excluded_ids=previous_ids,
         required_platforms=required_platforms,
         required_media_states=required_media_states,
+        required_post_ids=required_post_ids,
     )
     post_ids = sorted(str(record["post_id"]) for record in sample)
     overlap_count = len(set(post_ids) & previous_ids)
@@ -225,6 +241,12 @@ def build_manifest(
             "seed": seed,
             "required_platforms": list(required_platforms),
             "required_media_states": list(required_media_states),
+            "manual_include_count": len(required_post_ids),
+            "manual_include_sha256": (
+                hashlib.sha256("\n".join(sorted(required_post_ids)).encode("utf-8")).hexdigest()
+                if required_post_ids
+                else None
+            ),
         },
     }
 
@@ -242,6 +264,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--previous-manifest", type=Path)
     parser.add_argument("--require-platform", action="append", default=[])
     parser.add_argument("--require-media-state", action="append", choices=("available", "missing"), default=[])
+    parser.add_argument(
+        "--include-post-id",
+        action="append",
+        default=[],
+        help="manually selected eligible candidate ID that must be in this private batch",
+    )
     args = parser.parse_args(argv)
 
     if args.output.exists():
@@ -257,6 +285,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         previous_manifest=args.previous_manifest,
         required_platforms=args.require_platform,
         required_media_states=args.require_media_state,
+        required_post_ids=args.include_post_id,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
