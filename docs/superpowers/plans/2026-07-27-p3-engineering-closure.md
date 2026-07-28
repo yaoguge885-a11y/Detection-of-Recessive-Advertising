@@ -42,7 +42,7 @@
 - Produces: `tokenize_legal_text(text: str) -> list[str]` for deterministic English/alphanumeric tokens plus Chinese unigrams and adjacent bigrams.
 - Produces: `build_default_legal_retriever()` returning an indexed `HybridLegalRetriever`.
 
-- [ ] **Step 1: Write failing hybrid retrieval tests**
+- [x] **Step 1: Write failing hybrid retrieval tests**
 
 Create tests that use real `LegalDocument` and `LawEvidence` values. The tests must prove these observable behaviors:
 
@@ -85,7 +85,7 @@ Also cover:
 - `top_k=0` raises `ValueError("top_k must be at least 1")`.
 - repeated calls return the same ordered `(source_id, article_id, rerank_score)` tuples.
 
-- [ ] **Step 2: Run the new tests and verify RED**
+- [x] **Step 2: Run the new tests and verify RED**
 
 Run:
 
@@ -95,7 +95,7 @@ Run:
 
 Expected: collection fails because `impad.rag.hybrid_retriever` does not exist.
 
-- [ ] **Step 3: Implement deterministic lexical indexing and RRF**
+- [x] **Step 3: Implement deterministic lexical indexing and RRF**
 
 Implement only these public interfaces:
 
@@ -117,7 +117,7 @@ Implementation rules:
 - Build lexical evidence only from stored document metadata and section text.
 - Run `CitationGuard.validate()` on the final list.
 
-- [ ] **Step 4: Run hybrid tests and verify GREEN**
+- [x] **Step 4: Run hybrid tests and verify GREEN**
 
 Run:
 
@@ -127,7 +127,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Wire the default corpus to the hybrid retriever**
+- [x] **Step 5: Wire the default corpus to the hybrid retriever**
 
 Update `build_default_legal_retriever()` to:
 
@@ -145,7 +145,7 @@ assert isinstance(retriever, HybridLegalRetriever)
 assert retriever.retrieve("互联网广告应当具有可识别性", top_k=1)[0].rerank_score == 1.0
 ```
 
-- [ ] **Step 6: Run focused RAG regression**
+- [x] **Step 6: Run focused RAG regression**
 
 Run:
 
@@ -155,7 +155,7 @@ Run:
 
 Expected: all RAG tests pass and existing Chroma behavior remains available.
 
-- [ ] **Step 7: Commit Task 1**
+- [x] **Step 7: Commit Task 1**
 
 ```powershell
 git add -- implicit-ad-agent/impad/rag/hybrid_retriever.py implicit-ad-agent/impad/rag/corpus.py implicit-ad-agent/impad/rag/__init__.py implicit-ad-agent/tests/rag/test_hybrid_retriever.py implicit-ad-agent/tests/rag/test_official_corpus.py

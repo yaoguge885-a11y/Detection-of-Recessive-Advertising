@@ -12,11 +12,13 @@ from .evaluation import (
     LegalRetrievalQuestion,
     evaluate_retriever,
 )
+from .hybrid_retriever import HybridLegalRetriever, tokenize_legal_text
 
 __all__ = [
     "DeterministicHashEmbedding",
     "LegalDocument",
     "LegalCorpus",
+    "HybridLegalRetriever",
     "LegalRetrievalMetrics",
     "LegalRetrievalQuestion",
     "LegalRetriever",
@@ -24,4 +26,5 @@ __all__ = [
     "build_default_legal_retriever",
     "evaluate_retriever",
     "load_legal_corpus",
+    "tokenize_legal_text",
 ]
