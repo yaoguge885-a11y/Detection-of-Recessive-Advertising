@@ -325,7 +325,7 @@ def build_post_record(
 
     # ── 组装主记录 ──
     record = collections.OrderedDict()
-    record["schema_version"] = "1.1"
+    record["schema_version"] = "1.2"
     record["post_id"] = post_id
     record["platform"] = platform_from_url(url)
     record["source_type"] = source_type
