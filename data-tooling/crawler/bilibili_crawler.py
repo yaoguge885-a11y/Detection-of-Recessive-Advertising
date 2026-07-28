@@ -386,13 +386,13 @@ def discover_bilibili_posts(
 
         # ── 3. 动态/opus列表：渐进式重试 + DOM回退 ──
         print("  发现动态列表...")
-        dyn_retry_delays = [2, 5, 8]
+        dyn_retry_delays = [2, 5, 8, 12]
         dyn_urls = [
             f"https://space.bilibili.com/{mid}/dynamic",
             f"https://space.bilibili.com/{mid}?from=dynamic",
         ]
         for attempt in range(len(dyn_retry_delays) + 1):
-            if len(dynamic_items) >= 5:
+            if len(dynamic_items) >= max(max_items // 2, 10):
                 break
             url_idx = attempt % len(dyn_urls)
             try:
@@ -402,7 +402,7 @@ def discover_bilibili_posts(
                     time.sleep(w)
                 page.goto(dyn_urls[url_idx], wait_until="domcontentloaded", timeout=30000)
                 page.wait_for_timeout(3000)
-                for s in range(12):
+                for s in range(20):
                     page.evaluate("window.scrollBy(0, 600)")
                     page.wait_for_timeout(800 + random.randint(0, 300))
                 page.wait_for_timeout(2000)
@@ -417,7 +417,7 @@ def discover_bilibili_posts(
                 from bs4 import BeautifulSoup
                 page.goto(f"https://space.bilibili.com/{mid}/dynamic", wait_until="domcontentloaded", timeout=20000)
                 page.wait_for_timeout(2000)
-                for _ in range(8):
+                for _ in range(15):
                     page.evaluate("window.scrollBy(0, 500)")
                     page.wait_for_timeout(800)
                 soup = BeautifulSoup(page.content(), "html.parser")
@@ -454,7 +454,7 @@ def discover_bilibili_posts(
 
         browser.close()
 
-    # ── 去重、截取 ──
+    # ── 去重 ──
     seen = set()
     unique = []
     for item in all_items:
@@ -462,9 +462,21 @@ def discover_bilibili_posts(
             seen.add(item["url"])
             unique.append(item)
 
-    unique.sort(key=lambda x: x.get("published_at") or "", reverse=True)
-    result = unique[:max_items]
-    print(f"  [OK] 总计 {len(unique)} 条, 截取 {len(result)} 条 (作者: {author_name})")
+    # ── 优先级截取：动态占 1/2，其余视频+专栏填满 ──
+    opus_items = [x for x in unique if x.get("content_type") == "opus"]
+    other_items = [x for x in unique if x.get("content_type") != "opus"]
+    opus_items.sort(key=lambda x: x.get("published_at") or "", reverse=True)
+    other_items.sort(key=lambda x: x.get("published_at") or "", reverse=True)
+
+    opus_target = max(max_items // 2, min(len(opus_items), max_items))
+    other_target = max_items - opus_target
+
+    result = opus_items[:opus_target] + other_items[:other_target]
+    # 按时间重新排序保持一致性
+    result.sort(key=lambda x: x.get("published_at") or "", reverse=True)
+
+    opus_got = sum(1 for x in result if x.get("content_type") == "opus")
+    print(f"  [OK] 总计 {len(unique)} 条 (视频{len(other_items)} + 动态{len(opus_items)}), 截取 {len(result)} 条 (动态{opus_got}/{opus_target}) (作者: {author_name})")
     return result
 
 
