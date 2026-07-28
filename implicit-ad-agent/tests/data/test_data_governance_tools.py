@@ -498,3 +498,47 @@ def test_annotation_batch_lock_is_auditable_and_second_round_is_disjoint(
     assert second["formal_second_round"] is True
     assert second["overlap_with_previous_count"] == 0
     assert not (set(first["post_ids"]) & set(second["post_ids"]))
+
+
+def test_annotation_batch_lock_requires_manual_boundary_anchors_to_be_eligible(
+    tmp_path: Path,
+) -> None:
+    candidates = tmp_path / "candidates.jsonl"
+    candidates.write_text(
+        "".join(
+            json.dumps(record, ensure_ascii=False) + "\n"
+            for record in (
+                {"post_id": "p1", "platform": "xiaohongshu", "blogger_id": "a", "media": []},
+                {"post_id": "p2", "platform": "bilibili", "blogger_id": "b", "media": []},
+                {"post_id": "p3", "platform": "xiaohongshu", "blogger_id": "c", "media": []},
+            )
+        ),
+        encoding="utf-8",
+    )
+    guide = REPO_ROOT / "docs" / "annotation_guide_v1.md"
+
+    manifest = lock_annotation_batch.build_manifest(
+        candidates_path=candidates,
+        guide_path=guide,
+        batch_id="boundary-anchors-20260728",
+        count=2,
+        seed=42,
+        batch_kind="pilot",
+        formal_second_round=False,
+        required_post_ids=("p2",),
+    )
+
+    assert "p2" in manifest["post_ids"]
+    assert manifest["selection"]["manual_include_count"] == 1
+    assert manifest["selection"]["manual_include_sha256"]
+    with pytest.raises(ValueError, match="missing from eligible candidates"):
+        lock_annotation_batch.build_manifest(
+            candidates_path=candidates,
+            guide_path=guide,
+            batch_id="invalid-boundary-anchor-20260728",
+            count=2,
+            seed=42,
+            batch_kind="pilot",
+            formal_second_round=False,
+            required_post_ids=("unknown",),
+        )
