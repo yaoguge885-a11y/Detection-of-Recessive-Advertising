@@ -1,6 +1,6 @@
 # HANDOFF：隐性广告识别项目
 
-> 面向下一位接手开发者的事实交接。最后更新：2026-07-27（P3合并与统一CLI收口后）。
+> 面向下一位接手开发者的事实交接。最后更新：2026-07-27（P3非数据依赖工程收尾后）。
 > 先读本文件，再读 `docs/隐性广告识别项目_说明书.md`、`docs/隐性广告识别项目_分阶段计划表.md` 和 `docs/superpowers/` 下已确认的设计/实施记录。
 
 ## 1. 一句话目标
@@ -40,7 +40,7 @@
 - 本地P1→P2合并提交：`98cb599e280d97dddf779cfaa1b0a90d4f2b7608`；两个父提交分别是原P2 `76fb13f` 与最新P1 `6679671`。
 - 已用 `git merge-base --is-ancestor` 验证 `6679671` 是当前P2的祖先；两边历史均被保留。
 - P3实现提交`c3ed82d`已通过合并提交`1aad3f2`进入当前P2，`origin/P2_Tool-Compartment-Model-Tooling`已指向该合并提交。
-- P2.5/M1代码准入、P3工程MVP和统一CLI改动均已按职责提交；本地新增设计、计划和CLI提交尚未推送，接手时以`git status --short --branch`和`git log`复核。
+- P2.5/M1代码准入、P3工程MVP、统一CLI和P3工程收尾均已按职责拆分为本地提交，尚未推送；接手时以`git status --short --branch`和`git log`复核。
 - 安全备份仍保留在 `stash@{0}`：`codex-pre-p1-merge-2026-07-26`，对象为 `6c0bfedd4c8d990a5ffccd8a089bb3ee9bafcba3`。确认工作区无误前不要删除。
 
 不要从最新 `main` 重新建空目录复制文件，也不要再次把P1或P3整分支覆盖到P2。后续开发直接从当前P2继续，保留无关修改并按职责拆成可Review提交。
@@ -68,14 +68,14 @@
 | 证据/运行契约 | `EvidenceItem/EvidenceBundle/VerdictReport/RunMetadata`；覆盖、冲突、缺失要求和run event |
 | 充分性门与Judge | 已移除`0.6/0.25/0.15`投票；先检查采集/工具/冲突，再分离商业意图与披露；多图片未全覆盖、OCR实际不可用或未知披露均转需复核 |
 | Detection MCP | 官方MCP Python SDK v1低层Server；7工具可经stdio发现/调用，并有Local/MCP一致性和错误测试 |
-| MCP运行模式 | `MCPToolGateway`保持ToolResult契约，stdio失败时本地回落并记录hybrid/fallback_count |
-| 法规RAG基础 | 小规模官方法规语料、Chroma离线检索、确定性本地hash embedding、引用守卫，以及合成与官方冒烟评测fixture |
+| MCP运行模式 | `MCPToolGateway`保持ToolResult契约；stdio请求默认30秒超时，失败/超时均本地回落并记录`mcp_transport_fallback`与fallback_count |
+| 法规RAG基础 | 小规模官方法规语料、Chroma/hash向量召回、确定性词法召回、RRF重排分数、引用守卫和版本绑定离线报告 |
 | 知识与报告 | Knowledge MCP、Judge后LawEvidence、Markdown报告和JSON run持久化已接入 |
 | CreatorShift基础 | 同creator且严格早于目标时间的HistoryView；mean/max/EMA池化和可解释shift结果 |
 | 统一分析服务 | `AnalysisService`统一主图、Judge后法规检索、报告和run持久化；API与CLI共用 |
 | API与run查询 | `/api/v1/analyze`、`/api/v1/runs/{run_id}`、`/api/v1/capabilities`及兼容`/analyze`共用服务 |
-| 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、coverage/review_rate已有离线实现 |
-| 默认回归 | 当前零Key/零网络全量`276 passed, 2 skipped`；P3聚焦`16 passed` |
+| 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、coverage/review_rate，以及混淆计数、错误/复核样本ID和错误桶已有离线实现 |
+| 默认回归 | 当前零Key/零网络全量`297 passed, 2 skipped`；P3非数据依赖工程聚焦`43 passed` |
 | 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
 
 ### 4.2 P2.5缺口关闭状态
@@ -97,7 +97,7 @@
 ### 4.3 尚未完成
 
 - **M1数据关口仍未通过**：本地外部数据已完成只读审计，只有282个唯一候选、15个创作者；无正式Gold、第二轮盲标、无泄漏切分、条款完成证明或隐私人工审批。P2.5及M1工具代码已具备开始P3工程开发的接口，但不能把这写成“P3正式阶段已通过”。
-- **P3工程MVP已完成，但正式阶段门仍受M1事实证据约束**：统一服务、API/CLI、MCP回落、Knowledge MCP、官方法规工程基线、报告、run查询、追踪和分类指标已通过离线测试；远程MCP可达性、法规覆盖质量和真实数据效果尚未证明。
+- **P3非数据依赖工程范围已完成，但正式M3仍受M1事实证据约束**：统一服务、API/CLI、MCP超时回落、Knowledge MCP、混合检索、版本绑定报告、run查询、追踪和分类错误分析已通过离线测试；远程MCP可达性、法规覆盖质量和真实数据效果尚未证明。
 - **P4**：CreatorShift真实历史特征/模型/Agent接入，Judge验证集校准、阈值与risk-coverage实验。
 - **P5**：A2A远程专家、小红书/B站URL适配、研究工作台和local/A2A对照。
 
@@ -146,6 +146,20 @@
 - FastAPI版本化分析、能力和run查询接口与`run_demo.py`共用同一服务；`--llm`仅保留为零Key兼容参数。
 - P3聚焦测试`16 passed`；默认全量`276 passed, 2 skipped`；`pip check`、`compileall`和两个P1资产校验器通过。
 - 上述结果证明P3工程MVP和离线契约行为，不证明M1数据门、远程MCP部署、法规覆盖质量、论文分类精度或CreatorShift增益。
+
+### 4.8 2026-07-27 P3非数据依赖工程收尾验收
+
+- 默认`LegalRetriever`改为Chroma向量召回与确定性词法召回的RRF融合；`rerank_score`可追踪，最终引用继续通过`CitationGuard`逐字核验。
+- 评测问题集显式绑定`corpus_version`；旧顶层数组schema和语料版本错配会失败，不再允许把合成30题误跑到官方小语料。
+- `scripts/evaluate_p3.py`提供`retrieval`和`classification`两个零Key/零网络子命令，直接按脚本路径运行已有subprocess回归。
+- `StdioDetectionMCPClient`默认超时30秒；超时与传输失败都通过现有Gateway本地降级并记录`mcp_transport_fallback`。
+- 确定性本地/MCP工具运行仍保持`token_usage={}`、`cost_usd=null`，不伪造成本采集。
+- 证据快照：
+  - `data/reports/p3/retrieval_synthetic_30.json`：30题，Recall@1 `0.75`、Recall@3/5 `1.0`、跨文档Recall@5 `1.0`、误引率`0`。
+  - `data/reports/p3/retrieval_official_15.json`：2份官方文档、7个sections、15题，Recall@1 `0.85`、Recall@3/5与MRR@5 `1.0`、误引率`0`。
+  - `data/reports/p3/classification_fixture.json`：6行合成夹具，错误ID `4/5/6`、复核ID `4`。
+- P3聚焦`43 passed`；当前全量`297 passed, 2 skipped, 1 warning`。warning为既有Starlette/httpx弃用提示，无新增skip。
+- 这些指标仅证明小型语料和合成夹具的工程行为；正式M3仍等待M1 Gold、双标/仲裁、无泄漏切分、条款和隐私证据。
 
 ## 5. P1数据资产事实
 
@@ -233,6 +247,14 @@ cd implicit-ad-agent
 # 默认零网络回归
 .\.venv\Scripts\python.exe -m pytest -q
 
+# P3非数据依赖工程聚焦回归
+.\.venv\Scripts\python.exe -m pytest tests\rag tests\evaluation tests\orchestration\test_mcp_gateway.py tests\services\test_analysis_service.py tests\scripts\test_evaluate_p3.py -q
+
+# P3离线工程报告
+.\.venv\Scripts\python.exe scripts\evaluate_p3.py retrieval --corpus tests\fixtures\legal_rag_documents.json --benchmark tests\fixtures\legal_rag_eval_30.json --output ..\data\reports\p3\retrieval_synthetic_30.json
+.\.venv\Scripts\python.exe scripts\evaluate_p3.py retrieval --corpus impad\rag\data\legal_corpus_v1.json --benchmark tests\fixtures\legal_rag_official_eval_15.json --output ..\data\reports\p3\retrieval_official_15.json
+.\.venv\Scripts\python.exe scripts\evaluate_p3.py classification --predictions tests\fixtures\classification_eval_v1.json --output ..\data\reports\p3\classification_fixture.json
+
 # P2.5代码准入重点
 .\.venv\Scripts\python.exe -m pytest tests\contracts tests\adapters tests\orchestration tests\test_agents.py tests\test_graph_evidence_flow.py -q
 
@@ -262,7 +284,7 @@ cd implicit-ad-agent
 .\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
 ```
 
-当前预期：全量`276 passed, 2 skipped`，P3聚焦`16 passed`，M1数据治理`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归。
+当前预期：全量`297 passed, 2 skipped`，P3非数据依赖工程聚焦`43 passed`，M1数据治理历史聚焦`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归。
 
 M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的PowerShell命令见`data-tooling/README.md`。当前门禁预期退出码为2；在外部证据补齐前，不要把它改成成功预期。
 

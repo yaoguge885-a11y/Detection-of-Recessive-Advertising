@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -7,6 +9,7 @@ from scripts.evaluate_p3 import main
 
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_retrieval_command_writes_a_version_bound_report(tmp_path):
@@ -79,3 +82,28 @@ def test_classification_command_writes_error_analysis(tmp_path):
     assert payload["metrics"]["sample_count"] == 6
     assert payload["misclassified_sample_ids"] == ["4", "5", "6"]
     assert payload["review_sample_ids"] == ["4"]
+
+
+def test_script_path_execution_imports_the_local_impad_package(tmp_path):
+    output = tmp_path / "classification.json"
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "scripts/evaluate_p3.py",
+            "classification",
+            "--predictions",
+            str(FIXTURES / "classification_eval_v1.json"),
+            "--output",
+            str(output),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(
+        output.read_text(encoding="utf-8")
+    )["metrics"]["sample_count"] == 6

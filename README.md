@@ -74,16 +74,16 @@
 | 模块 | 当前状态 | 下一步 |
 | --- | --- | --- |
 | LangGraph/P3主链 | `PostRecord → Capability Plan → 七工具组 → EvidenceBundle → 充分性门 → Judge → 法规检索 → 报告/run持久化`可运行 | P4再接真实CreatorShift特征与校准 |
-| P2工具舱 | 7/7工具ready；Local/MCP共用ToolResult契约，MCP失败可回落本地 | 保持真实视觉和远程部署显式opt-in |
+| P2工具舱 | 7/7工具ready；Local/MCP共用ToolResult契约，stdio请求默认30秒超时，MCP失败可回落本地 | 保持真实视觉和远程部署显式opt-in |
 | 视觉环境 | YOLO/EasyOCR与RTX 4060 Laptop GPU实测通过 | 保持真实视觉测试显式opt-in |
 | P1数据资产 | 远端最新P1已合入本地P2；含schema、30条合成样例和独立`data-tooling/` | 完成真实候选数据的合规、双标、κ与划分验收 |
 | CreatorShift | 已有防未来泄漏的历史视图、mean/max/EMA基线和shift结果；行为组已接时间安全topic_drift | P4接真实历史特征、模型和校准 |
-| RAG/MCP/A2A | Detection MCP、MCPToolGateway回落、Knowledge MCP和小规模官方法规语料基线已实现；A2A未实现 | 扩语料与LightRAG仅做受控后续实验，P5建设A2A |
+| RAG/MCP/A2A | Chroma+词法+RRF混合检索、引用守卫、版本绑定评测报告、Detection/Knowledge MCP已实现；A2A未实现 | 扩语料与LightRAG仅做受控后续实验，P5建设A2A |
 | Web/API/CLI | 统一AnalysisService、版本化单条分析/run查询API和CLI演示已接入 | P5再接批量、URL与研究工作台 |
 
 远端 [`P1-·-数据地基与标注规范`](https://github.com/yaoguge885-a11y/Detection-of-Recessive-Advertising/tree/P1-%C2%B7-%E6%95%B0%E6%8D%AE%E5%9C%B0%E5%9F%BA%E4%B8%8E%E6%A0%87%E6%B3%A8%E8%A7%84%E8%8C%83) 的最新提交 `6679671` 已通过合并提交 `98cb599` 进入本地P2。`data/schema/data_schema_v1.json` 是当前提交资产校验所使用的权威字段标准；`data-tooling/schema/data_schema_v1_1.json` 是数据工具舱中待走兼容评审的后续版本，二者不能混用。
 
-本地零Key全量回归当前为 `276 passed, 2 skipped`，其中P3统一服务、API、MCP回落、Knowledge MCP、官方法规基线、评估指标和CLI闭环均有聚焦测试。真实视觉、远程MCP、LLM和联网采集仍是显式可选路径。
+本地零Key全量回归当前为 `297 passed, 2 skipped`，P3非数据依赖工程聚焦回归为`43 passed`。混合检索、版本绑定报告、分类错误分析和MCP超时回落均有测试；真实视觉、远程MCP、LLM和联网采集仍是显式可选路径。
 
 ## P1数据地基
 
@@ -114,6 +114,11 @@ cd implicit-ad-agent
 # 默认回归：零Key、零联网
 .\.venv\Scripts\python.exe -m pytest -q
 
+# 生成P3离线工程报告（仍为零Key、零联网）
+.\.venv\Scripts\python.exe scripts\evaluate_p3.py retrieval --corpus tests\fixtures\legal_rag_documents.json --benchmark tests\fixtures\legal_rag_eval_30.json --output ..\data\reports\p3\retrieval_synthetic_30.json
+.\.venv\Scripts\python.exe scripts\evaluate_p3.py retrieval --corpus impad\rag\data\legal_corpus_v1.json --benchmark tests\fixtures\legal_rag_official_eval_15.json --output ..\data\reports\p3\retrieval_official_15.json
+.\.venv\Scripts\python.exe scripts\evaluate_p3.py classification --predictions tests\fixtures\classification_eval_v1.json --output ..\data\reports\p3\classification_fixture.json
+
 # 运行本地样例
 .\.venv\Scripts\python.exe run_demo.py
 
@@ -141,6 +146,7 @@ cd implicit-ad-agent
 | `implicit-ad-agent/tests/` | 零网络默认回归与显式真实视觉测试 |
 | `data/schema/` | 提交级权威数据JSON Schema |
 | `data/synthetic/` | 仅用于schema与流水线冒烟的30条合成样例 |
+| `data/reports/p3/` | P3合成检索、官方小语料检索和分类夹具的工程评测快照 |
 | `scripts/data/` | 提交资产构造与校验入口 |
 | `data-tooling/` | 独立采集、标注、迁移、隐私与数据质量工具舱 |
 | `docs/隐性广告识别项目_说明书.md` | 目标架构、设计边界与验收原则 |
@@ -150,7 +156,7 @@ cd implicit-ad-agent
 ## 路线概览
 
 1. **P1收口 + P2.5证据整合**：冻结schema握手，完成数据迁移、证据契约、Function Calling和现有7工具接入。
-2. **P3证据型Agent MVP**：工程MVP已完成本地端到端报告、官方法规Chroma基线、MCP工具/知识服务与可观测轨迹；正式阶段结论仍受M1事实门约束。
+2. **P3证据型Agent MVP**：非数据依赖工程范围已完成本地端到端报告、Chroma/词法/RRF混合检索、版本绑定评测、分类错误分析、MCP工具/知识服务与可观测轨迹；正式M3仍受M1事实门约束。
 3. **P4 CreatorShift研究**：纵向偏好变化、校准Judge、强基线与泄漏安全评估。
 4. **P5产品与分布式模式**：网页端、小红书/B站URL适配、A2A专家模式。
 5. **P6开源与论文**：完整实验、浏览器插件冲刺、复现文档、论文/答辩/软著材料。

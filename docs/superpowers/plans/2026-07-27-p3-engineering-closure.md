@@ -593,7 +593,7 @@ git commit -m "feat: bound MCP stdio requests with timeout"
 - Produces: three privacy-safe aggregate/fixture-only JSON reports.
 - Produces: copyable zero-network verification commands and explicit unfinished boundaries.
 
-- [ ] **Step 1: Generate the synthetic retrieval report**
+- [x] **Step 1: Generate the synthetic retrieval report**
 
 Run from `implicit-ad-agent`:
 
@@ -603,7 +603,7 @@ Run from `implicit-ad-agent`:
 
 Expected: exit code 0 and a 30-question report bound to `synthetic-legal-v1`.
 
-- [ ] **Step 2: Generate the official small-corpus report**
+- [x] **Step 2: Generate the official small-corpus report**
 
 Run:
 
@@ -613,7 +613,7 @@ Run:
 
 Expected: exit code 0, corpus version `cn-official-v1-2026-07-27`, Recall@5 and MRR@5 at least 0.6, false-citation rate 0.
 
-- [ ] **Step 3: Generate the classification fixture report**
+- [x] **Step 3: Generate the classification fixture report**
 
 Run:
 
@@ -623,7 +623,7 @@ Run:
 
 Expected: exit code 0, six fixture rows, and misclassified IDs `4`, `5`, `6`.
 
-- [ ] **Step 4: Inspect report safety and metrics**
+- [x] **Step 4: Inspect report safety and metrics**
 
 Read the three JSON files and verify:
 
@@ -631,7 +631,7 @@ Read the three JSON files and verify:
 - retrieval reports contain version binding, indexing latency, P95 latency, Recall@1/3/5, MRR@5, citation precision, false-citation rate, and per-question IDs/keys only.
 - classification report is explicitly named as a synthetic fixture result.
 
-- [ ] **Step 5: Update root README**
+- [x] **Step 5: Update root README**
 
 Add:
 
@@ -642,7 +642,7 @@ Add:
 - statement that official corpus is only a two-document, seven-section engineering corpus.
 - statement that formal M3 remains blocked by M1.
 
-- [ ] **Step 6: Update HANDOFF**
+- [x] **Step 6: Update HANDOFF**
 
 Record:
 
@@ -652,11 +652,11 @@ Record:
 - deterministic token/cost semantics.
 - remaining M1, remote MCP, legal coverage, LightRAG, and P4 boundaries.
 
-- [ ] **Step 7: Update phase plan**
+- [x] **Step 7: Update phase plan**
 
 Fix the stale summary claiming the Agent main chain is not connected. Mark only the non-data P3 engineering rows complete. Keep formal M3 incomplete and link it to M1 evidence.
 
-- [ ] **Step 8: Update existing-function test library**
+- [x] **Step 8: Update existing-function test library**
 
 Add copyable commands for:
 
@@ -668,7 +668,7 @@ Add copyable commands for:
 
 For every command include expected evidence, optional/risky flags, and the boundary that tests do not prove research accuracy or legal completeness.
 
-- [ ] **Step 9: Run Markdown and report diff checks**
+- [x] **Step 9: Run Markdown and report diff checks**
 
 Run:
 
@@ -679,7 +679,7 @@ git diff --stat
 
 Expected: no whitespace errors; only task files appear.
 
-- [ ] **Step 10: Commit Task 5**
+- [x] **Step 10: Commit Task 5**
 
 ```powershell
 git add -- data/reports/p3/retrieval_synthetic_30.json data/reports/p3/retrieval_official_15.json data/reports/p3/classification_fixture.json README.md HANDOFF.md docs/隐性广告识别项目_分阶段计划表.md docs/已有功能测试指令库.md
