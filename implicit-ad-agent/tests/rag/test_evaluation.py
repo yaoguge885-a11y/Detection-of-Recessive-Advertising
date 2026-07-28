@@ -1,9 +1,10 @@
-import json
 from collections import Counter
 from pathlib import Path
 
+from impad.contracts import LawEvidence
 from impad.rag.chroma_retriever import ChromaLegalRetriever
-from impad.rag.contracts import LegalDocument
+from impad.rag.benchmark import load_retrieval_benchmark
+from impad.rag.corpus import load_legal_corpus
 from impad.rag.evaluation import (
     LegalRetrievalQuestion,
     evaluate_retriever,
@@ -14,17 +15,35 @@ FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 
 
 def _load_documents():
-    payload = json.loads(
-        (FIXTURES / "legal_rag_documents.json").read_text(encoding="utf-8")
-    )
-    return [LegalDocument.model_validate(item) for item in payload]
+    return load_legal_corpus(
+        FIXTURES / "legal_rag_documents.json"
+    ).documents
 
 
 def _load_questions():
-    payload = json.loads(
-        (FIXTURES / "legal_rag_eval_30.json").read_text(encoding="utf-8")
-    )
-    return [LegalRetrievalQuestion.model_validate(item) for item in payload]
+    return load_retrieval_benchmark(
+        FIXTURES / "legal_rag_eval_30.json"
+    ).questions
+
+
+class FixedRetriever:
+    def retrieve(self, query, top_k=5):
+        return [
+            LawEvidence(
+                source_id="s",
+                document_title="fixture",
+                source_path_or_url="fixture://metrics",
+                article_id=article_id,
+                document_version="v1",
+                quote=f"quote-{article_id}",
+                retrieval_score=score,
+            )
+            for article_id, score in (
+                ("A", 0.9),
+                ("X", 0.8),
+                ("B", 0.7),
+            )
+        ][:top_k]
 
 
 def test_benchmark_contains_exactly_ten_questions_per_category():
@@ -81,3 +100,20 @@ def test_chroma_benchmark_runs_and_reports_recall_and_abstention():
     assert metrics.direct_recall_at_5 >= 0.8
     assert metrics.cross_document_recall_at_5 >= 0.3
     assert metrics.false_citation_rate == 0
+
+
+def test_recall_cutoffs_use_the_observed_candidate_order():
+    metrics = evaluate_retriever(
+        FixedRetriever(),
+        [LegalRetrievalQuestion(
+            question_id="cutoffs",
+            category="direct",
+            query="fixture query",
+            expected_keys=["s#A", "s#B"],
+        )],
+        top_k=5,
+    )
+
+    assert metrics.recall_at_1 == 0.5
+    assert metrics.recall_at_3 == 1.0
+    assert metrics.recall_at_5 == 1.0

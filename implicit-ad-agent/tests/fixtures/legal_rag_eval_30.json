@@ -1,4 +1,7 @@
-[
+{
+  "benchmark_version": "synthetic-30-v1",
+  "corpus_version": "synthetic-legal-v1",
+  "questions": [
   {"question_id": "direct_01", "category": "direct", "query": "商业推广内容应该在正文什么位置标明广告合作？", "expected_keys": ["fixture_disclosure#D1"]},
   {"question_id": "direct_02", "category": "direct", "query": "图片商品展示中的披露标识需要满足什么条件？", "expected_keys": ["fixture_disclosure#D2"]},
   {"question_id": "direct_03", "category": "direct", "query": "帖子包含购买链接时还要说明什么？", "expected_keys": ["fixture_links#L1"]},
@@ -31,4 +34,5 @@
   {"question_id": "abstain_08", "category": "abstention", "query": "暑假旅行应该带哪些衣服？", "expected_keys": []},
   {"question_id": "abstain_09", "category": "abstention", "query": "如何给自行车轮胎充气？", "expected_keys": []},
   {"question_id": "abstain_10", "category": "abstention", "query": "世界上最高的山峰叫什么？", "expected_keys": []}
-]
+  ]
+}

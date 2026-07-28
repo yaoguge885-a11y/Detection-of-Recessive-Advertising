@@ -51,6 +51,8 @@ class LegalRetrievalMetrics(BaseModel):
     total_questions: int = Field(ge=0)
     answerable_questions: int = Field(ge=0)
     abstention_questions: int = Field(ge=0)
+    recall_at_1: float = Field(ge=0, le=1)
+    recall_at_3: float = Field(ge=0, le=1)
     recall_at_5: float = Field(ge=0, le=1)
     mrr_at_5: float = Field(ge=0, le=1)
     citation_precision_at_5: float = Field(ge=0, le=1)
@@ -71,6 +73,14 @@ def _p95(values: list[float]) -> float:
         return 0.0
     ordered = sorted(values)
     return ordered[max(0, math.ceil(0.95 * len(ordered)) - 1)]
+
+
+def _recall_at(result: LegalRetrievalQuestionResult, cutoff: int) -> float:
+    expected = set(result.expected_keys)
+    if not expected:
+        return 0.0
+    retrieved = set(result.retrieved_keys[:cutoff])
+    return len(expected & retrieved) / len(expected)
 
 
 def evaluate_retriever(
@@ -139,6 +149,12 @@ def evaluate_retriever(
         total_questions=len(results),
         answerable_questions=len(answerable),
         abstention_questions=len(abstention),
+        recall_at_1=_mean([
+            _recall_at(result, 1) for result in answerable
+        ]),
+        recall_at_3=_mean([
+            _recall_at(result, 3) for result in answerable
+        ]),
         recall_at_5=_mean([result.recall for result in answerable]),
         mrr_at_5=_mean([
             result.reciprocal_rank for result in answerable

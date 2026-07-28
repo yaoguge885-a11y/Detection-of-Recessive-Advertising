@@ -1,5 +1,6 @@
 {
   "benchmark_version": "official-smoke-v1-2026-07-27",
+  "corpus_version": "cn-official-v1-2026-07-27",
   "questions": [
     {
       "question_id": "official_01",

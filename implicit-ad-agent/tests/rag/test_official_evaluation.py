@@ -1,7 +1,6 @@
-import json
 from pathlib import Path
 
-from impad.rag import LegalRetrievalQuestion, evaluate_retriever
+from impad.rag import evaluate_retriever, load_retrieval_benchmark
 from impad.rag.corpus import build_default_legal_retriever
 
 
@@ -13,11 +12,7 @@ FIXTURE = (
 
 
 def test_official_corpus_retrieval_has_recall_mrr_precision_and_abstention():
-    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
-    questions = [
-        LegalRetrievalQuestion.model_validate(item)
-        for item in payload["questions"]
-    ]
+    questions = load_retrieval_benchmark(FIXTURE).questions
     metrics = evaluate_retriever(
         build_default_legal_retriever(),
         questions,

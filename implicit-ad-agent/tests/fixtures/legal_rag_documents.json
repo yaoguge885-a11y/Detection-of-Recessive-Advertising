@@ -1,4 +1,6 @@
-[
+{
+  "corpus_version": "synthetic-legal-v1",
+  "documents": [
   {
     "source_id": "fixture_disclosure",
     "document_title": "合成披露规则",
@@ -119,4 +121,5 @@
       }
     ]
   }
-]
+  ]
+}

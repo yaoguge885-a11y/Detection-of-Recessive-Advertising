@@ -189,7 +189,7 @@ git commit -m "feat: add deterministic hybrid legal retrieval"
 - Produces: `run_p3_retrieval_benchmark(corpus: LegalCorpus, benchmark: LegalRetrievalBenchmark, *, top_k: int = 5, minimum_score: float = 0.34) -> P3RetrievalReport`.
 - Produces CLI: `python scripts/evaluate_p3.py retrieval --corpus PATH --benchmark PATH --output PATH`.
 
-- [ ] **Step 1: Convert fixtures to explicit versioned schemas**
+- [x] **Step 1: Convert fixtures to explicit versioned schemas**
 
 Change `legal_rag_documents.json` from its current five-element array to an
 object with `corpus_version` equal to `synthetic-legal-v1` and `documents`
@@ -206,7 +206,7 @@ Add this field to `legal_rag_official_eval_15.json`:
 "corpus_version": "cn-official-v1-2026-07-27"
 ```
 
-- [ ] **Step 2: Write failing metric and benchmark tests**
+- [x] **Step 2: Write failing metric and benchmark tests**
 
 Update fixture loaders to validate `LegalCorpus` and `LegalRetrievalBenchmark`.
 
@@ -238,7 +238,7 @@ Add a report test asserting:
 - `retriever_version == "hybrid_rrf_v1"`.
 - report metrics contain 30 results for the synthetic fixture.
 
-- [ ] **Step 3: Run benchmark tests and verify RED**
+- [x] **Step 3: Run benchmark tests and verify RED**
 
 Run:
 
@@ -248,7 +248,7 @@ Run:
 
 Expected: failures for missing wrapper model/report functions and missing `recall_at_1`/`recall_at_3`.
 
-- [ ] **Step 4: Add cutoff metrics without breaking existing fields**
+- [x] **Step 4: Add cutoff metrics without breaking existing fields**
 
 Extend `LegalRetrievalMetrics` with:
 
@@ -259,7 +259,7 @@ recall_at_3: float = Field(ge=0, le=1)
 
 Keep all current `*_at_5` fields. Derive each cutoff from the first `n` unique retrieved keys; do not run the retriever three times.
 
-- [ ] **Step 5: Implement benchmark loading, version checks, timing, and report**
+- [x] **Step 5: Implement benchmark loading, version checks, timing, and report**
 
 Create `impad/rag/benchmark.py` with the exact interfaces above.
 
@@ -274,7 +274,7 @@ Rules:
 - Store `top_k`, `minimum_score`, `rrf_k=60`, `vector_candidates=10`, and `external_embedding=False` in `deterministic_config`.
 - Use an aware UTC `generated_at`.
 
-- [ ] **Step 6: Run benchmark tests and verify GREEN**
+- [x] **Step 6: Run benchmark tests and verify GREEN**
 
 Run:
 
@@ -284,7 +284,7 @@ Run:
 
 Expected: all tests pass; synthetic Recall@5 remains at least 0.6, direct Recall@5 at least 0.8, cross-document Recall@5 at least 0.3, and official Recall/MRR at least 0.6 with zero false citations.
 
-- [ ] **Step 7: Write failing CLI behavior tests**
+- [x] **Step 7: Write failing CLI behavior tests**
 
 Test `scripts.evaluate_p3.main()` with explicit temporary paths:
 
@@ -303,7 +303,7 @@ assert payload["metrics"]["total_questions"] == 30
 
 Also assert that a version mismatch raises a visible `ValueError` and does not create the output.
 
-- [ ] **Step 8: Run CLI tests and verify RED**
+- [x] **Step 8: Run CLI tests and verify RED**
 
 Run:
 
@@ -313,7 +313,7 @@ Run:
 
 Expected: failure because `scripts.evaluate_p3` does not exist.
 
-- [ ] **Step 9: Implement the retrieval CLI**
+- [x] **Step 9: Implement the retrieval CLI**
 
 Use `argparse` with a required `retrieval` subcommand and required `--corpus`, `--benchmark`, `--output`. Resolve inputs as `Path`, call the benchmark interfaces, create the output parent, and write:
 
@@ -323,7 +323,7 @@ report.model_dump_json(indent=2)
 
 with UTF-8 encoding. Return exit code 0. Do not read `.env`, invoke an LLM, or access the network.
 
-- [ ] **Step 10: Run CLI and full RAG tests**
+- [x] **Step 10: Run CLI and full RAG tests**
 
 Run:
 
@@ -333,7 +333,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 11: Commit Task 2**
+- [x] **Step 11: Commit Task 2**
 
 ```powershell
 git add -- implicit-ad-agent/impad/rag/benchmark.py implicit-ad-agent/impad/rag/evaluation.py implicit-ad-agent/impad/rag/__init__.py implicit-ad-agent/scripts/evaluate_p3.py implicit-ad-agent/tests/fixtures/legal_rag_documents.json implicit-ad-agent/tests/fixtures/legal_rag_eval_30.json implicit-ad-agent/tests/fixtures/legal_rag_official_eval_15.json implicit-ad-agent/tests/rag/test_evaluation.py implicit-ad-agent/tests/rag/test_official_evaluation.py implicit-ad-agent/tests/rag/test_benchmark.py implicit-ad-agent/tests/scripts/test_evaluate_p3.py
