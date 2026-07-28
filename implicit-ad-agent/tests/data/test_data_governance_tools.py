@@ -10,6 +10,7 @@ import pytest
 
 from scripts.data.annotation import build_gold_dataset
 from scripts.data.annotation import calculate_agreement
+from scripts.data.annotation import lock_annotation_batch
 from scripts.data.annotation import privacy_scan
 from scripts.data.annotation import split_by_blogger
 from scripts.data.annotation import validate_schema
@@ -372,3 +373,128 @@ def test_gold_merge_enforces_agreement_adjudication_and_exclusions() -> None:
     assert reasons["missing"] == "missing_one_annotator"
     assert reasons["uncertain"] == "uncertain_or_out_of_scope"
     assert reasons["out"] == "uncertain_or_out_of_scope"
+
+
+def test_gold_cli_writes_safe_aggregate_report(tmp_path: Path) -> None:
+    ann_a = tmp_path / "a.jsonl"
+    ann_b = tmp_path / "b.jsonl"
+    adjudication = tmp_path / "adjudication.jsonl"
+    gold = tmp_path / "gold.jsonl"
+    report = tmp_path / "gold_report.json"
+    ann_a.write_text(
+        json.dumps(
+            {
+                "post_id": "private-post-1",
+                "annotator_id": "annotator-a",
+                "label": "明广",
+                "confidence": 0.9,
+                "evidence": ["private evidence text"],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    ann_b.write_text(
+        json.dumps(
+            {
+                "post_id": "private-post-1",
+                "annotator_id": "annotator-b",
+                "label": "明广",
+                "confidence": 0.9,
+                "evidence": ["different private evidence text"],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    adjudication.write_text("", encoding="utf-8")
+    script = REPO_ROOT / "data-tooling" / "annotation" / "build_gold_dataset.py"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            str(ann_a),
+            str(ann_b),
+            str(adjudication),
+            str(gold),
+            "--report",
+            str(report),
+        ],
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, (result.stdout + result.stderr).decode(
+        errors="replace"
+    )
+    assert len(gold.read_text(encoding="utf-8").splitlines()) == 1
+    payload = json.loads(report.read_text(encoding="utf-8"))
+    assert payload == {
+        "gold_count": 1,
+        "excluded_count": 0,
+        "label_distribution": {"明广": 1},
+        "adjudicated_count": 0,
+        "low_confidence_count": 0,
+    }
+    report_text = report.read_text(encoding="utf-8")
+    for forbidden in (
+        "private-post-1",
+        "annotator-a",
+        "annotator-b",
+        "private evidence text",
+    ):
+        assert forbidden not in report_text
+
+
+def test_annotation_batch_lock_is_auditable_and_second_round_is_disjoint(
+    tmp_path: Path,
+) -> None:
+    candidates = tmp_path / "candidates.jsonl"
+    records = [
+        {"post_id": "p1", "platform": "xiaohongshu", "blogger_id": "a", "media": [{"ref": "a.jpg"}]},
+        {"post_id": "p2", "platform": "bilibili", "blogger_id": "b", "media": []},
+        {"post_id": "p3", "platform": "xiaohongshu", "blogger_id": "c", "media": [{"ref": "c.jpg"}]},
+        {"post_id": "p4", "platform": "bilibili", "blogger_id": "d", "media": []},
+    ]
+    candidates.write_text(
+        "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records),
+        encoding="utf-8",
+    )
+    guide = REPO_ROOT / "docs" / "annotation_guide_v1.md"
+    first = lock_annotation_batch.build_manifest(
+        candidates_path=candidates,
+        guide_path=guide,
+        batch_id="round1-20260728",
+        count=2,
+        seed=42,
+        batch_kind="pilot",
+        formal_second_round=False,
+        required_platforms=("xiaohongshu", "bilibili"),
+        required_media_states=("available", "missing"),
+    )
+    first_path = tmp_path / "round1_manifest.json"
+    first_path.write_text(json.dumps(first, ensure_ascii=False), encoding="utf-8")
+    second = lock_annotation_batch.build_manifest(
+        candidates_path=candidates,
+        guide_path=guide,
+        batch_id="round2-20260728",
+        count=2,
+        seed=42,
+        batch_kind="formal_kappa",
+        formal_second_round=True,
+        previous_manifest=first_path,
+    )
+
+    assert first["guide_version"] == "1.0"
+    assert first["sample_count"] == 2
+    assert first["creator_count"] == 2
+    assert first["platform_counts"] == {"bilibili": 1, "xiaohongshu": 1}
+    assert first["media_state_counts"] == {"available": 1, "missing": 1}
+    assert first["input_sha256"] == lock_annotation_batch.sha256_file(candidates)
+    assert first["sample_sha256"]
+    assert second["formal_second_round"] is True
+    assert second["overlap_with_previous_count"] == 0
+    assert not (set(first["post_ids"]) & set(second["post_ids"]))

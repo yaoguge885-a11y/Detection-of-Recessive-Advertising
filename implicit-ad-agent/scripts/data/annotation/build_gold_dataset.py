@@ -171,9 +171,38 @@ def write_jsonl(records: Iterable[Dict], path: Path) -> None:
             stream.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def build_report(gold: List[Dict], excluded: List[Dict]) -> Dict:
+    """Return a privacy-safe aggregate report for a Gold build.
+
+    The report intentionally excludes post IDs, annotation evidence, source text,
+    and annotator/arbiter identities so it can be kept with M1 gate inputs.
+    """
+    label_counts = defaultdict(int)
+    for record in gold:
+        label_counts[record["label"]] += 1
+    return {
+        "gold_count": len(gold),
+        "excluded_count": len(excluded),
+        "label_distribution": dict(sorted(label_counts.items())),
+        "adjudicated_count": sum(1 for record in gold if record["adjudicated"]),
+        "low_confidence_count": sum(
+            1 for record in gold if record.get("low_confidence")
+        ),
+    }
+
+
 def main(path_a: str, path_b: str, adjudication_path: str,
          output_path: str, excluded_path: Optional[str] = None,
-         min_confidence: float = 0.6) -> None:
+         min_confidence: float = 0.6, report_path: Optional[str] = None) -> None:
+    # Windows subprocesses often inherit a GBK console; this tool logs Chinese
+    # labels and symbols, so ensure report generation is not affected by stdout.
+    import sys
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+
     ann_a = {r["post_id"]: r for r in load_jsonl(Path(path_a))}
     ann_b = {r["post_id"]: r for r in load_jsonl(Path(path_b))}
 
@@ -185,12 +214,7 @@ def main(path_a: str, path_b: str, adjudication_path: str,
     gold, excluded = merge_annotations(ann_a, ann_b, adjudication, min_confidence)
     write_jsonl(gold, Path(output_path))
 
-    # 标签分布
-    label_counts = defaultdict(int)
-    for r in gold:
-        label_counts[r["label"]] += 1
-    adj_count = sum(1 for r in gold if r["adjudicated"])
-    low_conf_count = sum(1 for r in gold if r.get("low_confidence"))
+    report = build_report(gold, excluded)
 
     # 排除原因分布
     exclude_reasons = defaultdict(int)
@@ -198,11 +222,11 @@ def main(path_a: str, path_b: str, adjudication_path: str,
         exclude_reasons[r["reason"]] += 1
 
     print(f"📊 金标构建完成:")
-    print(f"   gold records:     {len(gold)}")
-    print(f"     adjudicated:    {adj_count}")
-    print(f"     low_confidence: {low_conf_count}")
-    print(f"   excluded:         {len(excluded)}")
-    print(f"   label distribution: {dict(label_counts)}")
+    print(f"   gold records:     {report['gold_count']}")
+    print(f"     adjudicated:    {report['adjudicated_count']}")
+    print(f"     low_confidence: {report['low_confidence_count']}")
+    print(f"   excluded:         {report['excluded_count']}")
+    print(f"   label distribution: {report['label_distribution']}")
     if exclude_reasons:
         print(f"   exclusion reasons:  {dict(exclude_reasons)}")
     print(f"   saved to:         {output_path}")
@@ -214,14 +238,26 @@ def main(path_a: str, path_b: str, adjudication_path: str,
         write_jsonl(excluded, ep)
         print(f"   excluded saved to: {ep}")
 
+    if report_path:
+        rp = Path(report_path)
+        rp.parent.mkdir(parents=True, exist_ok=True)
+        rp.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        print(f"   report saved to: {rp}")
+
     # 警告
-    if adj_count == 0 and any(
+    if report["adjudicated_count"] == 0 and any(
         ann_a.get(pid, {}).get("label") != ann_b.get(pid, {}).get("label")
         for pid in set(ann_a) & set(ann_b)
     ):
         print(f"\n⚠️  警告: 存在分歧样本但无仲裁记录。这些样本将被排除。")
-    if low_conf_count > 0:
-        print(f"⚠️  警告: {low_conf_count} 条金标记录置信度 < {min_confidence}，需复核。")
+    if report["low_confidence_count"] > 0:
+        print(
+            f"⚠️  警告: {report['low_confidence_count']} 条金标记录置信度 "
+            f"< {min_confidence}，需复核。"
+        )
 
 
 if __name__ == "__main__":
@@ -232,9 +268,10 @@ if __name__ == "__main__":
     parser.add_argument("annotator_b", help="标注者 B 的标注文件")
     parser.add_argument("adjudication", help="仲裁文件")
     parser.add_argument("output", help="金标输出文件")
+    parser.add_argument("--report", default=None, help="安全聚合 Gold 构建报告输出路径")
     parser.add_argument("--excluded-output", default=None, help="排除记录输出路径")
     parser.add_argument("--min-confidence", type=float, default=0.6,
                         help="最低置信度阈值（默认 0.6）")
     args = parser.parse_args()
     main(args.annotator_a, args.annotator_b, args.adjudication,
-         args.output, args.excluded_output, args.min_confidence)
+         args.output, args.excluded_output, args.min_confidence, args.report)
