@@ -1,57 +1,90 @@
-"""一键跑通样本，最直观地看到"能出报告"。
+"""Run de-identified samples through the unified P3 analysis service.
 
-用法：
-    python run_demo.py                       # 零成本：规则占位图 hello_graph，不花钱、不需 Key
-    python run_demo.py --llm                 # 兼容旧参数：运行确定性 P2.5 图，不需 Key
-    python run_demo.py --image path/to.jpg   # 带图跑多智能体图（视觉专家；需装 requirements-vision.txt）
-                                             # 缺视觉依赖时视觉专家自动降级
+Usage:
+    python run_demo.py
+    python run_demo.py --llm
+    python run_demo.py --image path/to.jpg
 """
 from __future__ import annotations
-import json
-import pathlib
-import sys
 
-# Windows 终端默认 GBK，强制 UTF-8 输出，避免中文乱码
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Sequence
+
+from impad.services import (
+    AnalysisResult,
+    AnalysisService,
+    get_default_analysis_service,
+)
+
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
-def _arg_value(flag: str) -> str | None:
-    """取 `--flag value` 形式的参数值。"""
-    if flag in sys.argv:
-        i = sys.argv.index(flag)
-        if i + 1 < len(sys.argv):
-            return sys.argv[i + 1]
-    return None
+PROJECT_ROOT = Path(__file__).resolve().parent
+DEFAULT_SAMPLES = PROJECT_ROOT / "samples" / "sample_posts.json"
 
 
-def main():
-    use_llm = "--llm" in sys.argv
-    image = _arg_value("--image")
+def run_demo(
+    samples_path: str | Path = DEFAULT_SAMPLES,
+    *,
+    image_path: str | None = None,
+    service: AnalysisService | None = None,
+) -> list[AnalysisResult]:
+    """Analyze fixed samples locally through the shared service boundary."""
 
-    # 带图 → 必须走多智能体图（含视觉专家）；hello_graph 无视觉能力
-    if image:
-        from impad.graph import graph
-        print(f">> 带图分析，走多智能体图（graph.py）；图片：{image}\n")
-        post = {"text": "分享一下最近入手的好物～", "blogger": "demo", "image_path": image}
-        print(graph.invoke({"post": post})["report"], "\n")
-        return
-
-    samples_path = pathlib.Path(__file__).parent / "samples" / "sample_posts.json"
-    samples = json.loads(samples_path.read_text(encoding="utf-8"))
-
-    if use_llm:
-        from impad.graph import graph
-        print(">> 使用确定性 P2.5 图（graph.py）——无需配置 Key\n")
+    if image_path:
+        posts = [{
+            "text": "分享一下最近入手的好物～",
+            "blogger": "demo",
+            "image_path": image_path,
+        }]
     else:
-        from impad.hello_graph import graph
-        print(">> 使用零成本占位图（hello_graph.py）\n")
+        posts = json.loads(
+            Path(samples_path).read_text(encoding="utf-8")
+        )
+    active_service = service or get_default_analysis_service()
+    return [
+        active_service.analyze(post, runtime_mode="local")
+        for post in posts
+    ]
 
-    for i, post in enumerate(samples, 1):
-        print(f"===== 样本 {i}：{post.get('blogger', '')} =====")
-        result = graph.invoke({"post": post})
-        print(result["report"], "\n")
+
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    samples_path: str | Path = DEFAULT_SAMPLES,
+    service: AnalysisService | None = None,
+) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--llm",
+        action="store_true",
+        help="deprecated compatibility flag; analysis remains deterministic",
+    )
+    parser.add_argument(
+        "--image",
+        help="optional local image path for the real vision pipeline",
+    )
+    args = parser.parse_args(argv)
+
+    if args.llm:
+        print(">> --llm 已弃用；继续使用零 Key 的确定性 AnalysisService。\n")
+
+    results = run_demo(
+        samples_path,
+        image_path=args.image,
+        service=service,
+    )
+    for index, result in enumerate(results, start=1):
+        print(f"===== 分析结果 {index} =====")
+        print(result.readable_report)
+        print(f"run_id：{result.run_metadata.run_id}\n")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
