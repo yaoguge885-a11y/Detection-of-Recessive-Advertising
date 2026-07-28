@@ -19,7 +19,9 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 # 确保项目根目录在 path 中，能 import impad
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
+_impad_path = Path(__file__).resolve().parent.parent.parent  # implicit-ad-agent/
+if str(_impad_path) not in sys.path:
+    sys.path.insert(0, str(_impad_path))
 
 from impad.llm import get_llm
 

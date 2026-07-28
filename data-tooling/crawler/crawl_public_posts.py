@@ -376,8 +376,36 @@ def _is_verification_page(html: str) -> bool:
     return any(m in html_lower for m in markers)
 
 
+def _is_empty_or_placeholder(html: str, title: str, body_text: str, image_count: int, published_at: str) -> bool:
+    """检测是否抓到了空白/占位页面（非真实文章内容）。
+
+    典型特征：
+      - 标题为"微信公众平台"（默认占位标题）
+      - 正文极短（< 200 字符）
+      - 无图片
+      - 无发布日期
+    返回 True 表示应重试而非保存。
+    """
+    # 占位标题
+    placeholder_titles = ["微信公众平台", "公众号", "WeChat", "环境异常", "验证"]
+    if any(t in title for t in placeholder_titles) and len(body_text) < 200:
+        return True
+    # 正文极短且无图片无日期 → 大概率空白页
+    if len(body_text) < 100 and image_count == 0 and not published_at:
+        return True
+    # HTML 中几乎无有效内容
+    if len(html) < 500:
+        return True
+    return False
+
+
+class RetryableError(Exception):
+    """可重试的错误——触发上层重试循环，不计入 seen_urls。"""
+    pass
+
+
 def _fetch_via_playwright(url: str, timeout: int = 30000, retry: int = 0) -> str:
-    """使用 Playwright 浏览器渲染抓取页面，内置反检测和验证页重试。"""
+    """使用 Playwright 浏览器渲染抓取页面，内置反检测、验证页重试和占位页重试。"""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
@@ -411,19 +439,40 @@ def _fetch_via_playwright(url: str, timeout: int = 30000, retry: int = 0) -> str
             extra_headers["Referer"] = "https://weixin.sogou.com"
         page.set_extra_http_headers(extra_headers)
 
-        # 随机延迟模拟人类行为
+        # 随机延迟模拟人类行为；重试时等待更久
         page.goto(url, wait_until="load", timeout=timeout)
-        page.wait_for_timeout(random.randint(800, 2000))
+        wait_ms = random.randint(1500, 3500) + retry * 2000
+        page.wait_for_timeout(wait_ms)
         content = page.content()
 
         browser.close()
 
-        # 检测验证页面，重试一次
-        if _is_verification_page(content) and retry < 1:
-            wait = 5 + retry * 10
-            print(f"    检测到验证页面，{wait}s 后重试...")
+        # 检测验证页面 → 重试
+        if _is_verification_page(content) and retry < 3:
+            wait = 5 + retry * 8
+            print(f"    检测到验证页面，{wait}s 后重试 (第{retry+1}次)...")
             time.sleep(wait)
             return _fetch_via_playwright(url, timeout=timeout, retry=retry + 1)
+
+        # 检测占位/空白页面 → 重试（等待更久、可能换个 UA）
+        if retry < 2:
+            html_len = len(content)
+            # 快速检测：HTML 极短 或 标题为占位
+            is_placeholder = False
+            if html_len < 800:
+                is_placeholder = True
+            elif "微信公众平台" in content[:2000] and html_len < 5000:
+                # 快速扫描 body text 长度
+                body_match = re.search(r'<body[^>]*>(.*?)</body>', content, re.DOTALL)
+                if body_match:
+                    body_text = re.sub(r'<[^>]+>', '', body_match.group(1)).strip()
+                    if len(body_text) < 200:
+                        is_placeholder = True
+            if is_placeholder:
+                wait = 3 + retry * 5
+                print(f"    检测到占位/空白页(HTML {html_len}bytes)，{wait}s 后重试 (第{retry+1}次)...")
+                time.sleep(wait)
+                return _fetch_via_playwright(url, timeout=timeout, retry=retry + 1)
 
         return content
 
@@ -574,6 +623,13 @@ def main() -> int:
                 image_urls = extract_image_urls(html) if not args.no_images else []
                 print(f"  images: {len(image_urls)} found")
 
+                # 4.5 占位/空白页面检测 → 触发重试
+                if _is_empty_or_placeholder(html, title, body_text, len(image_urls), published_at):
+                    raise RetryableError(
+                        f"占位页面(title='{title[:30]}', text={len(body_text)}chars, "
+                        f"imgs={len(image_urls)}, date={'有' if published_at else '无'})"
+                    )
+
                 # 5. BS4 结构提取（可选，无 LLM 成本）
                 bs4_result = None
                 if args.use_bs4 and html:
@@ -688,6 +744,9 @@ def main() -> int:
                 seen_urls.add(url)
                 print(f"  ✓ saved (history: {len(history_post_ids)} refs)")
 
+            except RetryableError as exc:
+                print(f"  🔄 重试: {exc}")
+                round_failed.append(item)
             except Exception as exc:
                 print(f"  ✗ failed: {exc}", file=sys.stderr)
                 round_failed.append(item)
