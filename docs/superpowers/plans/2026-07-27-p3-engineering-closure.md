@@ -361,7 +361,7 @@ git commit -m "feat: add version-bound P3 retrieval reports"
 - Produces: `build_classification_report(fixture: ClassificationEvaluationFixture, *, calibration_bins: int = 10) -> ClassificationErrorReport`.
 - Produces CLI: `python scripts/evaluate_p3.py classification --predictions PATH --output PATH`.
 
-- [ ] **Step 1: Create a six-row explicit fixture**
+- [x] **Step 1: Create a six-row explicit fixture**
 
 Create `classification_eval_v1.json` with:
 
@@ -379,7 +379,7 @@ Create `classification_eval_v1.json` with:
 }
 ```
 
-- [ ] **Step 2: Write failing classification report tests**
+- [x] **Step 2: Write failing classification report tests**
 
 Assert literal, hand-counted outputs:
 
@@ -399,7 +399,7 @@ assert report.error_buckets == {
 
 Also assert `report.metrics == evaluate_classification(fixture.predictions)`. Pydantic must reject a missing or out-of-range `dark_ad_score`; no fallback from confidence is accepted.
 
-- [ ] **Step 3: Run report tests and verify RED**
+- [x] **Step 3: Run report tests and verify RED**
 
 Run:
 
@@ -409,7 +409,7 @@ Run:
 
 Expected: import failure because `impad.evaluation.reporting` does not exist.
 
-- [ ] **Step 4: Implement the minimal report layer**
+- [x] **Step 4: Implement the minimal report layer**
 
 Use stable row/column orders:
 
@@ -428,7 +428,7 @@ For binary dark-ad analysis:
 
 Sort sample IDs within each output by their input order. Sort error-bucket keys lexicographically before model construction.
 
-- [ ] **Step 5: Run report tests and verify GREEN**
+- [x] **Step 5: Run report tests and verify GREEN**
 
 Run:
 
@@ -438,7 +438,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Extend CLI tests and implement `classification`**
+- [x] **Step 6: Extend CLI tests and implement `classification`**
 
 Add a test that calls:
 
@@ -454,7 +454,7 @@ Assert the output benchmark version, `sample_count == 6`, and the literal error 
 
 Implement the subcommand by validating `ClassificationEvaluationFixture`, calling `build_classification_report`, and writing UTF-8 JSON. Keep retrieval behavior unchanged.
 
-- [ ] **Step 7: Run all P3 evaluation tests**
+- [x] **Step 7: Run all P3 evaluation tests**
 
 Run:
 
@@ -464,7 +464,7 @@ Run:
 
 Expected: all tests pass.
 
-- [ ] **Step 8: Commit Task 3**
+- [x] **Step 8: Commit Task 3**
 
 ```powershell
 git add -- implicit-ad-agent/impad/evaluation/reporting.py implicit-ad-agent/impad/evaluation/__init__.py implicit-ad-agent/scripts/evaluate_p3.py implicit-ad-agent/tests/fixtures/classification_eval_v1.json implicit-ad-agent/tests/evaluation/test_reporting.py implicit-ad-agent/tests/scripts/test_evaluate_p3.py

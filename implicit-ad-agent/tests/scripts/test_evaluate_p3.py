@@ -60,3 +60,22 @@ def test_retrieval_command_does_not_write_a_mismatched_report(tmp_path):
         ])
 
     assert not output.exists()
+
+
+def test_classification_command_writes_error_analysis(tmp_path):
+    output = tmp_path / "classification.json"
+
+    exit_code = main([
+        "classification",
+        "--predictions",
+        str(FIXTURES / "classification_eval_v1.json"),
+        "--output",
+        str(output),
+    ])
+
+    assert exit_code == 0
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["benchmark_version"] == "synthetic-classification-v1"
+    assert payload["metrics"]["sample_count"] == 6
+    assert payload["misclassified_sample_ids"] == ["4", "5", "6"]
+    assert payload["review_sample_ids"] == ["4"]
