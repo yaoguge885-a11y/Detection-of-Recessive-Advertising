@@ -487,7 +487,7 @@ git commit -m "feat: add P3 classification error reports"
 - Produces: `StdioDetectionMCPClient(*, python_executable: str | None = None, project_root: Path | None = None, timeout_seconds: float = 30.0)`.
 - Preserves: `MCPToolGateway.call()` fallback limitation code `mcp_transport_fallback`.
 
-- [ ] **Step 1: Write failing timeout tests**
+- [x] **Step 1: Write failing timeout tests**
 
 Use a real subclass boundary, not mock assertions:
 
@@ -515,7 +515,7 @@ assert any(
 
 Also assert `timeout_seconds=0` and `timeout_seconds=-1` raise `ValueError("timeout_seconds must be greater than 0")`.
 
-- [ ] **Step 2: Run timeout tests and verify RED**
+- [x] **Step 2: Run timeout tests and verify RED**
 
 Run:
 
@@ -525,7 +525,7 @@ Run:
 
 Expected: failures because the constructor does not accept `timeout_seconds`.
 
-- [ ] **Step 3: Implement one timeout wrapper**
+- [x] **Step 3: Implement one timeout wrapper**
 
 Add:
 
@@ -539,7 +539,7 @@ def _run_request(self, **kwargs):
 
 Validate the constructor value and route both `list_tools()` and `call_tool()` through `_run_request()`. Do not change `MCPToolGateway`'s broad transport fallback semantics.
 
-- [ ] **Step 4: Run timeout and orchestration tests**
+- [x] **Step 4: Run timeout and orchestration tests**
 
 Run:
 
@@ -549,7 +549,7 @@ Run:
 
 Expected: all tests pass; timeout and existing connection failure both use the same local fallback contract.
 
-- [ ] **Step 5: Lock existing deterministic usage semantics**
+- [x] **Step 5: Lock existing deterministic usage semantics**
 
 Add these assertions to the real local `AnalysisService` test:
 
@@ -566,7 +566,7 @@ Run:
 
 Expected: PASS immediately because this documents an existing contract and requires no production change.
 
-- [ ] **Step 6: Commit Task 4**
+- [x] **Step 6: Commit Task 4**
 
 ```powershell
 git add -- implicit-ad-agent/impad/orchestration/mcp_gateway.py implicit-ad-agent/tests/orchestration/test_mcp_gateway.py implicit-ad-agent/tests/services/test_analysis_service.py

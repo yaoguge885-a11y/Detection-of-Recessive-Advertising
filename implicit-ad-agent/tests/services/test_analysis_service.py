@@ -44,6 +44,8 @@ def test_analysis_service_runs_rag_after_judge_and_persists_by_run_id(
     stored = service.get_run(result.run_metadata.run_id)
 
     assert stored is not None
+    assert result.run_metadata.token_usage == {}
+    assert result.run_metadata.cost_usd is None
     assert result.verdict_report.law_evidence[0].article_id == "第九条"
     assert stored.verdict_report == result.verdict_report
     assert stored.run_metadata.trace_ids

@@ -39,9 +39,13 @@ class StdioDetectionMCPClient:
         *,
         python_executable: str | None = None,
         project_root: Path | None = None,
+        timeout_seconds: float = 30.0,
     ):
+        if timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be greater than 0")
         self.python_executable = python_executable or sys.executable
         self.project_root = project_root or Path(__file__).resolve().parents[2]
+        self.timeout_seconds = timeout_seconds
 
     async def _request(
         self,
@@ -68,16 +72,22 @@ class StdioDetectionMCPClient:
                     arguments=arguments or {},
                 )
 
+    def _run_request(self, **kwargs):
+        return asyncio.run(asyncio.wait_for(
+            self._request(**kwargs),
+            timeout=self.timeout_seconds,
+        ))
+
     def list_tools(self) -> set[str]:
-        response = asyncio.run(self._request(list_only=True))
+        response = self._run_request(list_only=True)
         return {tool.name for tool in response.tools}
 
     def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-        response = asyncio.run(self._request(
+        response = self._run_request(
             list_only=False,
             name=name,
             arguments=arguments,
-        ))
+        )
         if response.isError or response.structuredContent is None:
             raise RuntimeError("Detection MCP call failed")
         return dict(response.structuredContent)
