@@ -71,6 +71,11 @@ class FailingVectorRetriever:
         raise ConnectionError("vector store offline")
 
 
+class FailingLexicalHybridRetriever(HybridLegalRetriever):
+    def _lexical_candidates(self, query_tokens):
+        raise RuntimeError("lexical index unavailable")
+
+
 def test_hybrid_retriever_unions_paths_and_sets_stable_rerank_scores():
     retriever = HybridLegalRetriever(
         documents=_documents(),
@@ -112,6 +117,30 @@ def test_vector_failure_uses_lexical_evidence_without_inventing_quote():
     assert "Vector retrieval unavailable; lexical fallback used." in (
         result[0].limitations
     )
+
+
+def test_lexical_failure_uses_vector_evidence_without_inventing_quote():
+    expected = _vector_evidence()
+    retriever = FailingLexicalHybridRetriever(
+        documents=_documents(),
+        vector_retriever=FixedVectorRetriever([expected]),
+    )
+
+    result = retriever.retrieve("购买链接商业标识", top_k=1)
+
+    assert result[0].quote == expected.quote
+    assert "Lexical retrieval unavailable; vector fallback used." in (
+        result[0].limitations
+    )
+
+
+def test_both_retrieval_paths_fail_closed():
+    retriever = FailingLexicalHybridRetriever(
+        documents=_documents(),
+        vector_retriever=FailingVectorRetriever(),
+    )
+
+    assert retriever.retrieve("商业推广", top_k=3) == []
 
 
 def test_empty_and_unrelated_queries_abstain():

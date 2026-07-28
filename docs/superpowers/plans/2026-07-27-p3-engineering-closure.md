@@ -700,7 +700,7 @@ git commit -m "docs: close P3 engineering handoff"
 - Consumes: every implementation and report above.
 - Produces: verified branch state with no uncommitted task changes.
 
-- [ ] **Step 1: Run dependency and syntax checks**
+- [x] **Step 1: Run dependency and syntax checks**
 
 Run from `implicit-ad-agent`:
 
@@ -711,7 +711,7 @@ Run from `implicit-ad-agent`:
 
 Expected: `No broken requirements found.` and exit code 0.
 
-- [ ] **Step 2: Run focused P3 tests**
+- [x] **Step 2: Run focused P3 tests**
 
 Run:
 
@@ -721,7 +721,7 @@ Run:
 
 Expected: all pass, no new skip.
 
-- [ ] **Step 3: Run complete tests**
+- [x] **Step 3: Run complete tests**
 
 Run:
 
@@ -731,18 +731,18 @@ Run:
 
 Expected: all pass; skipped count remains exactly 2. The existing Starlette/httpx deprecation warning may remain but no new warning is accepted.
 
-- [ ] **Step 4: Run P1 validators**
+- [x] **Step 4: Run P1 validators**
 
 Run from repository root:
 
 ```powershell
-.\implicit-ad-agent\.venv\Scripts\python.exe .\scripts\validate_data_contracts.py
-.\implicit-ad-agent\.venv\Scripts\python.exe .\scripts\validate_annotation_gold.py
+.\implicit-ad-agent\.venv\Scripts\python.exe .\scripts\data\validate_submission_assets.py
+.\implicit-ad-agent\.venv\Scripts\python.exe .\data-tooling\validate_submission_assets.py
 ```
 
 Expected: both exit 0. These validators prove schema/fixture invariants only and do not pass M1.
 
-- [ ] **Step 5: Re-run generated report commands**
+- [x] **Step 5: Re-run generated report commands**
 
 Re-run all three Task 5 commands and confirm:
 
@@ -752,7 +752,7 @@ Re-run all three Task 5 commands and confirm:
 
 Update documentation only with the observed final values and test counts.
 
-- [ ] **Step 6: Review the complete diff**
+- [x] **Step 6: Review the complete diff**
 
 Run:
 
@@ -765,7 +765,7 @@ git log -6 --oneline
 
 Review every changed line against the approved design. Remove no unrelated code and do not reformat adjacent files.
 
-- [ ] **Step 7: Commit any verification-only documentation correction**
+- [x] **Step 7: Commit any verification-only documentation correction**
 
 Only if test counts/report values required a correction:
 
@@ -774,7 +774,7 @@ git add -- README.md HANDOFF.md docs/隐性广告识别项目_分阶段计划表
 git commit -m "docs: record final P3 verification"
 ```
 
-- [ ] **Step 8: Invoke completion skills**
+- [x] **Step 8: Invoke completion skills**
 
 Use:
 

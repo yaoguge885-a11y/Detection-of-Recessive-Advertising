@@ -12,6 +12,9 @@ _TOKEN_PATTERN = re.compile(r"[a-z0-9]+|[\u4e00-\u9fff]+")
 _VECTOR_FALLBACK_LIMITATION = (
     "Vector retrieval unavailable; lexical fallback used."
 )
+_LEXICAL_FALLBACK_LIMITATION = (
+    "Lexical retrieval unavailable; vector fallback used."
+)
 
 
 def tokenize_legal_text(text: str) -> list[str]:
@@ -138,7 +141,12 @@ class HybridLegalRetriever:
         if not query_tokens:
             return []
 
-        lexical = self._lexical_candidates(query_tokens)
+        lexical_failed = False
+        try:
+            lexical = self._lexical_candidates(query_tokens)
+        except Exception:
+            lexical_failed = True
+            lexical = []
         vector_failed = False
         try:
             vector = self.vector_retriever.retrieve(
@@ -203,6 +211,11 @@ class HybridLegalRetriever:
             limitations = list(item.limitations)
             if vector_failed and _VECTOR_FALLBACK_LIMITATION not in limitations:
                 limitations.append(_VECTOR_FALLBACK_LIMITATION)
+            if (
+                lexical_failed
+                and _LEXICAL_FALLBACK_LIMITATION not in limitations
+            ):
+                limitations.append(_LEXICAL_FALLBACK_LIMITATION)
             evidence.append(item.model_copy(update={
                 "rerank_score": fused[key] / maximum_score,
                 "limitations": limitations,

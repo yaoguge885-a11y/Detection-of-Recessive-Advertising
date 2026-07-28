@@ -83,7 +83,7 @@
 
 远端 [`P1-·-数据地基与标注规范`](https://github.com/yaoguge885-a11y/Detection-of-Recessive-Advertising/tree/P1-%C2%B7-%E6%95%B0%E6%8D%AE%E5%9C%B0%E5%9F%BA%E4%B8%8E%E6%A0%87%E6%B3%A8%E8%A7%84%E8%8C%83) 的最新提交 `6679671` 已通过合并提交 `98cb599` 进入本地P2。`data/schema/data_schema_v1.json` 是当前提交资产校验所使用的权威字段标准；`data-tooling/schema/data_schema_v1_1.json` 是数据工具舱中待走兼容评审的后续版本，二者不能混用。
 
-本地零Key全量回归当前为 `297 passed, 2 skipped`，P3非数据依赖工程聚焦回归为`43 passed`。混合检索、版本绑定报告、分类错误分析和MCP超时回落均有测试；真实视觉、远程MCP、LLM和联网采集仍是显式可选路径。
+本地零Key全量回归当前为 `299 passed, 2 skipped`，P3非数据依赖工程聚焦回归为`45 passed`。混合检索、版本绑定报告、分类错误分析和MCP超时回落均有测试；真实视觉、远程MCP、LLM和联网采集仍是显式可选路径。
 
 ## P1数据地基
 

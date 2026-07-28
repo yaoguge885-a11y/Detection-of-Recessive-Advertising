@@ -75,7 +75,7 @@
 | 统一分析服务 | `AnalysisService`统一主图、Judge后法规检索、报告和run持久化；API与CLI共用 |
 | API与run查询 | `/api/v1/analyze`、`/api/v1/runs/{run_id}`、`/api/v1/capabilities`及兼容`/analyze`共用服务 |
 | 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、coverage/review_rate，以及混淆计数、错误/复核样本ID和错误桶已有离线实现 |
-| 默认回归 | 当前零Key/零网络全量`297 passed, 2 skipped`；P3非数据依赖工程聚焦`43 passed` |
+| 默认回归 | 当前零Key/零网络全量`299 passed, 2 skipped`；P3非数据依赖工程聚焦`45 passed` |
 | 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
 
 ### 4.2 P2.5缺口关闭状态
@@ -158,7 +158,7 @@
   - `data/reports/p3/retrieval_synthetic_30.json`：30题，Recall@1 `0.75`、Recall@3/5 `1.0`、跨文档Recall@5 `1.0`、误引率`0`。
   - `data/reports/p3/retrieval_official_15.json`：2份官方文档、7个sections、15题，Recall@1 `0.85`、Recall@3/5与MRR@5 `1.0`、误引率`0`。
   - `data/reports/p3/classification_fixture.json`：6行合成夹具，错误ID `4/5/6`、复核ID `4`。
-- P3聚焦`43 passed`；当前全量`297 passed, 2 skipped, 1 warning`。warning为既有Starlette/httpx弃用提示，无新增skip。
+- P3聚焦`45 passed`；当前全量`299 passed, 2 skipped, 1 warning`。warning为既有Starlette/httpx弃用提示，无新增skip。
 - 这些指标仅证明小型语料和合成夹具的工程行为；正式M3仍等待M1 Gold、双标/仲裁、无泄漏切分、条款和隐私证据。
 
 ## 5. P1数据资产事实
@@ -284,7 +284,7 @@ cd implicit-ad-agent
 .\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
 ```
 
-当前预期：全量`297 passed, 2 skipped`，P3非数据依赖工程聚焦`43 passed`，M1数据治理历史聚焦`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归。
+当前预期：全量`299 passed, 2 skipped`，P3非数据依赖工程聚焦`45 passed`，M1数据治理历史聚焦`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归。
 
 M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的PowerShell命令见`data-tooling/README.md`。当前门禁预期退出码为2；在外部证据补齐前，不要把它改成成功预期。
 
