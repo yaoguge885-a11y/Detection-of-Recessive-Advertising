@@ -10,6 +10,7 @@ from ..orchestration import (
     attach_trace,
     build_evidence_bundle,
     execute_post_tools,
+    execute_post_tools_parallel,
 )
 from ..state import AdCheckState
 
@@ -34,11 +35,12 @@ def execute_agent_group(
         remaining_plan = plan.model_copy(
             update={"call_budget": remaining_calls}
         )
-        result = execute_post_tools(
+        result = execute_post_tools_parallel(
             post,
             remaining_plan,
             RunContext(run_id=metadata.run_id),
             tool_names=tool_names,
+            gateway=state.get("tool_gateway"),
             recorder=recorder,
         )
     tool_results = [*state.get("tool_results", []), *result.tool_results]

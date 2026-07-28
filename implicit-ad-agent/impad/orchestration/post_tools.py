@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from typing import Collection
 from urllib.parse import urlparse
 
@@ -173,3 +174,66 @@ def execute_post_tools(
         plan=plan,
         recorder=recorder,
     )
+
+
+def execute_post_tools_parallel(
+    post: PostRecord,
+    plan: CapabilityPlan,
+    run: RunContext,
+    *,
+    tool_names: Collection[str] | None = None,
+    gateway: ToolGateway | None = None,
+    recorder: InMemoryTraceRecorder | None = None,
+    policy: FunctionCallingPolicy | None = None,
+) -> FunctionCallingResult:
+    """Execute independent planned calls concurrently, then merge in plan order."""
+
+    calls = function_calls_from_post(post, plan, tool_names=tool_names)
+    active_policy = policy or FunctionCallingPolicy()
+    budget = min(plan.call_budget, active_policy.max_calls)
+    selected = calls[:budget]
+    if not selected:
+        return FunctionCallingResult(
+            stopped_reason=(
+                "max_calls_reached" if calls and budget == 0 else None
+            )
+        )
+    context = capability_context_from_post(post)
+    active_gateway = gateway
+
+    def invoke(call: dict):
+        local_recorder = InMemoryTraceRecorder(run.run_id)
+        single_plan = plan.model_copy(update={
+            "available_tools": [call["name"]],
+            "call_budget": 1,
+        })
+        single_policy = active_policy.model_copy(update={"max_calls": 1})
+        outcome = RestrictedFunctionCaller(
+            gateway=active_gateway
+        ).execute(
+            calls=[call],
+            context=context,
+            run=run,
+            policy=single_policy,
+            plan=single_plan,
+            recorder=local_recorder,
+        )
+        return outcome, local_recorder.snapshot()
+
+    with ThreadPoolExecutor(max_workers=len(selected)) as executor:
+        outcomes = list(executor.map(invoke, selected))
+
+    merged = FunctionCallingResult(
+        stopped_reason=(
+            "max_calls_reached" if len(calls) > len(selected) else None
+        )
+    )
+    for outcome, trace in outcomes:
+        merged.tool_results.extend(outcome.tool_results)
+        merged.traces.extend(outcome.traces)
+        merged.proposed_count += outcome.proposed_count
+        merged.executed_count += outcome.executed_count
+        merged.rejected_count += outcome.rejected_count
+        if recorder is not None:
+            recorder.trace.events.extend(trace.events)
+    return merged

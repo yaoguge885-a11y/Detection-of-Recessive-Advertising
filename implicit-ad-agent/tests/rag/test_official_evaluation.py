@@ -1,0 +1,34 @@
+import json
+from pathlib import Path
+
+from impad.rag import LegalRetrievalQuestion, evaluate_retriever
+from impad.rag.corpus import build_default_legal_retriever
+
+
+FIXTURE = (
+    Path(__file__).resolve().parents[1]
+    / "fixtures"
+    / "legal_rag_official_eval_15.json"
+)
+
+
+def test_official_corpus_retrieval_has_recall_mrr_precision_and_abstention():
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    questions = [
+        LegalRetrievalQuestion.model_validate(item)
+        for item in payload["questions"]
+    ]
+    metrics = evaluate_retriever(
+        build_default_legal_retriever(),
+        questions,
+        top_k=5,
+    )
+
+    assert metrics.total_questions == 15
+    assert 0 <= metrics.recall_at_5 <= 1
+    assert 0 <= metrics.mrr_at_5 <= 1
+    assert 0 <= metrics.citation_precision_at_5 <= 1
+    assert 0 <= metrics.false_citation_rate <= 1
+    assert metrics.recall_at_5 >= 0.6
+    assert metrics.mrr_at_5 >= 0.6
+    assert metrics.false_citation_rate == 0

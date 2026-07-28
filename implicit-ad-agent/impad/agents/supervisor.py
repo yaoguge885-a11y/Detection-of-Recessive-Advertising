@@ -79,7 +79,7 @@ def supervisor(state: AdCheckState) -> AdCheckState:
             run_id=run_id,
             status="running",
             started_at=datetime.now(timezone.utc),
-            runtime_mode="local",
+            runtime_mode=state.get("runtime_mode", "local"),
             planner_version="capability_planner_v1",
         ),
         "agent_outputs": {},

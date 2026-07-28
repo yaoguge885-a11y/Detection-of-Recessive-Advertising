@@ -26,6 +26,7 @@ from .judgment import (
 from .post_tools import (
     capability_context_from_post,
     execute_post_tools,
+    execute_post_tools_parallel,
     function_calls_from_post,
 )
 from .tool_gateway import (
@@ -36,6 +37,7 @@ from .tool_gateway import (
     UnavailableToolError,
     UnknownToolError,
 )
+from .mcp_gateway import MCPToolGateway, StdioDetectionMCPClient
 from .tracing import InMemoryTraceRecorder, RunEvent, RunTrace, attach_trace
 
 __all__ = [
@@ -52,6 +54,7 @@ __all__ = [
     "build_evidence_bundle",
     "evidence_items_from_tool_result",
     "execute_post_tools",
+    "execute_post_tools_parallel",
     "FunctionCallingPolicy",
     "FunctionCallingResult",
     "FunctionCallRequest",
@@ -59,11 +62,13 @@ __all__ = [
     "function_calls_from_post",
     "InMemoryTraceRecorder",
     "LocalToolGateway",
+    "MCPToolGateway",
     "RestrictedFunctionCaller",
     "RunEvent",
     "RunContext",
     "RunTrace",
     "SkippedTool",
+    "StdioDetectionMCPClient",
     "ToolGateway",
     "UnavailableToolError",
     "UnknownToolError",

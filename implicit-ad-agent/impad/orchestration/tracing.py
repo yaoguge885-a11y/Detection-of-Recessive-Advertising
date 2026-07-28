@@ -11,12 +11,17 @@ from ..contracts.run import RunMetadata
 
 
 RunEventType = Literal[
+    "analysis_started",
     "function_call_proposed",
     "function_call_rejected",
     "tool_started",
     "tool_completed",
     "tool_failed",
     "run_stopped",
+    "judgment_completed",
+    "rag_completed",
+    "report_completed",
+    "run_persisted",
 ]
 
 
