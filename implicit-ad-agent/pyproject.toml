@@ -78,3 +78,4 @@ include = ["impad*"]
 
 [tool.setuptools.package-data]
 "impad.rag" = ["data/*.json"]
+"impad.web" = ["*.html", "*.css", "*.js"]

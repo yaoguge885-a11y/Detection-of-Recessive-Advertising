@@ -2,11 +2,25 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from impad.adapters.platforms import URLImportService
 from impad.api import AnalyzeRequest, create_api_router
 from impad.services import AnalysisService, get_default_analysis_service
+from impad.web import asset_directory
+
+
+WORKBENCH_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; script-src 'self'; style-src 'self'; "
+        "img-src 'self' data:; connect-src 'self'; object-src 'none'; "
+        "base-uri 'none'; frame-ancestors 'none'"
+    ),
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Cache-Control": "no-store",
+}
 
 
 def create_app(
@@ -28,12 +42,28 @@ def create_app(
         tags=["analysis"],
     )
 
+    workbench_assets = asset_directory()
+    application.mount(
+        "/workbench/assets",
+        StaticFiles(directory=workbench_assets),
+        name="workbench-assets",
+    )
+
+    @application.get("/workbench", response_class=FileResponse)
+    def workbench():
+        return FileResponse(
+            workbench_assets / "index.html",
+            media_type="text/html; charset=utf-8",
+            headers=WORKBENCH_HEADERS,
+        )
+
     @application.get("/", response_class=HTMLResponse)
     def root():
         return (
             "<h1>隐性广告识别 API</h1>"
             "<p>使用 <a href='/docs'>/docs</a> 试用接口；"
             "正式入口为 <code>POST /api/v1/analyze</code>。</p>"
+            '<p><a href="/workbench">打开开发者研究工作台</a></p>'
         )
 
     @application.get("/health")
