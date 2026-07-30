@@ -1,4 +1,9 @@
+import os
 from pathlib import Path
+import shutil
+import subprocess
+import sys
+import zipfile
 
 from fastapi.testclient import TestClient
 
@@ -48,8 +53,39 @@ def test_workbench_document_has_strict_security_headers(tmp_path):
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_root_links_to_workbench(tmp_path):
-    response = _client(tmp_path).get("/")
+def test_built_wheel_contains_workbench_assets(tmp_path):
+    project_root = Path(__file__).resolve().parents[2]
+    build_root = tmp_path / "project"
+    wheel_directory = tmp_path / "wheel"
+    build_root.mkdir()
+    shutil.copy2(project_root / "pyproject.toml", build_root / "pyproject.toml")
+    shutil.copytree(project_root / "impad", build_root / "impad")
 
-    assert response.status_code == 200
-    assert 'href="/workbench"' in response.text
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "wheel",
+            "--disable-pip-version-check",
+            "--no-build-isolation",
+            "--no-deps",
+            "--wheel-dir",
+            str(wheel_directory),
+            str(build_root),
+        ],
+        check=True,
+        capture_output=True,
+        env={**os.environ, "PIP_NO_INDEX": "1"},
+        text=True,
+    )
+
+    wheel = next(wheel_directory.glob("*.whl"))
+    with zipfile.ZipFile(wheel) as archive:
+        packaged_files = set(archive.namelist())
+
+    assert {
+        "impad/web/index.html",
+        "impad/web/workbench.css",
+        "impad/web/workbench.js",
+    } <= packaged_files
