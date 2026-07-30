@@ -113,3 +113,39 @@ def test_runtime_assessment_excludes_unknown_time_with_limitation():
     assert summary.status == "sufficient"
     assert summary.history_count == 3
     assert "excluded_history_without_timestamp:1" in summary.limitations
+
+
+def test_runtime_assessment_does_not_turn_missing_target_text_into_zero():
+    post = _post()
+    post = post.model_copy(update={"text": "   "})
+
+    summary = assess_post_creator_shift(post)
+
+    assert summary.status == "unavailable"
+    assert summary.shift_score is None
+    assert "target_text_unavailable" in summary.limitations
+
+
+def test_runtime_assessment_excludes_missing_history_text():
+    summary = assess_post_creator_shift(_post(history=[
+        {
+            "post_id": "history_empty",
+            "text": " ",
+            "published_at": "2026-07-27T00:00:00Z",
+        },
+        {
+            "post_id": "history_1",
+            "text": "今天生活记录",
+            "published_at": "2026-07-28T00:00:00Z",
+        },
+        {
+            "post_id": "history_2",
+            "text": "昨天学习记录",
+            "published_at": "2026-07-29T00:00:00Z",
+        },
+    ]))
+
+    assert summary.status == "insufficient"
+    assert summary.history_count == 2
+    assert summary.shift_score is None
+    assert "excluded_history_without_text:1" in summary.limitations

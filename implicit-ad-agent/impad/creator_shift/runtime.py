@@ -44,20 +44,38 @@ def assess_post_creator_shift(
     timestamped = [
         item for item in post.history if item.published_at is not None
     ]
-    excluded = len(post.history) - len(timestamped)
+    usable_history = [
+        item for item in timestamped if item.text.strip()
+    ]
+    excluded_time = len(post.history) - len(timestamped)
+    excluded_text = len(timestamped) - len(usable_history)
     limitations = []
-    if excluded:
+    if excluded_time:
         limitations.append(
-            f"excluded_history_without_timestamp:{excluded}"
+            f"excluded_history_without_timestamp:{excluded_time}"
+        )
+    if excluded_text:
+        limitations.append(
+            f"excluded_history_without_text:{excluded_text}"
         )
     if post.published_at is None:
         return _summary(
             status="unavailable",
-            history_count=len(timestamped),
+            history_count=len(usable_history),
             required_history=minimum_history,
             limitations=[
                 *limitations,
                 "target_timestamp_unavailable",
+            ],
+        )
+    if not post.text.strip():
+        return _summary(
+            status="unavailable",
+            history_count=len(usable_history),
+            required_history=minimum_history,
+            limitations=[
+                *limitations,
+                "target_text_unavailable",
             ],
         )
 
@@ -73,7 +91,7 @@ def assess_post_creator_shift(
                 published_at=item.published_at,
                 features=compute_keyword_weights(item.text),
             )
-            for item in timestamped
+            for item in usable_history
         ],
     )
     sufficiency = view.sufficiency
