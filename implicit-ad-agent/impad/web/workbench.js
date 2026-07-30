@@ -261,17 +261,32 @@ async function loadCapabilities() {
     + `批量上限${capabilities.batch_analysis.max_items}`
   );
   const platforms = capabilities.url_import.platforms || [];
-  const available = platforms.length > 0;
-  byId("url-preview-submit").disabled = !available;
-  byId("url-input").disabled = !available;
-  byId("url-unavailable").hidden = available;
-  byId("url-unavailable").textContent = available
-    ? ""
-    : "当前未配置平台URL适配器；请使用单条或批量输入。";
-  byId("url-capability").textContent = available
-    ? `URL：${platforms.map((item) => item.platform).join("、")}`
-    : "URL：未配置";
+  setUrlImportAvailability(platforms);
   return capabilities;
+}
+
+function setUrlImportUnavailable(message) {
+  byId("url-preview-submit").disabled = true;
+  byId("url-input").disabled = true;
+  byId("url-unavailable").hidden = false;
+  byId("url-unavailable").textContent = message;
+  byId("url-capability").textContent = "URL：未配置";
+}
+
+function setUrlImportAvailability(platforms) {
+  if (!Array.isArray(platforms) || platforms.length === 0) {
+    setUrlImportUnavailable(
+      "当前未配置平台URL适配器；请使用单条或批量输入。",
+    );
+    return;
+  }
+  byId("url-preview-submit").disabled = false;
+  byId("url-input").disabled = false;
+  byId("url-unavailable").hidden = true;
+  byId("url-unavailable").textContent = "";
+  byId("url-capability").textContent = (
+    `URL：${platforms.map((item) => item.platform).join("、")}`
+  );
 }
 
 function renderVerdict(record) {
@@ -691,6 +706,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCapabilities();
     setSubmissionStatus("工作台已就绪", "success");
   } catch (error) {
+    setUrlImportUnavailable(
+      "平台URL适配器不可用；请使用单条或批量输入。",
+    );
     setSubmissionStatus(
       `初始化失败：${error.message}`,
       "error",
@@ -789,8 +807,16 @@ function setupBatchForm() {
 function setupUrlForms() {
   const previewForm = byId("url-preview-form");
   const confirmForm = byId("url-confirm-form");
+  setUrlImportUnavailable(
+    "正在检查平台URL适配器；请使用单条或批量输入。",
+  );
   previewForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const platforms = state.capabilities?.url_import?.platforms;
+    if (!Array.isArray(platforms) || platforms.length === 0) {
+      setSubmissionStatus("平台URL适配器尚未就绪，无法生成预览", "error");
+      return;
+    }
     try {
       setBusy(previewForm, true);
       setSubmissionStatus("正在生成URL预览");
