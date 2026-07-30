@@ -15,6 +15,10 @@ from impad.creator_shift import (
     CreatorShiftBenchmarkFixture,
     run_creator_shift_benchmark,
 )
+from impad.evaluation import (
+    CalibrationEvaluationFixture,
+    build_calibration_report,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -28,6 +32,22 @@ def _parser() -> argparse.ArgumentParser:
     )
     creator_shift.add_argument("--fixture", type=Path, required=True)
     creator_shift.add_argument("--output", type=Path, required=True)
+    calibration = commands.add_parser(
+        "calibration",
+        help="Evaluate explicit pre-abstention predictions.",
+    )
+    calibration.add_argument("--predictions", type=Path, required=True)
+    calibration.add_argument("--output", type=Path, required=True)
+    calibration.add_argument(
+        "--bootstrap-resamples",
+        type=int,
+        default=500,
+    )
+    calibration.add_argument(
+        "--bootstrap-seed",
+        type=int,
+        default=20260730,
+    )
     return parser
 
 
@@ -43,6 +63,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.fixture.read_text(encoding="utf-8")
         )
         report = run_creator_shift_benchmark(fixture)
+        _write_report(args.output, report.model_dump_json(indent=2))
+        return 0
+    if args.command == "calibration":
+        fixture = CalibrationEvaluationFixture.model_validate_json(
+            args.predictions.read_text(encoding="utf-8")
+        )
+        report = build_calibration_report(
+            fixture,
+            bootstrap_resamples=args.bootstrap_resamples,
+            bootstrap_seed=args.bootstrap_seed,
+        )
         _write_report(args.output, report.model_dump_json(indent=2))
         return 0
     raise ValueError(f"unsupported command: {args.command}")

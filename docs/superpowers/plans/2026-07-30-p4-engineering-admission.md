@@ -371,7 +371,7 @@ git commit -m "feat: add versioned CreatorShift benchmark"
   `bootstrap_classification_intervals()`, `risk_coverage_curve()`, and CLI
   command `evaluate_p4.py calibration`.
 
-- [ ] **Step 1: Write failing selective-evaluation tests**
+- [x] **Step 1: Write failing selective-evaluation tests**
 
 Use explicit pre-abstention predictions:
 
@@ -397,7 +397,7 @@ Assert:
 - every interval has `lower <= upper` and all reported metric values remain
   inside `[0, 1]`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -407,7 +407,7 @@ Run:
 
 Expected: selective/calibration modules are missing.
 
-- [ ] **Step 3: Implement risk-coverage and bootstrap**
+- [x] **Step 3: Implement risk-coverage and bootstrap**
 
 `risk_coverage_curve()` sorts by
 `(-decision_confidence, sample_id)` and emits one point for each retained
@@ -430,7 +430,7 @@ resamples with replacement. Report percentile intervals for:
 Use a deterministic linear percentile helper. Reject nonpositive resamples and
 confidence levels outside `(0, 1)`.
 
-- [ ] **Step 4: Build the versioned report**
+- [x] **Step 4: Build the versioned report**
 
 Convert `CalibrationPrediction` values to existing
 `ClassificationPrediction` values for base metrics. The report records:
@@ -450,7 +450,7 @@ risk_coverage
 The fixture contains six synthetic samples with all three labels, at least two
 errors, and unique confidence values.
 
-- [ ] **Step 5: Extend and verify the CLI**
+- [x] **Step 5: Extend and verify the CLI**
 
 Add:
 
@@ -468,7 +468,7 @@ Run:
 .\.venv\Scripts\python.exe -m pytest tests\evaluation tests\scripts\test_evaluate_p4.py -q
 ```
 
-- [ ] **Step 6: Generate the calibration report**
+- [x] **Step 6: Generate the calibration report**
 
 Run:
 
@@ -476,7 +476,7 @@ Run:
 .\.venv\Scripts\python.exe scripts\evaluate_p4.py calibration --predictions tests\fixtures\calibration_eval_v1.json --output ..\data\reports\p4\calibration_fixture.json --bootstrap-resamples 500 --bootstrap-seed 20260730
 ```
 
-- [ ] **Step 7: Commit Task 4**
+- [x] **Step 7: Commit Task 4**
 
 ```powershell
 git add -- implicit-ad-agent/impad/evaluation implicit-ad-agent/scripts/evaluate_p4.py implicit-ad-agent/tests/evaluation implicit-ad-agent/tests/scripts/test_evaluate_p4.py implicit-ad-agent/tests/fixtures/calibration_eval_v1.json data/reports/p4/calibration_fixture.json
