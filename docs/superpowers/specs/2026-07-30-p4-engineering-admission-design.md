@@ -1,7 +1,7 @@
 # P4 Engineering Admission Design
 
-**Date:** 2026-07-30  
-**Status:** Approved by the user's autonomous-execution instruction  
+**Date:** 2026-07-30
+**Status:** Approved by the user's autonomous-execution instruction
 **Scope:** P1-independent CreatorShift runtime integration and evaluation infrastructure
 
 ## 1. Goal
