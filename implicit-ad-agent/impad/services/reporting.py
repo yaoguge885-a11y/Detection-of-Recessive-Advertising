@@ -29,6 +29,33 @@ def render_readable_report(
         f"- 商业意图：{report.commercial_intent.status}",
         f"- 披露状态：{report.disclosure.status}",
         f"- 是否需复核：{'是' if report.review_required else '否'}",
+    ]
+    summary = report.creator_shift
+    lines.extend([
+        "",
+        "## CreatorShift",
+        "",
+    ])
+    if summary is None:
+        lines.append("- 状态：unavailable")
+        lines.append("- 限制：CreatorShift未运行。")
+    else:
+        lines.extend([
+            f"- 状态：{summary.status}",
+            f"- 历史数量：{summary.history_count}/{summary.required_history}",
+        ])
+        if summary.shift_score is not None:
+            lines.extend([
+                f"- Shift分数：{summary.shift_score:.3f}",
+                f"- 池化方法：{summary.pooling_method}",
+                "- 主要变化维度："
+                + (", ".join(summary.top_features[:3]) or "无"),
+            ])
+        if summary.limitations:
+            lines.extend(
+                f"- 限制：{item}" for item in summary.limitations
+            )
+    lines.extend([
         "",
         "## 判定依据",
         "",
@@ -36,7 +63,7 @@ def render_readable_report(
         "",
         "## 证据链",
         "",
-    ]
+    ])
     if bundle.items:
         lines.extend(
             f"- [{item.tool_name}] {item.kind}："

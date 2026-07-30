@@ -66,6 +66,7 @@ def supervisor(state: AdCheckState) -> AdCheckState:
         plan.append("vision")
     if available & _BEHAVIOR_TOOLS:
         plan.append("behavior")
+    plan.append("creator_shift")
     run_id = f"run_{uuid4().hex}"
     return {
         "post_record": post,

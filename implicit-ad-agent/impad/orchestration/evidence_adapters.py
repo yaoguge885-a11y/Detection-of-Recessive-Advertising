@@ -200,6 +200,8 @@ def _missing_requirements(
 def build_evidence_bundle(
     post: PostRecord,
     results: list[ToolResult],
+    *,
+    supplemental_items: list[EvidenceItem] | None = None,
 ) -> EvidenceBundle:
     """Build evidence, raw outcomes, coverage, and explicit missing state."""
 
@@ -208,6 +210,7 @@ def build_evidence_bundle(
         for result in results
         for item in evidence_items_from_tool_result(result)
     ]
+    items.extend(supplemental_items or [])
     ids_by_modality: dict[str, list[str]] = {}
     for item in items:
         ids_by_modality.setdefault(item.source_type, []).append(

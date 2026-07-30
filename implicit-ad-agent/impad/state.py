@@ -6,8 +6,10 @@ from typing import Any, TypedDict
 from .contracts import (
     CaptureStatus,
     EvidenceBundle,
+    EvidenceItem,
     PostRecord,
     RunMetadata,
+    CreatorShiftSummary,
     VerdictReport,
 )
 from .orchestration import (
@@ -31,6 +33,8 @@ class AdCheckState(TypedDict, total=False):
     run_events: list[RunEvent]
     run_metadata: RunMetadata
     evidence_bundle: EvidenceBundle
+    supplemental_evidence: list[EvidenceItem]
+    creator_shift_summary: CreatorShiftSummary
     verdict_report: VerdictReport
     agent_outputs: dict[str, dict[str, Any]]
     tool_gateway: Any

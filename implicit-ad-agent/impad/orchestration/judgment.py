@@ -5,6 +5,7 @@ from ..contracts.evidence import EvidenceBundle
 from ..contracts.post import PostRecord
 from ..contracts.verdict import (
     CommercialIntent,
+    CreatorShiftSummary,
     DisclosureEvidence,
     VerdictReport,
 )
@@ -134,6 +135,8 @@ def _confidence(
 def build_verdict_report(
     post: PostRecord,
     bundle: EvidenceBundle,
+    *,
+    creator_shift: CreatorShiftSummary | None = None,
 ) -> VerdictReport:
     """Apply the documented label table after the adequacy gate."""
 
@@ -159,6 +162,11 @@ def build_verdict_report(
         f"commercial_intent:{intent.status}",
         f"disclosure:{disclosure.status}",
     ]
+    creator_shift_ids = [
+        item.evidence_id
+        for item in bundle.items
+        if item.kind == "creator_shift"
+    ]
     return VerdictReport(
         post_id=post.post_id,
         label=label,
@@ -166,6 +174,8 @@ def build_verdict_report(
         review_required=label == "需复核",
         commercial_intent=intent,
         disclosure=disclosure,
+        creator_shift=creator_shift,
+        creator_shift_evidence_ids=creator_shift_ids,
         evidence_ids=[item.evidence_id for item in bundle.items],
         reasons=reasons,
         law_evidence=[],

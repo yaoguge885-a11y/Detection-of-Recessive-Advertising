@@ -3,9 +3,15 @@ from __future__ import annotations
 from langgraph.graph import StateGraph, START, END
 from .state import AdCheckState
 from .agents import (supervisor, route_next, nlp_agent,
-                     vision_agent, behavior_agent, judge)
+                     vision_agent, behavior_agent, creator_shift_agent, judge)
 
-ROUTES = {"nlp": "nlp", "vision": "vision", "behavior": "behavior", "judge": "judge"}
+ROUTES = {
+    "nlp": "nlp",
+    "vision": "vision",
+    "behavior": "behavior",
+    "creator_shift": "creator_shift",
+    "judge": "judge",
+}
 
 
 def build_graph():
@@ -14,10 +20,17 @@ def build_graph():
     g.add_node("nlp", nlp_agent)
     g.add_node("vision", vision_agent)
     g.add_node("behavior", behavior_agent)
+    g.add_node("creator_shift", creator_shift_agent)
     g.add_node("judge", judge)
 
     g.add_edge(START, "supervisor")
-    for src in ("supervisor", "nlp", "vision", "behavior"):
+    for src in (
+        "supervisor",
+        "nlp",
+        "vision",
+        "behavior",
+        "creator_shift",
+    ):
         g.add_conditional_edges(src, route_next, ROUTES)
     g.add_edge("judge", END)
     return g.compile()

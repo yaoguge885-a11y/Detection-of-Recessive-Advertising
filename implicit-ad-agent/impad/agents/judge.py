@@ -27,8 +27,15 @@ def judge(state: AdCheckState) -> AdCheckState:
     bundle = build_evidence_bundle(
         post,
         list(state.get("tool_results", [])),
+        supplemental_items=list(
+            state.get("supplemental_evidence", [])
+        ),
     )
-    report = build_verdict_report(post, bundle)
+    report = build_verdict_report(
+        post,
+        bundle,
+        creator_shift=state.get("creator_shift_summary"),
+    )
     finished_at = datetime.now(timezone.utc)
     metadata = state["run_metadata"]
     duration_ms = max(
@@ -50,6 +57,10 @@ def judge(state: AdCheckState) -> AdCheckState:
         "tool_versions": {
             result.tool_name: result.tool_version
             for result in bundle.tool_results
+        },
+        "model_versions": {
+            **metadata.model_versions,
+            "creator_shift": "creator_shift_runtime_v1",
         },
         "fallback_count": fallback_count,
         "runtime_mode": runtime_mode,

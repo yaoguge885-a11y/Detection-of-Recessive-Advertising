@@ -150,7 +150,7 @@ git commit -m "feat: add runtime CreatorShift assessment"
   `creator_shift_summary` and `supplemental_evidence`, and persisted
   `VerdictReport.creator_shift`.
 
-- [ ] **Step 1: Write failing graph integration tests**
+- [x] **Step 1: Write failing graph integration tests**
 
 Use one synthetic manual post with three timestamped historical posts. Assert:
 
@@ -174,7 +174,7 @@ CreatorShift evidence items. Run a paired classification input with and
 without valid history and assert identical label, confidence, commercial
 intent, and disclosure.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -184,7 +184,7 @@ Run:
 
 Expected: missing state key or graph node.
 
-- [ ] **Step 3: Add supplemental evidence assembly**
+- [x] **Step 3: Add supplemental evidence assembly**
 
 Change the evidence builder signature to:
 
@@ -201,7 +201,7 @@ Append supplemental items after tool-derived items, keep deterministic order,
 and include their IDs in modality coverage. Existing two-argument callers
 must continue to work.
 
-- [ ] **Step 4: Add the dedicated graph node**
+- [x] **Step 4: Add the dedicated graph node**
 
 `creator_shift_agent()` evaluates the normalized `post_record`, builds zero or
 one supplemental evidence item, rebuilds the current bundle, and removes
@@ -212,7 +212,7 @@ run so unavailable status remains explicit. The graph registers the node and
 route. `AdCheckState` receives typed keys for the summary and supplemental
 items.
 
-- [ ] **Step 5: Persist summary without changing classification**
+- [x] **Step 5: Persist summary without changing classification**
 
 Extend `build_verdict_report()` with keyword-only
 `creator_shift: CreatorShiftSummary | None = None`. Set
@@ -226,7 +226,7 @@ The Judge passes both supplemental items and the summary, and records
 Add a `## CreatorShift` section to readable reports. Render status, observed
 history, score/method/top features when sufficient, and limitations otherwise.
 
-- [ ] **Step 6: Verify GREEN and graph regressions**
+- [x] **Step 6: Verify GREEN and graph regressions**
 
 Run:
 
@@ -236,7 +236,7 @@ Run:
 
 Expected: all selected tests pass and paired labels remain identical.
 
-- [ ] **Step 7: Commit Task 2**
+- [x] **Step 7: Commit Task 2**
 
 ```powershell
 git add -- implicit-ad-agent/impad/agents implicit-ad-agent/impad/graph.py implicit-ad-agent/impad/state.py implicit-ad-agent/impad/orchestration/evidence_adapters.py implicit-ad-agent/impad/orchestration/judgment.py implicit-ad-agent/impad/services/reporting.py implicit-ad-agent/tests/creator_shift/test_graph_integration.py

@@ -6,7 +6,8 @@ from .supervisor import supervisor, route_next
 from .nlp_agent import nlp_agent
 from .vision_agent import vision_agent
 from .behavior_agent import behavior_agent
+from .creator_shift_agent import creator_shift_agent
 from .judge import judge
 
 __all__ = ["supervisor", "route_next", "nlp_agent",
-           "vision_agent", "behavior_agent", "judge"]
+           "vision_agent", "behavior_agent", "creator_shift_agent", "judge"]
