@@ -37,6 +37,11 @@ class ExplodingAnalysisService(AnalysisService):
         raise RuntimeError("api_key=do-not-expose")
 
 
+class ValueErrorAnalysisService(AnalysisService):
+    def analyze(self, post, *, runtime_mode="local"):
+        raise ValueError("internal execution detail")
+
+
 def test_analysis_service_runs_rag_after_judge_and_persists_by_run_id(
     tmp_path: Path,
 ):
@@ -179,6 +184,24 @@ def test_batch_analysis_hides_unexpected_error_details(tmp_path: Path):
     assert result.items[0].error.code == "analysis_failed"
     assert result.items[0].error.message == "Analysis failed."
     assert "do-not-expose" not in result.model_dump_json()
+
+
+def test_batch_analysis_does_not_misclassify_internal_value_error(
+    tmp_path: Path,
+):
+    service = ValueErrorAnalysisService(
+        retriever=StubRetriever(),
+        run_store=JsonRunStore(tmp_path / "runs"),
+    )
+
+    result = service.analyze_batch([
+        analyze_module.BatchAnalysisInput(post={"text": "valid"}),
+    ])
+
+    assert result.failed == 1
+    assert result.items[0].error is not None
+    assert result.items[0].error.code == "analysis_failed"
+    assert "internal execution detail" not in result.model_dump_json()
 
 
 @pytest.mark.parametrize("count", [0, 51])

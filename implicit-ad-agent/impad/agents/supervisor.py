@@ -35,7 +35,7 @@ _P1_SOURCE_TYPES = {
 }
 
 
-def _normalize(raw: dict | PostRecord) -> PostRecord:
+def normalize_post_record(raw: dict | PostRecord) -> PostRecord:
     if isinstance(raw, PostRecord):
         return raw
     is_p1 = raw.get("schema_version") == "1.0" or (
@@ -55,7 +55,7 @@ def _normalize(raw: dict | PostRecord) -> PostRecord:
 
 
 def supervisor(state: AdCheckState) -> AdCheckState:
-    post = _normalize(state.get("post", {}))
+    post = normalize_post_record(state.get("post", {}))
     context = capability_context_from_post(post)
     capability_plan = CapabilityPlanner().plan(context)
     available = set(capability_plan.available_tools)

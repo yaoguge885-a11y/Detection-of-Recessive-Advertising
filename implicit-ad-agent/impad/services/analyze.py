@@ -14,6 +14,7 @@ from pydantic import (
     model_validator,
 )
 
+from ..agents.supervisor import normalize_post_record
 from ..contracts import (
     EvidenceBundle,
     PostRecord,
@@ -86,12 +87,14 @@ class BatchAnalysisResult(BaseModel):
         return self
 
 
-def _safe_batch_error(exc: Exception) -> BatchAnalysisError:
-    if isinstance(exc, (ValueError, ValidationError)):
-        return BatchAnalysisError(
-            code="invalid_input",
-            message="Input could not be normalized.",
-        )
+def _invalid_batch_input_error() -> BatchAnalysisError:
+    return BatchAnalysisError(
+        code="invalid_input",
+        message="Input could not be normalized.",
+    )
+
+
+def _analysis_failed_batch_error() -> BatchAnalysisError:
     return BatchAnalysisError(
         code="analysis_failed",
         message="Analysis failed.",
@@ -274,18 +277,26 @@ class AnalysisService:
         outcomes = []
         for index, item in enumerate(items):
             try:
+                normalized = normalize_post_record(item.post)
+            except (TypeError, ValueError, ValidationError):
+                outcomes.append(BatchAnalysisItem(
+                    index=index,
+                    error=_invalid_batch_input_error(),
+                ))
+                continue
+            try:
                 result = self.analyze(
-                    item.post,
+                    normalized,
                     runtime_mode=item.runtime_mode,
                 )
                 outcomes.append(BatchAnalysisItem(
                     index=index,
                     result=result,
                 ))
-            except Exception as exc:
+            except Exception:
                 outcomes.append(BatchAnalysisItem(
                     index=index,
-                    error=_safe_batch_error(exc),
+                    error=_analysis_failed_batch_error(),
                 ))
         succeeded = sum(item.result is not None for item in outcomes)
         return BatchAnalysisResult(
