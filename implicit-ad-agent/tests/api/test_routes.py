@@ -197,6 +197,33 @@ def test_url_preview_and_confirm_routes(tmp_path):
     assert confirmed.json()["run_metadata"]["run_id"]
 
 
+def test_url_query_secret_is_absent_from_confirmed_run(tmp_path):
+    client = _url_client(tmp_path)
+    preview = client.post(
+        "/api/v1/import/url/preview",
+        json={
+            "url": (
+                "https://example.test/post/1"
+                "?api_key=do-not-store#private-fragment"
+            )
+        },
+    ).json()
+
+    confirmed = client.post(
+        "/api/v1/import/url/confirm",
+        json={"preview_id": preview["preview_id"]},
+    )
+
+    assert confirmed.status_code == 200
+    run_id = confirmed.json()["run_metadata"]["run_id"]
+    queried = client.get(f"/api/v1/runs/{run_id}")
+    assert queried.status_code == 200
+    assert "do-not-store" not in confirmed.text
+    assert "private-fragment" not in confirmed.text
+    assert "do-not-store" not in queried.text
+    assert "private-fragment" not in queried.text
+
+
 def test_default_app_rejects_unsupported_url_before_fetch():
     response = TestClient(create_app()).post(
         "/api/v1/import/url/preview",
@@ -237,6 +264,39 @@ def test_url_confirm_maps_missing_and_invalid_preview_errors(tmp_path):
     assert invalid.json()["detail"]["code"] == "invalid_corrections"
 
 
+@pytest.mark.parametrize(
+    "immutable_field",
+    ["post_id", "platform", "provenance", "privacy", "unknown"],
+)
+def test_url_confirm_rejects_non_allowlisted_corrections_without_consuming(
+    tmp_path,
+    immutable_field,
+):
+    client = _url_client(tmp_path)
+    preview = client.post(
+        "/api/v1/import/url/preview",
+        json={"url": "https://example.test/post/1"},
+    ).json()
+
+    rejected = client.post(
+        "/api/v1/import/url/confirm",
+        json={
+            "preview_id": preview["preview_id"],
+            "corrections": {immutable_field: "replacement"},
+        },
+    )
+
+    assert rejected.status_code == 422
+    accepted = client.post(
+        "/api/v1/import/url/confirm",
+        json={
+            "preview_id": preview["preview_id"],
+            "corrections": {},
+        },
+    )
+    assert accepted.status_code == 200
+
+
 def test_capabilities_report_batch_and_registered_url_adapters(tmp_path):
     payload = _url_client(tmp_path).get(
         "/api/v1/capabilities"
@@ -254,3 +314,11 @@ def test_capabilities_report_batch_and_registered_url_adapters(tmp_path):
         "version": "static-v1",
         "hosts": ["example.test"],
     }]
+
+
+def test_default_capabilities_do_not_claim_live_platform_adapters():
+    payload = TestClient(create_app()).get(
+        "/api/v1/capabilities"
+    ).json()
+
+    assert payload["url_import"]["platforms"] == []
