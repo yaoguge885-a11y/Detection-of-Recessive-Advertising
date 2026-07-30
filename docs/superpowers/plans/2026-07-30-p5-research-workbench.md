@@ -16,6 +16,10 @@
 - Render all untrusted values with `textContent`; never use `innerHTML`, inline event handlers, inline scripts, or inline styles.
 - Do not use cookies, local/session storage, IndexedDB, service workers, analytics, remote fonts, or remote images.
 - Only server-provided `https:` law references may become clickable external links.
+- Limit source-text assertions to forbidden security capabilities. Verify
+  JavaScript functions, API wiring, state changes, and rendering through
+  repeatable real-browser behavior checks; do not use required symbol or
+  endpoint strings as change-detector tests.
 - Preserve explicit missing, degraded, conflicted, and review-required states.
 - Keep the existing two intentional vision skips and existing Starlette/httpx warning boundary factual.
 - Do not claim live platform capture, four-person UAT, P5/M5, M1, or M4 completion.
@@ -818,27 +822,16 @@ git commit -m "feat: add research workbench shell"
 - Produces: `state`, safe DOM helpers, `fetchJson`, tab control, parsed single
   and batch payloads, and capability-driven URL availability.
 
-- [ ] **Step 1: Add failing JavaScript security and endpoint-contract tests**
+- [ ] **Step 1: Add the static security gate and define failing browser checks**
 
 Append:
 
 ```python
-def test_workbench_script_uses_safe_dom_and_only_same_origin_api(tmp_path):
+def test_workbench_script_avoids_forbidden_browser_capabilities(tmp_path):
     script = _client(tmp_path).get(
         "/workbench/assets/workbench.js"
     ).text
 
-    for required in (
-        '"/health"',
-        '"/api/v1/capabilities"',
-        'textContent',
-        'DOMContentLoaded',
-        'parseJsonArray',
-        'parseBatchPayload',
-        'setupTabs',
-        'loadCapabilities',
-    ):
-        assert required in script
     for forbidden in (
         "innerHTML",
         "outerHTML",
@@ -854,15 +847,33 @@ def test_workbench_script_uses_safe_dom_and_only_same_origin_api(tmp_path):
         assert forbidden not in script
 ```
 
-- [ ] **Step 2: Run the script contract test and verify RED**
+Before changing `workbench.js`, start the local app and use the real browser
+against `/workbench` to record these repeatable RED checks:
+
+1. the API/capability badges become `API 正常`, `7个工具 · 批量上限50`,
+   and `URL：未配置`;
+2. clicking the batch tab changes `aria-selected`, hides the single panel,
+   and reveals the batch panel;
+3. ArrowLeft/ArrowRight/Home/End update both focus and selection;
+4. evaluating the client helper with text `<img src=x onerror=alert(1)>`
+   creates a text-only node with zero element children;
+5. invalid array/object/batch JSON is rejected with the planned user-facing
+   validation message.
+
+The minimal Task 2 script must fail these behavior checks because the client
+foundation is not implemented.
+
+- [ ] **Step 2: Run the static gate and verify the browser RED evidence**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
   tests\web\test_workbench.py `
-  -k "script_uses_safe_dom" -q
+  -k "avoids_forbidden_browser_capabilities" -q
 ```
 
-Expected: required endpoint/helper markers are absent from the minimal script.
+Expected: the static security gate passes, while all five browser behavior
+checks fail for the missing client behavior. Record both results in the task
+report.
 
 - [ ] **Step 3: Implement state and safe DOM helpers**
 
@@ -1119,7 +1130,6 @@ git commit -m "feat: add safe workbench client foundation"
 **Files:**
 - Modify: `implicit-ad-agent/impad/web/workbench.js`
 - Modify: `implicit-ad-agent/impad/web/workbench.css`
-- Modify: `implicit-ad-agent/tests/web/test_workbench.py`
 
 **Interfaces:**
 - Consumes: `POST /api/v1/analyze`, `GET /api/v1/runs/{run_id}`, safe DOM
@@ -1127,42 +1137,20 @@ git commit -m "feat: add safe workbench client foundation"
 - Produces: `renderRun(record, response)`, every required result renderer, and
   a complete single-analysis form flow.
 
-- [ ] **Step 1: Add failing renderer and single-flow contract tests**
+- [ ] **Step 1: Record a failing real-browser single-flow check**
 
-Append:
+Against the Task 3 workbench, submit text
+`品牌合作，广告，限时购买` with `capture_complete=true`. Assert that the
+browser does not yet complete the request and does not render verdict,
+coverage, evidence, CreatorShift, history, law, trace, report, and raw
+sections. This is the RED result: `setupSingleForm` is still the deliberate
+Task 3 no-op.
 
-```python
-def test_workbench_script_defines_complete_run_renderers(tmp_path):
-    script = _client(tmp_path).get(
-        "/workbench/assets/workbench.js"
-    ).text
+- [ ] **Step 2: Preserve the RED evidence**
 
-    for required in (
-        '"/api/v1/analyze"',
-        '"/api/v1/runs/"',
-        "renderRun",
-        "renderVerdict",
-        "renderCoverage",
-        "renderEvidence",
-        "renderCreatorShift",
-        "renderHistory",
-        "renderLawEvidence",
-        "renderTrace",
-        "renderReport",
-        "renderRaw",
-    ):
-        assert required in script
-```
-
-- [ ] **Step 2: Run the renderer test and verify RED**
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest `
-  tests\web\test_workbench.py `
-  -k "complete_run_renderers" -q
-```
-
-Expected: renderer and endpoint markers are absent.
+Record the submitted values, failed observable assertions, browser console
+state, and local server command in the task report. Do not replace this check
+with JavaScript function-name or endpoint-string assertions.
 
 - [ ] **Step 3: Add reusable rendering primitives**
 
@@ -1627,8 +1615,7 @@ Replace the Task 3 `setupSingleForm` no-op; keep the other no-ops.
 ```powershell
 git add -- `
   implicit-ad-agent/impad/web/workbench.js `
-  implicit-ad-agent/impad/web/workbench.css `
-  implicit-ad-agent/tests/web/test_workbench.py
+  implicit-ad-agent/impad/web/workbench.css
 git diff --cached --check
 git commit -m "feat: render complete analysis runs"
 ```
@@ -1640,7 +1627,6 @@ git commit -m "feat: render complete analysis runs"
 **Files:**
 - Modify: `implicit-ad-agent/impad/web/workbench.js`
 - Modify: `implicit-ad-agent/impad/web/workbench.css`
-- Modify: `implicit-ad-agent/tests/web/test_workbench.py`
 
 **Interfaces:**
 - Consumes: `POST /api/v1/analyze/batch`, `parseBatchPayload`, and
@@ -1648,32 +1634,22 @@ git commit -m "feat: render complete analysis runs"
 - Produces: file loading, count validation, ordered batch rows, and successful
   run selection.
 
-- [ ] **Step 1: Add failing batch-flow asset test**
+- [ ] **Step 1: Record failing real-browser batch checks**
 
-Append:
+Against the Task 4 workbench:
 
-```python
-def test_workbench_script_defines_batch_file_and_result_flow(tmp_path):
-    script = _client(tmp_path).get(
-        "/workbench/assets/workbench.js"
-    ).text
+1. enter a batch containing one valid item, one item missing `text`, and a
+   second valid item;
+2. verify the displayed count changes as JSON changes;
+3. submit and assert that no ordered three-row result list appears;
+4. select a local UTF-8 JSON fixture and assert that its content is not loaded.
 
-    for required in (
-        '"/api/v1/analyze/batch"',
-        "FileReader",
-        "renderBatchResults",
-        "setupBatchForm",
-        "batch.items",
-    ):
-        assert required in script
-```
+These checks must fail because `setupBatchForm` is still the Task 3 no-op.
 
-- [ ] **Step 2: Run and verify RED**
+- [ ] **Step 2: Preserve the RED evidence**
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest `
-  tests\web\test_workbench.py -k "batch_file_and_result_flow" -q
-```
+Record the exact fixture, failed observable assertions, and console state in
+the task report. Do not add JavaScript source-marker tests.
 
 - [ ] **Step 3: Implement count and ordered result rendering**
 
@@ -1849,8 +1825,7 @@ Add:
 ```powershell
 git add -- `
   implicit-ad-agent/impad/web/workbench.js `
-  implicit-ad-agent/impad/web/workbench.css `
-  implicit-ad-agent/tests/web/test_workbench.py
+  implicit-ad-agent/impad/web/workbench.css
 git diff --cached --check
 git commit -m "feat: add workbench batch analysis"
 ```
@@ -1862,41 +1837,28 @@ git commit -m "feat: add workbench batch analysis"
 **Files:**
 - Modify: `implicit-ad-agent/impad/web/workbench.js`
 - Modify: `implicit-ad-agent/impad/web/workbench.css`
-- Modify: `implicit-ad-agent/tests/web/test_workbench.py`
 
 **Interfaces:**
 - Consumes: P5.1 preview/confirm endpoints and `URLImportPreview` response.
 - Produces: no-adapter state, sanitized preview rendering, allowlisted
   corrections, confirmation, and local preview disposal.
 
-- [ ] **Step 1: Add failing URL-flow and privacy asset test**
+- [ ] **Step 1: Record failing real-browser URL checks**
 
-Append:
+First verify the real zero-adapter state: the URL input and submit button are
+disabled and the explanation remains visible. Then use browser request
+interception with a complete `capabilities` response, a complete sanitized
+`URLImportPreview`, and complete confirm/run responses to exercise the
+positive path without registering a live adapter. Assert before implementation
+that preview metadata, allowlisted correction submission, confirmation,
+local preview disposal, and input clearing do not work because
+`setupUrlForms` is still a no-op.
 
-```python
-def test_workbench_script_defines_gated_url_preview_and_confirm(tmp_path):
-    script = _client(tmp_path).get(
-        "/workbench/assets/workbench.js"
-    ).text
+- [ ] **Step 2: Preserve the RED evidence**
 
-    for required in (
-        '"/api/v1/import/url/preview"',
-        '"/api/v1/import/url/confirm"',
-        "activePreview",
-        "renderUrlPreview",
-        "urlCorrections",
-        'byId("url-input").value = ""',
-    ):
-        assert required in script
-```
-
-- [ ] **Step 2: Run and verify RED**
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest `
-  tests\web\test_workbench.py `
-  -k "gated_url_preview_and_confirm" -q
-```
+Record the intercepted response shapes, captured confirm request body, failed
+observable assertions, and console state in the task report. Do not add
+JavaScript source-marker tests.
 
 - [ ] **Step 3: Implement sanitized preview rendering**
 
@@ -2086,8 +2048,7 @@ Add:
 ```powershell
 git add -- `
   implicit-ad-agent/impad/web/workbench.js `
-  implicit-ad-agent/impad/web/workbench.css `
-  implicit-ad-agent/tests/web/test_workbench.py
+  implicit-ad-agent/impad/web/workbench.css
 git diff --cached --check
 git commit -m "feat: add workbench URL review flow"
 ```
@@ -2108,28 +2069,11 @@ git commit -m "feat: add workbench URL review flow"
 - Produces: copy/download helpers, browser-verified desktop/narrow workbench,
   and a final list of UI issues fixed under TDD.
 
-- [ ] **Step 1: Add failing export and accessibility contract tests**
+- [ ] **Step 1: Add the accessibility contract and record failing export behavior**
 
 Append:
 
 ```python
-def test_workbench_script_defines_explicit_copy_and_download_actions(
-    tmp_path,
-):
-    script = _client(tmp_path).get(
-        "/workbench/assets/workbench.js"
-    ).text
-
-    for required in (
-        "navigator.clipboard.writeText",
-        "downloadText",
-        "URL.createObjectURL",
-        "URL.revokeObjectURL",
-        "setupExportActions",
-    ):
-        assert required in script
-
-
 def test_workbench_has_accessible_status_and_tabs(tmp_path):
     html = _client(tmp_path).get("/workbench").text
 
@@ -2140,16 +2084,21 @@ def test_workbench_has_accessible_status_and_tabs(tmp_path):
     assert 'aria-label="分析结果"' in html
 ```
 
-- [ ] **Step 2: Run and verify RED**
+Before implementing export helpers, load a completed single run in the real
+browser, click every visible copy/download action, and assert that no success
+status or UTF-8 download is produced. Preserve this RED evidence in the task
+report.
+
+- [ ] **Step 2: Run the static accessibility gate and verify browser RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
   tests\web\test_workbench.py `
-  -k "copy_and_download or accessible_status" -q
+  -k "accessible_status" -q
 ```
 
-Expected: export helper markers are absent; accessibility assertions already
-pass and protect Task 2 markup.
+Expected: the accessibility assertions pass and protect Task 2 markup; the
+real export actions fail before their helpers exist.
 
 - [ ] **Step 3: Implement copy and UTF-8 download helpers**
 
