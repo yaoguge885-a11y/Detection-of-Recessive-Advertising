@@ -108,6 +108,53 @@ function parseBatchPayload(text) {
   return {items};
 }
 
+function heading(title, detail) {
+  const wrapper = element("div", null, "section-heading");
+  wrapper.append(element("h2", title));
+  if (detail) {
+    wrapper.append(element("span", detail, "section-detail"));
+  }
+  return wrapper;
+}
+
+function definitionList(entries) {
+  const list = element("dl", null, "definition-grid");
+  for (const [term, value] of entries) {
+    list.append(element("dt", term), element("dd", value ?? "未知"));
+  }
+  return list;
+}
+
+function listOrEmpty(values, emptyText) {
+  const list = element("ul");
+  if (!values || values.length === 0) {
+    list.append(element("li", emptyText, "muted"));
+    return list;
+  }
+  for (const value of values) {
+    list.append(element("li", value));
+  }
+  return list;
+}
+
+function formatScore(value) {
+  return typeof value === "number" ? value.toFixed(3) : "未知";
+}
+
+function formatTime(value) {
+  if (!value) {
+    return "时间未知";
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf())
+    ? String(value)
+    : date.toLocaleString("zh-CN", {hour12: false});
+}
+
+function jsonText(value) {
+  return JSON.stringify(value, null, 2);
+}
+
 function setupTabs() {
   const tabs = [
     ["single-tab", "single-panel"],
@@ -178,6 +225,359 @@ async function loadCapabilities() {
   return capabilities;
 }
 
+function renderVerdict(record) {
+  const report = record.verdict_report;
+  const metadata = record.run_metadata;
+  const target = byId("verdict-section");
+  const badge = element("span", report.label, "verdict-badge");
+  badge.dataset.label = report.label;
+  replaceChildren(
+    target,
+    heading("判定摘要", metadata.run_id),
+    badge,
+    definitionList([
+      ["置信度", formatScore(report.confidence)],
+      ["需要复核", report.review_required ? "是" : "否"],
+      ["商业意图", report.commercial_intent.status],
+      ["披露状态", report.disclosure.status],
+      ["运行状态", metadata.status],
+      ["运行模式", metadata.runtime_mode],
+      ["耗时", metadata.duration_ms == null
+        ? "未知"
+        : `${metadata.duration_ms} ms`],
+      ["判断方法", report.judgment_method],
+    ]),
+    element("h3", "判定理由"),
+    listOrEmpty(report.reasons, "没有附加理由"),
+  );
+}
+
+function renderCoverage(bundle) {
+  const target = byId("coverage-section");
+  const grid = element("div", null, "coverage-grid");
+  for (const coverage of bundle.coverage || []) {
+    const card = element("article", null, "coverage-card");
+    card.dataset.status = coverage.status;
+    card.append(
+      element("h3", coverage.modality),
+      element("p", coverage.status, "status-text"),
+      element("p", `证据：${coverage.evidence_ids.length}`),
+    );
+    grid.append(card);
+  }
+  const conflicts = element("div", null, "conflict-list");
+  for (const conflict of bundle.conflicts || []) {
+    conflicts.append(
+      element(
+        "article",
+        `${conflict.reason} · ${conflict.evidence_ids.join("、")}`,
+        "conflict-card",
+      ),
+    );
+  }
+  replaceChildren(
+    target,
+    heading("覆盖、缺失与冲突"),
+    grid,
+    element("h3", "缺失要求"),
+    listOrEmpty(bundle.missing_requirements, "没有记录缺失要求"),
+    element("h3", "证据冲突"),
+    conflicts.childElementCount
+      ? conflicts
+      : element("p", "没有记录证据冲突", "muted"),
+  );
+}
+
+function renderEvidence(bundle) {
+  const target = byId("evidence-section");
+  const groups = new Map();
+  for (const item of bundle.items || []) {
+    const key = item.source_type || "metadata";
+    groups.set(key, [...(groups.get(key) || []), item]);
+  }
+  const content = element("div");
+  for (const [sourceType, items] of groups) {
+    content.append(element("h3", sourceType));
+    const grid = element("div", null, "evidence-grid");
+    for (const item of items) {
+      const card = element("article", null, "evidence-card");
+      card.dataset.polarity = item.polarity;
+      card.dataset.status = item.status;
+      card.append(
+        element("h4", item.kind),
+        definitionList([
+          ["状态", item.status],
+          ["极性", item.polarity],
+          ["强度", formatScore(item.strength)],
+          ["生产者", item.producer],
+          ["来源", item.source_ref],
+          ["关联帖子", item.related_post_id],
+        ]),
+        element("p", item.quote || "没有可显示引用", "evidence-quote"),
+        listOrEmpty(item.limitations, "没有记录局限"),
+      );
+      grid.append(card);
+    }
+    content.append(grid);
+  }
+  replaceChildren(
+    target,
+    heading("证据画布", `${bundle.items.length}条`),
+    content.childElementCount
+      ? content
+      : element("p", "当前没有正向证据项", "muted"),
+  );
+}
+
+function renderCreatorShift(report) {
+  const target = byId("creator-shift-section");
+  const shift = report.creator_shift;
+  if (!shift) {
+    replaceChildren(
+      target,
+      heading("CreatorShift"),
+      element("p", "本次运行没有CreatorShift摘要", "muted"),
+    );
+    return;
+  }
+  const deltas = Object.entries(shift.feature_deltas || {})
+    .map(([name, value]) => `${name}: ${Number(value).toFixed(3)}`);
+  replaceChildren(
+    target,
+    heading("CreatorShift", shift.status),
+    definitionList([
+      ["历史数量", `${shift.history_count}/${shift.required_history}`],
+      ["池化方法", shift.pooling_method],
+      ["偏移分数", formatScore(shift.shift_score)],
+      ["特征版本", shift.feature_version],
+      ["运行版本", shift.runtime_version],
+      ["窗口开始", formatTime(shift.window_start)],
+      ["窗口结束", formatTime(shift.window_end)],
+    ]),
+    element("h3", "主要特征"),
+    listOrEmpty(shift.top_features, "没有主要特征"),
+    element("h3", "特征变化"),
+    listOrEmpty(deltas, "没有数值变化"),
+    element("h3", "局限"),
+    listOrEmpty(shift.limitations, "没有附加局限"),
+  );
+}
+
+function renderHistory(post) {
+  const target = byId("history-section");
+  const entries = [...(post.history || [])].sort((left, right) => {
+    if (!left.published_at && !right.published_at) return 0;
+    if (!left.published_at) return 1;
+    if (!right.published_at) return -1;
+    return new Date(left.published_at) - new Date(right.published_at);
+  });
+  const timeline = element("ol", null, "timeline");
+  for (const entry of entries) {
+    const item = element("li", null, "timeline-item");
+    item.append(
+      element("time", formatTime(entry.published_at)),
+      element("strong", entry.post_id),
+      element("p", entry.text),
+    );
+    timeline.append(item);
+  }
+  const targetItem = element("li", null, "timeline-item target-post");
+  targetItem.append(
+    element("time", formatTime(post.published_at)),
+    element("strong", `${post.post_id}（目标帖）`),
+    element("p", post.text),
+  );
+  timeline.append(targetItem);
+  replaceChildren(
+    target,
+    heading("创作者历史时间线", `${entries.length}条历史`),
+    timeline,
+  );
+}
+
+function safeLawLink(source) {
+  try {
+    const url = new URL(source);
+    if (url.protocol !== "https:") {
+      return element("span", source);
+    }
+    const link = element("a", "打开来源");
+    link.href = url.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    return link;
+  } catch {
+    return element("span", source || "来源未知");
+  }
+}
+
+function renderLawEvidence(report) {
+  const target = byId("law-section");
+  const grid = element("div", null, "law-grid");
+  for (const citation of report.law_evidence || []) {
+    const card = element("article", null, "law-card");
+    card.append(
+      element("h3", citation.document_title),
+      definitionList([
+        ["条款", citation.article_id],
+        ["版本", citation.document_version],
+        ["检索分数", formatScore(citation.retrieval_score)],
+        ["重排分数", formatScore(citation.rerank_score)],
+      ]),
+      element("blockquote", citation.quote || "没有可显示引文"),
+      safeLawLink(citation.source_path_or_url),
+      listOrEmpty(citation.limitations, "没有附加局限"),
+    );
+    grid.append(card);
+  }
+  replaceChildren(
+    target,
+    heading("法规引用"),
+    grid.childElementCount
+      ? grid
+      : element("p", "检索未返回可靠引用", "muted"),
+  );
+}
+
+function renderTrace(record) {
+  const target = byId("trace-section");
+  const events = [...(record.run_events || [])].sort(
+    (left, right) => new Date(left.timestamp) - new Date(right.timestamp)
+  );
+  const list = element("div", null, "event-list");
+  for (const event of events) {
+    list.append(
+      definitionList([
+        ["时间", formatTime(event.timestamp)],
+        ["事件", event.event_type],
+        ["阶段", event.stage],
+        ["工具", event.tool_name],
+        ["调用ID", event.call_id],
+        ["数据", jsonText(event.data)],
+      ]),
+    );
+  }
+  replaceChildren(
+    target,
+    heading("运行轨迹", `${events.length}个事件`),
+    list,
+    element("h3", "运行问题"),
+    listOrEmpty(
+      (record.run_metadata.issues || []).map(
+        (issue) => `${issue.stage}/${issue.code}: ${issue.message}`
+      ),
+      "没有记录运行问题",
+    ),
+    element("h3", "版本与计数"),
+    definitionList([
+      ["工具版本", jsonText(record.run_metadata.tool_versions)],
+      ["模型版本", jsonText(record.run_metadata.model_versions)],
+      ["重试", record.run_metadata.retry_count],
+      ["回落", record.run_metadata.fallback_count],
+      ["Trace IDs", record.run_metadata.trace_ids.join("、")],
+    ]),
+  );
+}
+
+function actionButton(label, handler) {
+  const button = element("button", label, "secondary");
+  button.type = "button";
+  button.addEventListener("click", handler);
+  return button;
+}
+
+function renderReport(record) {
+  const pre = element("pre", record.readable_report, "report-text");
+  replaceChildren(
+    byId("report-section"),
+    heading("可读报告"),
+    pre,
+    actionButton("复制Markdown", () => copyText(
+      record.readable_report,
+      "Markdown报告已复制",
+    )),
+    actionButton("下载Markdown", () => downloadText(
+      `${record.run_metadata.run_id}.md`,
+      record.readable_report,
+      "text/markdown;charset=utf-8",
+    )),
+  );
+}
+
+function renderRaw(record, response) {
+  replaceChildren(
+    byId("raw-section"),
+    heading("原始JSON"),
+    element("h3", "分析响应"),
+    element("pre", jsonText(response), "raw-json"),
+    element("h3", "完整RunRecord"),
+    element("pre", jsonText(record), "raw-json"),
+    actionButton("复制Run JSON", () => copyText(
+      jsonText(record),
+      "Run JSON已复制",
+    )),
+    actionButton("下载Run JSON", () => downloadText(
+      `${record.run_metadata.run_id}.json`,
+      jsonText(record),
+      "application/json;charset=utf-8",
+    )),
+  );
+}
+
+function renderRun(record, response) {
+  state.activeRun = record;
+  state.activeResponse = response;
+  byId("result-empty").hidden = true;
+  byId("result-content").hidden = false;
+  renderVerdict(record);
+  renderCoverage(record.evidence_bundle);
+  renderEvidence(record.evidence_bundle);
+  renderCreatorShift(record.verdict_report);
+  renderHistory(record.post);
+  renderLawEvidence(record.verdict_report);
+  renderTrace(record);
+  renderReport(record);
+  renderRaw(record, response);
+}
+
+async function loadAndRenderRun(response) {
+  const runId = response.run_metadata.run_id;
+  const record = await fetchJson(
+    `/api/v1/runs/${encodeURIComponent(runId)}`
+  );
+  renderRun(record, response);
+  return record;
+}
+
+function singlePayload() {
+  const payload = {
+    text: byId("single-text").value,
+    platform: byId("single-platform").value || "other",
+    comments: parseJsonArray(
+      byId("single-comments").value,
+      "评论",
+    ),
+    history: parseJsonArray(
+      byId("single-history").value,
+      "历史",
+    ),
+    capture_complete: byId("single-capture-complete").checked,
+    runtime_mode: byId("runtime-mode").value,
+  };
+  const optional = {
+    post_id: byId("single-post-id").value.trim(),
+    creator_id: byId("single-creator").value.trim(),
+  };
+  for (const [key, value] of Object.entries(optional)) {
+    if (value) payload[key] = value;
+  }
+  const publishedAt = byId("single-published-at").value;
+  if (publishedAt) {
+    payload.published_at = new Date(publishedAt).toISOString();
+  }
+  return payload;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   setupTabs();
   setupSingleForm();
@@ -195,7 +595,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-function setupSingleForm() {}
+function setupSingleForm() {
+  const form = byId("single-form");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      setBusy(form, true);
+      setSubmissionStatus("正在运行单条分析");
+      const response = await fetchJson("/api/v1/analyze", {
+        method: "POST",
+        body: JSON.stringify(singlePayload()),
+      });
+      await loadAndRenderRun(response);
+      setSubmissionStatus("单条分析完成", "success");
+    } catch (error) {
+      setSubmissionStatus(
+        `${error.code || "client_error"}：${error.message}`,
+        "error",
+      );
+    } finally {
+      setBusy(form, false);
+    }
+  });
+  byId("single-clear").addEventListener("click", () => {
+    form.reset();
+    byId("single-platform").value = "other";
+    byId("single-comments").value = "[]";
+    byId("single-history").value = "[]";
+    setSubmissionStatus("单条输入已清空");
+  });
+}
 function setupBatchForm() {}
 function setupUrlForms() {}
 function setupExportActions() {}

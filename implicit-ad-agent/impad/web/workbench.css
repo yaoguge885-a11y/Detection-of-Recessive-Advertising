@@ -135,8 +135,23 @@ h1 {
   justify-content: end;
 }
 
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-detail,
+.status-text,
+time {
+  color: var(--muted);
+}
+
 .field-grid,
 .summary-grid,
+.coverage-grid,
 .evidence-grid,
 .law-grid {
   display: grid;
@@ -269,11 +284,22 @@ input:disabled {
 .coverage-card,
 .evidence-card,
 .law-card,
-.timeline-item {
+.timeline-item,
+.event-list .definition-grid {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: white;
+}
+
+.coverage-card[data-status="covered"] {
+  border-left: 4px solid var(--success);
+}
+
+.coverage-card[data-status="partial"],
+.coverage-card[data-status="missing"],
+.coverage-card[data-status="not_applicable"] {
+  border-left: 4px solid var(--warning);
 }
 
 .evidence-card[data-polarity="supports"] {
@@ -288,8 +314,34 @@ input:disabled {
   border-left: 4px dotted var(--accent);
 }
 
+.evidence-card[data-status="degraded"],
+.evidence-card[data-status="conflicted"] {
+  background: #fff5df;
+}
+
 .evidence-polarity-label {
   font-weight: 700;
+}
+
+.verdict-badge[data-label="明广"] {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.verdict-badge[data-label="暗广"],
+.verdict-badge[data-label="需复核"] {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.target-post {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.conflict-list {
+  display: grid;
+  gap: 10px;
 }
 
 .timeline,
@@ -298,6 +350,18 @@ input:disabled {
   gap: 10px;
   padding: 0;
   list-style: none;
+}
+
+.timeline-item {
+  display: grid;
+  gap: 6px;
+}
+
+.evidence-quote,
+blockquote {
+  margin-inline: 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--line);
 }
 
 .report-text,
@@ -330,6 +394,7 @@ input:disabled {
 
   .field-grid,
   .summary-grid,
+  .coverage-grid,
   .evidence-grid,
   .law-grid {
     grid-template-columns: 1fr;
