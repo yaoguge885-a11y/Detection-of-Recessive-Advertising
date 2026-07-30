@@ -1471,6 +1471,13 @@ function renderTrace(record) {
   );
 }
 
+function actionButton(label, handler) {
+  const button = element("button", label, "secondary");
+  button.type = "button";
+  button.addEventListener("click", handler);
+  return button;
+}
+
 function renderReport(record) {
   const pre = element("pre", record.readable_report, "report-text");
   replaceChildren(
@@ -1509,6 +1516,11 @@ function renderRaw(record, response) {
   );
 }
 ```
+
+Cross-task ruling: Task 4 defines only `actionButton` so complete run
+rendering succeeds. `copyText` and `downloadText` intentionally remain
+undefined until Task 7; clicking an export button therefore remains the
+Task 7 RED behavior.
 
 - [ ] **Step 6: Connect the shared renderer and single form**
 
@@ -2102,16 +2114,9 @@ real export actions fail before their helpers exist.
 
 - [ ] **Step 3: Implement copy and UTF-8 download helpers**
 
-Use:
+Keep the `actionButton` helper introduced in Task 4 and add:
 
 ```javascript
-function actionButton(label, handler) {
-  const button = element("button", label, "secondary");
-  button.type = "button";
-  button.addEventListener("click", handler);
-  return button;
-}
-
 async function copyText(text, successMessage) {
   try {
     await navigator.clipboard.writeText(text);
