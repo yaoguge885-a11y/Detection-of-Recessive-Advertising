@@ -1,6 +1,19 @@
 """Versioned FastAPI schemas and routes."""
 
 from .routes import create_api_router
-from .schemas import AnalyzeRequest, AnalyzeResponse
+from .schemas import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    BatchAnalyzeItemResponse,
+    BatchAnalyzeRequest,
+    BatchAnalyzeResponse,
+)
 
-__all__ = ["AnalyzeRequest", "AnalyzeResponse", "create_api_router"]
+__all__ = [
+    "AnalyzeRequest",
+    "AnalyzeResponse",
+    "BatchAnalyzeItemResponse",
+    "BatchAnalyzeRequest",
+    "BatchAnalyzeResponse",
+    "create_api_router",
+]

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from ..contracts import EvidenceBundle, RunMetadata, VerdictReport
 from ..orchestration import RunEvent
+from ..services import BATCH_MAX_ITEMS, BatchAnalysisError
 
 
 class AnalyzeRequest(BaseModel):
@@ -34,3 +35,24 @@ class AnalyzeResponse(BaseModel):
     run_metadata: RunMetadata
     run_events: list[RunEvent]
     readable_report: str
+
+
+class BatchAnalyzeRequest(BaseModel):
+    items: list[AnalyzeRequest] = Field(
+        min_length=1,
+        max_length=BATCH_MAX_ITEMS,
+    )
+
+
+class BatchAnalyzeItemResponse(BaseModel):
+    index: int
+    ok: bool
+    result: AnalyzeResponse | None = None
+    error: BatchAnalysisError | None = None
+
+
+class BatchAnalyzeResponse(BaseModel):
+    total: int
+    succeeded: int
+    failed: int
+    items: list[BatchAnalyzeItemResponse]
