@@ -1,8 +1,10 @@
+from html.parser import HTMLParser
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import sys
+from urllib.parse import urljoin, urlsplit
 import zipfile
 
 from fastapi.testclient import TestClient
@@ -14,6 +16,45 @@ from impad.services import AnalysisService, JsonRunStore
 class EmptyRetriever:
     def retrieve(self, query, top_k=5):
         return []
+
+
+class DocumentParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.visible_links = []
+        self.stylesheets = []
+        self.scripts = []
+        self._link = None
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == "a":
+            visible = (
+                "hidden" not in attributes
+                and (attributes.get("aria-hidden") or "").lower() != "true"
+            )
+            self._link = {
+                "href": attributes.get("href"),
+                "text": [],
+                "visible": visible,
+            }
+        elif tag == "link":
+            rel = (attributes.get("rel") or "").lower().split()
+            if "stylesheet" in rel and attributes.get("href"):
+                self.stylesheets.append(attributes["href"])
+        elif tag == "script" and attributes.get("src"):
+            self.scripts.append(attributes["src"])
+
+    def handle_data(self, data):
+        if self._link is not None:
+            self._link["text"].append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "a" and self._link is not None:
+            if self._link["visible"] and self._link["href"]:
+                text = " ".join("".join(self._link["text"]).split())
+                self.visible_links.append((text, self._link["href"]))
+            self._link = None
 
 
 def _client(tmp_path: Path) -> TestClient:
@@ -51,6 +92,50 @@ def test_workbench_document_has_strict_security_headers(tmp_path):
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["referrer-policy"] == "no-referrer"
     assert response.headers["cache-control"] == "no-store"
+
+
+def test_root_navigation_reaches_workbench_and_loads_its_assets(tmp_path):
+    client = _client(tmp_path)
+    root = client.get("/")
+    root_document = DocumentParser()
+    root_document.feed(root.text)
+    workbench_links = [
+        href
+        for text, href in root_document.visible_links
+        if text == "打开开发者研究工作台"
+    ]
+
+    assert root.status_code == 200
+    assert len(workbench_links) == 1
+
+    workbench = client.get(workbench_links[0])
+    workbench_document = DocumentParser()
+    workbench_document.feed(workbench.text)
+
+    assert workbench.status_code == 200
+    assert workbench_document.stylesheets
+    assert workbench_document.scripts
+
+    workbench_origin = urlsplit(str(workbench.url))
+    for href in workbench_document.stylesheets:
+        asset_url = urlsplit(urljoin(str(workbench.url), href))
+        assert (asset_url.scheme, asset_url.netloc) == (
+            workbench_origin.scheme,
+            workbench_origin.netloc,
+        )
+        response = client.get(asset_url.geturl())
+        assert response.status_code == 200
+        assert "text/css" in response.headers["content-type"]
+
+    for src in workbench_document.scripts:
+        asset_url = urlsplit(urljoin(str(workbench.url), src))
+        assert (asset_url.scheme, asset_url.netloc) == (
+            workbench_origin.scheme,
+            workbench_origin.netloc,
+        )
+        response = client.get(asset_url.geturl())
+        assert response.status_code == 200
+        assert "javascript" in response.headers["content-type"]
 
 
 def test_built_wheel_contains_workbench_assets(tmp_path):
