@@ -38,7 +38,7 @@
   - `BatchAnalysisResult(total, succeeded, failed, items)`;
   - `AnalysisService.analyze_batch(items)`.
 
-- [ ] **Step 1: Write failing service tests**
+- [x] **Step 1: Write failing service tests**
 
 Add tests that prove delegation, order, isolation, safe error text, and direct
 service bounds:
@@ -102,7 +102,7 @@ def test_batch_analysis_rejects_out_of_bounds_count(tmp_path, count):
         ])
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```powershell
 cd implicit-ad-agent
@@ -112,7 +112,7 @@ cd implicit-ad-agent
 
 Expected: import/attribute failures for the missing batch contracts and method.
 
-- [ ] **Step 3: Implement minimal batch contracts and delegation**
+- [x] **Step 3: Implement minimal batch contracts and delegation**
 
 In `services/analyze.py`, add Pydantic contracts and the method:
 
@@ -197,7 +197,7 @@ def analyze_batch(
 
 Export the new contracts from `services/__init__.py`.
 
-- [ ] **Step 4: Run service tests and verify GREEN**
+- [x] **Step 4: Run service tests and verify GREEN**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -206,7 +206,7 @@ Export the new contracts from `services/__init__.py`.
 
 Expected: all service tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- `
@@ -235,7 +235,7 @@ git commit -m "feat: add isolated batch analysis service"
   - `BatchAnalyzeResponse(total, succeeded, failed, items)`;
   - `POST /api/v1/analyze/batch`.
 
-- [ ] **Step 1: Write failing API tests**
+- [x] **Step 1: Write failing API tests**
 
 ```python
 def test_batch_route_returns_per_item_outcomes(tmp_path):
@@ -265,7 +265,7 @@ def test_batch_route_rejects_invalid_size(tmp_path, items):
     assert response.status_code == 422
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\api\test_routes.py -q
@@ -273,7 +273,7 @@ def test_batch_route_rejects_invalid_size(tmp_path, items):
 
 Expected: `404` for the missing batch route.
 
-- [ ] **Step 3: Add request/response models and route**
+- [x] **Step 3: Add request/response models and route**
 
 In `api/schemas.py`:
 
@@ -336,7 +336,7 @@ def analyze_batch(request: BatchAnalyzeRequest):
 
 Export the public API models from `api/__init__.py`.
 
-- [ ] **Step 4: Run API and service tests**
+- [x] **Step 4: Run API and service tests**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -346,7 +346,7 @@ Export the public API models from `api/__init__.py`.
 
 Expected: all tests pass and the original single-item route remains green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- `
@@ -378,7 +378,7 @@ git commit -m "feat: expose bounded batch analysis API"
   - `PlatformAdapterRegistry.resolve(source)`;
   - `URLImportError(code, message, status_code)`.
 
-- [ ] **Step 1: Write failing URL safety tests**
+- [x] **Step 1: Write failing URL safety tests**
 
 ```python
 @pytest.mark.parametrize("url", [
@@ -411,7 +411,7 @@ def test_url_validator_keeps_fetch_query_but_hides_display_query():
     assert result.sensitive_tokens == ("token=secret", "fragment")
 ```
 
-- [ ] **Step 2: Write failing registry tests**
+- [x] **Step 2: Write failing registry tests**
 
 ```python
 class StaticAdapter:
@@ -445,7 +445,7 @@ def test_registry_rejects_unsupported_host():
         )
 ```
 
-- [ ] **Step 3: Run tests and verify RED**
+- [x] **Step 3: Run tests and verify RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -454,7 +454,7 @@ def test_registry_rejects_unsupported_host():
 
 Expected: imports fail because `impad.adapters.platforms` does not exist.
 
-- [ ] **Step 4: Implement URL contracts and validator**
+- [x] **Step 4: Implement URL contracts and validator**
 
 In `contracts.py`:
 
@@ -497,7 +497,7 @@ and `urlunsplit`. Hash the fragment-free fetch URL with SHA-256. Reject
 non-HTTPS, credentials, non-443 ports, forbidden local suffixes, and IP
 literals where `is_global` is false.
 
-- [ ] **Step 5: Implement registry**
+- [x] **Step 5: Implement registry**
 
 ```python
 class PlatformAdapterRegistry:
@@ -543,7 +543,7 @@ class PlatformAdapterRegistry:
 
 Export the public symbols from `platforms/__init__.py`.
 
-- [ ] **Step 6: Run platform adapter tests**
+- [x] **Step 6: Run platform adapter tests**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -552,7 +552,7 @@ Export the public symbols from `platforms/__init__.py`.
 
 Expected: all URL and registry tests pass without network access.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```powershell
 git add -- `
@@ -581,7 +581,7 @@ git commit -m "feat: add safe platform adapter boundary"
   - `URLImportService.preview(url)`;
   - `URLImportService.confirm(preview_id, corrections, runtime_mode)`.
 
-- [ ] **Step 1: Write failing preview tests**
+- [x] **Step 1: Write failing preview tests**
 
 Create a static adapter whose `preview()` returns a complete deterministic
 `PostRecord` with no source URL text:
@@ -610,7 +610,7 @@ def test_preview_normalizes_source_without_running_analysis(tmp_path):
 
 Also assert an unsupported host does not call the adapter.
 
-- [ ] **Step 2: Write failing confirmation tests**
+- [x] **Step 2: Write failing confirmation tests**
 
 ```python
 def test_confirm_applies_audited_corrections_and_consumes_preview(
@@ -658,7 +658,7 @@ def test_invalid_correction_does_not_consume_preview(tmp_path):
     assert result.run_metadata.run_id
 ```
 
-- [ ] **Step 3: Run tests and verify RED**
+- [x] **Step 3: Run tests and verify RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -667,7 +667,7 @@ def test_invalid_correction_does_not_consume_preview(tmp_path):
 
 Expected: import failures for the missing preview service/contracts.
 
-- [ ] **Step 4: Implement preview/correction contracts**
+- [x] **Step 4: Implement preview/correction contracts**
 
 In `contracts.py`:
 
@@ -697,7 +697,7 @@ class URLImportCorrections(BaseModel):
 Use `model_fields_set` so omitted fields differ from explicitly supplied
 `null`.
 
-- [ ] **Step 5: Implement bounded preview store**
+- [x] **Step 5: Implement bounded preview store**
 
 ```python
 class InMemoryURLPreviewStore:
@@ -720,7 +720,7 @@ class InMemoryURLPreviewStore:
         self._records.pop(preview_id, None)
 ```
 
-- [ ] **Step 6: Implement URL import orchestration**
+- [x] **Step 6: Implement URL import orchestration**
 
 Use this constructor so the API can inspect the same registry used by the
 workflow:
@@ -765,7 +765,7 @@ URLImportError(
 )
 ```
 
-- [ ] **Step 7: Run URL import tests**
+- [x] **Step 7: Run URL import tests**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -774,7 +774,7 @@ URLImportError(
 
 Expected: all platform adapter tests pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```powershell
 git add -- `
@@ -804,7 +804,7 @@ git commit -m "feat: add audited URL preview and confirm service"
   - preview/confirm endpoints;
   - capability metadata.
 
-- [ ] **Step 1: Write failing route tests**
+- [x] **Step 1: Write failing route tests**
 
 Inject a `URLImportService` with the static adapter into `create_app()`:
 
@@ -854,7 +854,7 @@ def test_default_app_rejects_unsupported_url_before_fetch():
 Add tests for `preview_not_found` (`404`), invalid corrections (`422`), and
 capabilities listing only the injected adapter.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests\api\test_routes.py -q
@@ -862,7 +862,7 @@ capabilities listing only the injected adapter.
 
 Expected: missing endpoint and `create_app()` parameter failures.
 
-- [ ] **Step 3: Add API models and route injection**
+- [x] **Step 3: Add API models and route injection**
 
 In `api/schemas.py`:
 
@@ -896,7 +896,7 @@ Resolve both services once at router construction so preview and confirmation
 share one process-local store. If no URL service is injected, construct one
 with an empty `PlatformAdapterRegistry`.
 
-- [ ] **Step 4: Implement endpoints and safe error mapping**
+- [x] **Step 4: Implement endpoints and safe error mapping**
 
 ```python
 def _raise_url_error(exc: URLImportError):
@@ -954,7 +954,7 @@ Extend capabilities with:
 
 Update `create_app()` to accept/pass `url_import_service`.
 
-- [ ] **Step 5: Run API, service, and adapter tests**
+- [x] **Step 5: Run API, service, and adapter tests**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -965,7 +965,7 @@ Update `create_app()` to accept/pass `url_import_service`.
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add -- `
@@ -988,7 +988,7 @@ git commit -m "feat: expose URL preview and confirm API"
 **Interfaces:**
 - Verifies all prior tasks and the unchanged compatibility routes.
 
-- [ ] **Step 1: Add explicit secret and immutability tests**
+- [x] **Step 1: Add explicit secret and immutability tests**
 
 Assert:
 
@@ -1000,7 +1000,7 @@ Assert:
   with `adapter_failed`;
 - preview IDs are not consumed after invalid corrections.
 
-- [ ] **Step 2: Add compatibility tests**
+- [x] **Step 2: Add compatibility tests**
 
 Verify:
 
@@ -1020,7 +1020,7 @@ def test_existing_health_and_compatibility_analyze_remain_available(
     ).status_code == 200
 ```
 
-- [ ] **Step 3: Run the focused P5.1 gate**
+- [x] **Step 3: Run the focused P5.1 gate**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -1032,7 +1032,7 @@ def test_existing_health_and_compatibility_analyze_remain_available(
 
 Expected: all focused tests pass with no network access.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add -- `
@@ -1061,7 +1061,7 @@ git commit -m "test: close P5 service security coverage"
 - Produces: current-state handoff, copyable commands, explicit P5.1 and
   incomplete P5.2-P5.7/M1/M4 boundaries.
 
-- [ ] **Step 1: Update factual status**
+- [x] **Step 1: Update factual status**
 
 Record:
 
@@ -1072,7 +1072,7 @@ Record:
 - that no live platform URL adapter, Web, A2A, real URL integration, or M5
   acceptance has been completed.
 
-- [ ] **Step 2: Add copyable test commands**
+- [x] **Step 2: Add copyable test commands**
 
 Add commands for:
 
@@ -1083,7 +1083,7 @@ Add commands for:
 - full default regression;
 - both P1 validators.
 
-- [ ] **Step 3: Run dependency and compilation checks**
+- [x] **Step 3: Run dependency and compilation checks**
 
 ```powershell
 cd implicit-ad-agent
@@ -1092,7 +1092,7 @@ cd implicit-ad-agent
   impad tests scripts app.py run_demo.py run_tools_demo.py
 ```
 
-- [ ] **Step 4: Run focused and full tests**
+- [x] **Step 4: Run focused and full tests**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -1103,7 +1103,7 @@ cd implicit-ad-agent
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-- [ ] **Step 5: Run both P1 validators**
+- [x] **Step 5: Run both P1 validators**
 
 From the repository root:
 
@@ -1116,7 +1116,7 @@ From the repository root:
 
 Both must output `VALIDATION PASSED`.
 
-- [ ] **Step 6: Run security and repository scans**
+- [x] **Step 6: Run security and repository scans**
 
 ```powershell
 rg -n `
@@ -1131,13 +1131,13 @@ The secret scan must find no runtime artifact, fixture, report, or user-facing
 documentation occurrence. Test inputs and the implementation plan are explicit
 exceptions.
 
-- [ ] **Step 7: Review the cumulative diff**
+- [x] **Step 7: Review the cumulative diff**
 
 Compare every acceptance criterion in the design against production code,
 tests, HTTP behavior, docs, and current command output. Fix every Critical or
 Important issue and rerun the affected gate.
 
-- [ ] **Step 8: Commit factual documentation**
+- [x] **Step 8: Commit factual documentation**
 
 ```powershell
 git add -- `

@@ -1,7 +1,7 @@
 # P5.1 Batch and URL Service Admission Design
 
 **Date:** 2026-07-30
-**Status:** Approved by the user's autonomous-execution instruction
+**Status:** Implemented and verified on 2026-07-30
 **Scope:** P5.1 batch analysis and URL preview/confirm service boundary
 
 ## 1. Goal
@@ -27,8 +27,8 @@ workbench, or A2A are available.
 - `AnalysisService.analyze()` owns graph execution, legal retrieval, readable
   reporting, and run persistence.
 - `PostRecord` and `CaptureStatus` are the normalized runtime boundary.
-- The API has no batch endpoint, platform adapter contract, URL preview, or
-  URL confirmation workflow.
+- Before this slice, the API had no batch endpoint, platform adapter contract,
+  URL preview, or URL confirmation workflow.
 - P5.3 and P5.4 separately own live Xiaohongshu and Bilibili adapters.
 - The verified pre-P5.1 default baseline is
   `326 passed, 2 skipped, 1 warning`.
@@ -135,7 +135,9 @@ fully implemented.
 5. does not run classification or persist an analysis run.
 
 Pending previews are process-local, bounded, and one-time. They are not a
-durable job queue.
+durable job queue. Confirmation atomically claims a preview; concurrent
+confirmations fail closed, validation/analysis failure releases the claim, and
+successful analysis consumes it.
 
 ### Confirm
 
@@ -219,6 +221,16 @@ Default tests cover:
 
 No test makes a real network request.
 
+Review-driven regressions also cover:
+
+- concurrent confirmation of one preview;
+- mutation of a returned preview object;
+- attempted capture-audit metadata forgery;
+- short query values that legitimately occur in post text;
+- decoded query values containing JSON-escaped characters;
+- internal execution `ValueError` classification;
+- structurally invalid API items that must not abort a batch.
+
 ## 11. Acceptance Criteria
 
 1. Batch requests accept 1-50 items and report per-item success/error.
@@ -249,3 +261,18 @@ No test makes a real network request.
 - high concurrency, accounts, RBAC, or multi-tenant operation;
 - changing classification, CreatorShift, Judge, RAG, or M1 logic;
 - claiming P5 or M5 completion.
+
+## 13. Verification Evidence
+
+- focused P5.1 gate: `58 passed, 1 warning`;
+- default full gate: `380 passed, 2 skipped, 1 warning`;
+- `pip check`: `No broken requirements found.`;
+- compilation: passed for `impad`, tests, scripts, and application/demo
+  entrypoints;
+- both P1 asset validators: `VALIDATION PASSED`;
+- two independent code reviews: no Critical findings; all Important findings
+  were either already fixed or closed with regression tests;
+- the warning is the pre-existing Starlette/httpx deprecation warning.
+
+These results admit only the P5.1 engineering boundary. They do not admit
+P5/M5, M1, or M4.
