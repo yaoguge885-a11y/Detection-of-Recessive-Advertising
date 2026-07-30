@@ -7,7 +7,12 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationError,
+    model_validator,
+)
 
 from ..contracts import (
     EvidenceBundle,
@@ -29,6 +34,7 @@ from .run_store import JsonRunStore, RunRecord, RunStore
 
 
 RuntimeMode = Literal["local", "mcp"]
+BATCH_MAX_ITEMS = 50
 
 
 class AnalysisResult(BaseModel):
@@ -38,6 +44,58 @@ class AnalysisResult(BaseModel):
     run_metadata: RunMetadata
     run_events: list[RunEvent]
     readable_report: str
+
+
+class BatchAnalysisInput(BaseModel):
+    post: dict | PostRecord
+    runtime_mode: RuntimeMode = "local"
+
+
+class BatchAnalysisError(BaseModel):
+    code: Literal["invalid_input", "analysis_failed"]
+    message: str
+
+
+class BatchAnalysisItem(BaseModel):
+    index: int = Field(ge=0)
+    result: AnalysisResult | None = None
+    error: BatchAnalysisError | None = None
+
+    @model_validator(mode="after")
+    def exactly_one_outcome(self):
+        if (self.result is None) == (self.error is None):
+            raise ValueError("batch item requires exactly one outcome")
+        return self
+
+
+class BatchAnalysisResult(BaseModel):
+    total: int = Field(ge=1, le=BATCH_MAX_ITEMS)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    items: list[BatchAnalysisItem]
+
+    @model_validator(mode="after")
+    def counts_match_items(self):
+        succeeded = sum(item.result is not None for item in self.items)
+        if (
+            self.total != len(self.items)
+            or self.succeeded != succeeded
+            or self.failed != self.total - succeeded
+        ):
+            raise ValueError("batch counts must match item outcomes")
+        return self
+
+
+def _safe_batch_error(exc: Exception) -> BatchAnalysisError:
+    if isinstance(exc, (ValueError, ValidationError)):
+        return BatchAnalysisError(
+            code="invalid_input",
+            message="Input could not be normalized.",
+        )
+    return BatchAnalysisError(
+        code="analysis_failed",
+        message="Analysis failed.",
+    )
 
 
 def _event(
@@ -203,6 +261,38 @@ class AnalysisService:
             run_metadata=record.run_metadata,
             run_events=record.run_events,
             readable_report=record.readable_report,
+        )
+
+    def analyze_batch(
+        self,
+        items: list[BatchAnalysisInput],
+    ) -> BatchAnalysisResult:
+        """Analyze a bounded batch while isolating per-item failures."""
+
+        if not 1 <= len(items) <= BATCH_MAX_ITEMS:
+            raise ValueError("batch size must be between 1 and 50")
+        outcomes = []
+        for index, item in enumerate(items):
+            try:
+                result = self.analyze(
+                    item.post,
+                    runtime_mode=item.runtime_mode,
+                )
+                outcomes.append(BatchAnalysisItem(
+                    index=index,
+                    result=result,
+                ))
+            except Exception as exc:
+                outcomes.append(BatchAnalysisItem(
+                    index=index,
+                    error=_safe_batch_error(exc),
+                ))
+        succeeded = sum(item.result is not None for item in outcomes)
+        return BatchAnalysisResult(
+            total=len(outcomes),
+            succeeded=succeeded,
+            failed=len(outcomes) - succeeded,
+            items=outcomes,
         )
 
     def get_run(self, run_id: str) -> RunRecord | None:
