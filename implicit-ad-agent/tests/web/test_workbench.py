@@ -95,15 +95,6 @@ def test_workbench_document_has_strict_security_headers(tmp_path):
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_workbench_assets_have_no_store_cache_headers(tmp_path):
-    client = _client(tmp_path)
-
-    for asset in ("workbench.css", "workbench.js"):
-        response = client.get(f"/workbench/assets/{asset}")
-
-        assert response.headers["cache-control"] == "no-store"
-
-
 def test_root_navigation_reaches_workbench_and_loads_its_assets(tmp_path):
     client = _client(tmp_path)
     root = client.get("/")

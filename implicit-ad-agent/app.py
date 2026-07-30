@@ -23,17 +23,6 @@ WORKBENCH_HEADERS = {
 }
 
 
-class NoStoreStaticFiles(StaticFiles):
-    """Serve workbench assets without retaining stale browser copies."""
-
-    def file_response(self, full_path, stat_result, scope, status_code=200):
-        response = super().file_response(
-            full_path, stat_result, scope, status_code
-        )
-        response.headers["Cache-Control"] = "no-store"
-        return response
-
-
 def create_app(
     service: AnalysisService | None = None,
     *,
@@ -56,7 +45,7 @@ def create_app(
     workbench_assets = asset_directory()
     application.mount(
         "/workbench/assets",
-        NoStoreStaticFiles(directory=workbench_assets),
+        StaticFiles(directory=workbench_assets),
         name="workbench-assets",
     )
 
