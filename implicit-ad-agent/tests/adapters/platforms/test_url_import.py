@@ -48,6 +48,12 @@ class StaticAdapter:
         })
 
 
+class QueryValueLeakingAdapter(StaticAdapter):
+    def preview(self, source):
+        post = super().preview(source)
+        return post.model_copy(update={"text": "do-not-store"})
+
+
 def _analysis_service(tmp_path: Path) -> AnalysisService:
     return AnalysisService(
         retriever=EmptyRetriever(),
@@ -94,6 +100,25 @@ def test_unsupported_host_fails_before_adapter_call(tmp_path):
 
     assert exc.value.code == "unsupported_url_host"
     assert adapter.calls == 0
+
+
+def test_preview_rejects_adapter_output_containing_query_value(tmp_path):
+    analysis = _analysis_service(tmp_path)
+    adapter = QueryValueLeakingAdapter()
+    service = URLImportService(
+        analysis_service=analysis,
+        registry=PlatformAdapterRegistry([adapter]),
+    )
+
+    with pytest.raises(URLImportError) as exc:
+        service.preview(
+            "https://example.test/post/1"
+            "?api_key=do-not-store"
+        )
+
+    assert exc.value.code == "adapter_failed"
+    assert "do-not-store" not in exc.value.message
+    assert not (tmp_path / "runs").exists()
 
 
 def test_confirm_applies_audited_corrections_and_consumes_preview(

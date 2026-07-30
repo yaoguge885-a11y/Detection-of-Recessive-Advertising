@@ -40,7 +40,9 @@ def test_url_validator_keeps_fetch_query_but_hides_display_query():
     assert result.display_url == "https://example.test/post/1"
     assert result.hostname == "example.test"
     assert len(result.source_ref_hash) == 64
-    assert result.sensitive_tokens == ("token=secret", "fragment")
+    assert "token=secret" in result.sensitive_tokens
+    assert "secret" in result.sensitive_tokens
+    assert "fragment" in result.sensitive_tokens
 
 
 def test_url_validator_normalizes_default_port_and_empty_path():

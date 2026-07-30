@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 from ipaddress import ip_address
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import parse_qsl, unquote, urlsplit, urlunsplit
 
 from .contracts import URLImportError, ValidatedSourceURL
 
@@ -105,11 +105,21 @@ def validate_public_https_url(url: str) -> ValidatedSourceURL:
     source_ref_hash = hashlib.sha256(
         fetch_url.encode("utf-8")
     ).hexdigest()
-    sensitive_tokens = tuple(
+    sensitive_tokens = tuple(dict.fromkeys(
         token
-        for token in (parsed.query, parsed.fragment)
+        for token in (
+            parsed.query,
+            *(
+                value
+                for _, value in parse_qsl(
+                    parsed.query,
+                    keep_blank_values=True,
+                )
+            ),
+            unquote(parsed.fragment),
+        )
         if token
-    )
+    ))
     return ValidatedSourceURL(
         fetch_url=fetch_url,
         display_url=display_url,
