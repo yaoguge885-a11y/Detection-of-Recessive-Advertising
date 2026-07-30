@@ -153,6 +153,33 @@ def test_batch_route_exposes_isolated_safe_error(tmp_path):
     assert payload["items"][1]["ok"] is True
 
 
+def test_batch_route_isolates_structurally_invalid_item(tmp_path):
+    response = _client(tmp_path).post(
+        "/api/v1/analyze/batch",
+        json={
+            "items": [
+                {"platform": "other"},
+                {"text": "valid"},
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["succeeded"] == 1
+    assert payload["failed"] == 1
+    assert payload["items"][0] == {
+        "index": 0,
+        "ok": False,
+        "result": None,
+        "error": {
+            "code": "invalid_input",
+            "message": "Input could not be normalized.",
+        },
+    }
+    assert payload["items"][1]["ok"] is True
+
+
 @pytest.mark.parametrize("items", [[], [{"text": "x"}] * 51])
 def test_batch_route_rejects_invalid_size(tmp_path, items):
     response = _client(tmp_path).post(

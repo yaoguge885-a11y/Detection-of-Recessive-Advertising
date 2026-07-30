@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
+from pydantic import ValidationError
 
 from ..adapters.platforms import (
     PlatformAdapterRegistry,
@@ -12,6 +13,7 @@ from ..services import (
     AnalysisResult,
     AnalysisService,
     BATCH_MAX_ITEMS,
+    BatchAnalysisError,
     BatchAnalysisInput,
     get_default_analysis_service,
 )
@@ -104,20 +106,34 @@ def create_api_router(
         response_model=BatchAnalyzeResponse,
     )
     def analyze_batch(request: BatchAnalyzeRequest):
-        batch = active_service().analyze_batch([
-            BatchAnalysisInput(
+        outcomes: dict[int, BatchAnalyzeItemResponse] = {}
+        valid_inputs = []
+        valid_indices = []
+        for index, raw_item in enumerate(request.items):
+            try:
+                item = AnalyzeRequest.model_validate(raw_item)
+            except (TypeError, ValueError, ValidationError):
+                outcomes[index] = BatchAnalyzeItemResponse(
+                    index=index,
+                    ok=False,
+                    error=BatchAnalysisError(
+                        code="invalid_input",
+                        message="Input could not be normalized.",
+                    ),
+                )
+                continue
+            valid_indices.append(index)
+            valid_inputs.append(BatchAnalysisInput(
                 post=item.post_payload(),
                 runtime_mode=item.runtime_mode,
-            )
-            for item in request.items
-        ])
-        return BatchAnalyzeResponse(
-            total=batch.total,
-            succeeded=batch.succeeded,
-            failed=batch.failed,
-            items=[
-                BatchAnalyzeItemResponse(
-                    index=item.index,
+            ))
+
+        if valid_inputs:
+            batch = active_service().analyze_batch(valid_inputs)
+            for item in batch.items:
+                original_index = valid_indices[item.index]
+                outcomes[original_index] = BatchAnalyzeItemResponse(
+                    index=original_index,
                     ok=item.result is not None,
                     result=(
                         _analyze_response(item.result)
@@ -126,8 +142,13 @@ def create_api_router(
                     ),
                     error=item.error,
                 )
-                for item in batch.items
-            ],
+        ordered = [outcomes[index] for index in range(len(request.items))]
+        succeeded = sum(item.ok for item in ordered)
+        return BatchAnalyzeResponse(
+            total=len(ordered),
+            succeeded=succeeded,
+            failed=len(ordered) - succeeded,
+            items=ordered,
         )
 
     @router.post(

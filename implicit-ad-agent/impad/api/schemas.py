@@ -42,7 +42,7 @@ class AnalyzeResponse(BaseModel):
 
 
 class BatchAnalyzeRequest(BaseModel):
-    items: list[AnalyzeRequest] = Field(
+    items: list[Any] = Field(
         min_length=1,
         max_length=BATCH_MAX_ITEMS,
     )
