@@ -376,6 +376,35 @@ blockquote {
   color: var(--muted);
 }
 
+.batch-item-list {
+  display: grid;
+  gap: 10px;
+}
+
+.batch-item {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+.batch-item[data-ok="true"] {
+  border-left: 4px solid var(--success);
+}
+
+.batch-item[data-ok="false"] {
+  border-left: 4px solid var(--danger);
+}
+
+.batch-item code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 860px) {
   .masthead {
     align-items: start;
@@ -404,5 +433,10 @@ blockquote {
 @media (max-width: 520px) {
   .definition-grid {
     grid-template-columns: 1fr;
+  }
+
+  .batch-item {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }

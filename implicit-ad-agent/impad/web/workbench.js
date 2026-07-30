@@ -204,6 +204,7 @@ async function loadCapabilities() {
     fetchJson("/api/v1/capabilities"),
   ]);
   state.capabilities = capabilities;
+  updateBatchCount();
   byId("health-status").textContent = health.status === "ok"
     ? "API 正常"
     : "API 状态未知";
@@ -486,6 +487,60 @@ function actionButton(label, handler) {
   return button;
 }
 
+function updateBatchCount() {
+  try {
+    const parsed = parseJson(byId("batch-json").value, "批量请求");
+    const items = Array.isArray(parsed) ? parsed : parsed?.items;
+    const count = Array.isArray(items) ? items.length : 0;
+    const maximum = state.capabilities?.batch_analysis?.max_items || 50;
+    byId("batch-count").textContent = `${count} / ${maximum}`;
+  } catch {
+    byId("batch-count").textContent = "JSON待修正";
+  }
+}
+
+function renderBatchResults(batch) {
+  state.batch = batch;
+  byId("batch-results").hidden = false;
+  byId("batch-summary").textContent = (
+    `${batch.succeeded}成功 / ${batch.failed}失败 / ${batch.total}总计`
+  );
+  const rows = element("div", null, "batch-item-list");
+  for (const item of batch.items) {
+    const row = element("article", null, "batch-item");
+    row.dataset.ok = String(item.ok);
+    row.append(element("strong", `#${item.index + 1}`));
+    if (item.ok) {
+      const report = item.result.verdict_report;
+      const metadata = item.result.run_metadata;
+      row.append(
+        element("span", report.label, "batch-label"),
+        element(
+          "span",
+          report.review_required ? "需复核" : "已判定",
+        ),
+        element("code", metadata.run_id),
+        actionButton("查看", async () => {
+          try {
+            setSubmissionStatus(`正在加载第${item.index + 1}条结果`);
+            await loadAndRenderRun(item.result);
+            setSubmissionStatus("批量结果已加载", "success");
+          } catch (error) {
+            setSubmissionStatus(error.message, "error");
+          }
+        }),
+      );
+    } else {
+      row.append(
+        element("span", item.error.code, "error-code"),
+        element("span", item.error.message),
+      );
+    }
+    rows.append(row);
+  }
+  replaceChildren(byId("batch-items"), rows);
+}
+
 function renderReport(record) {
   const pre = element("pre", record.readable_report, "report-text");
   replaceChildren(
@@ -625,6 +680,58 @@ function setupSingleForm() {
     setSubmissionStatus("单条输入已清空");
   });
 }
-function setupBatchForm() {}
+function setupBatchForm() {
+  const form = byId("batch-form");
+  const editor = byId("batch-json");
+  editor.addEventListener("input", updateBatchCount);
+  byId("batch-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      editor.value = String(reader.result);
+      updateBatchCount();
+      setSubmissionStatus("本地JSON文件已读取");
+    });
+    reader.addEventListener("error", () => {
+      setSubmissionStatus("本地JSON文件读取失败", "error");
+    });
+    reader.readAsText(file, "utf-8");
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      setBusy(form, true);
+      const request = parseBatchPayload(editor.value);
+      setSubmissionStatus(`正在分析${request.items.length}条记录`);
+      const batch = await fetchJson("/api/v1/analyze/batch", {
+        method: "POST",
+        body: JSON.stringify(request),
+      });
+      renderBatchResults(batch);
+      const firstSuccess = batch.items.find((item) => item.ok);
+      if (firstSuccess) {
+        await loadAndRenderRun(firstSuccess.result);
+      }
+      setSubmissionStatus("批量分析完成", "success");
+    } catch (error) {
+      setSubmissionStatus(
+        `${error.code || "client_error"}：${error.message}`,
+        "error",
+      );
+    } finally {
+      setBusy(form, false);
+    }
+  });
+  byId("batch-clear").addEventListener("click", () => {
+    editor.value = '{"items":[]}';
+    byId("batch-file").value = "";
+    byId("batch-results").hidden = true;
+    replaceChildren(byId("batch-items"));
+    updateBatchCount();
+    setSubmissionStatus("批量输入已清空");
+  });
+  updateBatchCount();
+}
 function setupUrlForms() {}
 function setupExportActions() {}
