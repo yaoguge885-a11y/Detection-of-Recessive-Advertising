@@ -683,17 +683,21 @@ function setupSingleForm() {
 function setupBatchForm() {
   const form = byId("batch-form");
   const editor = byId("batch-json");
+  let readToken = 0;
   editor.addEventListener("input", updateBatchCount);
   byId("batch-file").addEventListener("change", (event) => {
+    const token = ++readToken;
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.addEventListener("load", () => {
+      if (token !== readToken) return;
       editor.value = String(reader.result);
       updateBatchCount();
       setSubmissionStatus("本地JSON文件已读取");
     });
     reader.addEventListener("error", () => {
+      if (token !== readToken) return;
       setSubmissionStatus("本地JSON文件读取失败", "error");
     });
     reader.readAsText(file, "utf-8");
@@ -724,6 +728,7 @@ function setupBatchForm() {
     }
   });
   byId("batch-clear").addEventListener("click", () => {
+    readToken += 1;
     editor.value = '{"items":[]}';
     byId("batch-file").value = "";
     byId("batch-results").hidden = true;
