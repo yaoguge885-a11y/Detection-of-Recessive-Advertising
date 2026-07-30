@@ -19,6 +19,7 @@ from .post import (
 from .run import RunIssue, RunMetadata
 from .verdict import (
     CommercialIntent,
+    CreatorShiftSummary,
     DisclosureEvidence,
     LawEvidence,
     VerdictReport,
@@ -29,6 +30,7 @@ __all__ = [
     "CaptureStatus",
     "CommentRecord",
     "CommercialIntent",
+    "CreatorShiftSummary",
     "DisclosureEvidence",
     "EvidenceBundle",
     "EvidenceConflict",

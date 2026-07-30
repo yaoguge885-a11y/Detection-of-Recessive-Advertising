@@ -1,7 +1,7 @@
 """Structured judgment and legal-reference contracts."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import AliasChoices, BaseModel, Field, model_validator
@@ -61,6 +61,42 @@ class LawEvidence(BaseModel):
         return self.source_path_or_url
 
 
+class CreatorShiftSummary(BaseModel):
+    """Report-facing CreatorShift state; score is evidence, not probability."""
+
+    status: Literal["sufficient", "insufficient", "unavailable"]
+    history_count: int = Field(ge=0)
+    required_history: int = Field(ge=1)
+    feature_version: str = "keyword_weights_v1"
+    runtime_version: str = "creator_shift_runtime_v1"
+    pooling_method: Literal["mean", "max", "ema"] | None = None
+    shift_score: float | None = Field(default=None, ge=0, le=1)
+    history_post_ids: list[str] = Field(default_factory=list)
+    window_start: datetime | None = None
+    window_end: datetime | None = None
+    top_features: list[str] = Field(default_factory=list)
+    feature_deltas: dict[str, float] = Field(default_factory=dict)
+    limitations: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def numeric_result_requires_sufficient_history(self):
+        if self.status == "sufficient":
+            if self.shift_score is None or self.pooling_method is None:
+                raise ValueError(
+                    "sufficient CreatorShift requires score and pooling method"
+                )
+            if self.history_count < self.required_history:
+                raise ValueError(
+                    "sufficient CreatorShift requires enough history"
+                )
+            return self
+        if self.shift_score is not None or self.pooling_method is not None:
+            raise ValueError(
+                "nonnumeric CreatorShift states cannot contain a score"
+            )
+        return self
+
+
 class VerdictReport(BaseModel):
     """Final structured decision before presentation formatting."""
 
@@ -70,6 +106,7 @@ class VerdictReport(BaseModel):
     review_required: bool
     commercial_intent: CommercialIntent
     disclosure: DisclosureEvidence
+    creator_shift: CreatorShiftSummary | None = None
     creator_shift_evidence_ids: list[str] = Field(default_factory=list)
     evidence_ids: list[str] = Field(default_factory=list)
     reasons: list[str] = Field(default_factory=list)

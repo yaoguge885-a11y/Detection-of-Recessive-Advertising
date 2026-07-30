@@ -33,7 +33,7 @@
 - Consumes: `PostRecord`, `compute_keyword_weights(text)`, `CreatorHistoryView`, `pool_history()`, and `calculate_shift()`.
 - Produces: `CreatorShiftSummary`, `assess_post_creator_shift(post, method="ema", minimum_history=3, alpha=0.5) -> CreatorShiftSummary`, and `creator_shift_evidence(summary) -> EvidenceItem | None`.
 
-- [ ] **Step 1: Write failing runtime tests**
+- [x] **Step 1: Write failing runtime tests**
 
 Add tests that construct normalized `PostRecord` objects and assert:
 
@@ -51,7 +51,7 @@ timestamped history posts return `unavailable` or `insufficient` with
 `shift_score is None` and no evidence item. Assert that missing-timestamp
 history is excluded and recorded in `limitations`.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -63,7 +63,7 @@ cd implicit-ad-agent
 Expected: import failure for `CreatorShiftSummary` or
 `assess_post_creator_shift`.
 
-- [ ] **Step 3: Implement the structured summary and adapter**
+- [x] **Step 3: Implement the structured summary and adapter**
 
 Add this strict report-facing contract to `contracts/verdict.py`:
 
@@ -109,7 +109,7 @@ metadata=summary.model_dump(mode="json")
 
 Use a SHA-256 digest of the canonical summary JSON in the evidence ID.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run the runtime test and existing CreatorShift tests:
 
@@ -119,7 +119,7 @@ Run the runtime test and existing CreatorShift tests:
 
 Expected: all CreatorShift tests pass.
 
-- [ ] **Step 5: Commit Task 1**
+- [x] **Step 5: Commit Task 1**
 
 ```powershell
 git add -- implicit-ad-agent/impad/contracts/verdict.py implicit-ad-agent/impad/creator_shift implicit-ad-agent/tests/creator_shift/test_runtime.py
