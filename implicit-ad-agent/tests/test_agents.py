@@ -13,7 +13,7 @@ from impad.tools.contracts import ToolEvidence, ToolResult
 
 def test_supervisor_routes_by_capability_plan():
     text_only = supervisor({"post": {"text": "hi"}})
-    assert text_only["plan"] == ["nlp"]
+    assert text_only["plan"] == ["nlp", "creator_shift"]
 
     with_history_and_comments = supervisor({
         "post": {
@@ -30,7 +30,11 @@ def test_supervisor_routes_by_capability_plan():
             ],
         }
     })
-    assert with_history_and_comments["plan"] == ["nlp", "behavior"]
+    assert with_history_and_comments["plan"] == [
+        "nlp",
+        "behavior",
+        "creator_shift",
+    ]
     assert isinstance(
         with_history_and_comments["post_record"],
         PostRecord,
