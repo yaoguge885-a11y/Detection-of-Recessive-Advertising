@@ -575,7 +575,7 @@ git diff --cached --check
 git commit -m "docs: record P4 engineering admission"
 ```
 
-- [ ] **Step 8: Final repository audit**
+- [x] **Step 8: Final repository audit**
 
 ```powershell
 git status --short --branch
