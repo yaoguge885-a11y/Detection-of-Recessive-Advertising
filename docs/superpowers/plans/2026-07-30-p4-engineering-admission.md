@@ -263,7 +263,7 @@ git commit -m "feat: connect CreatorShift to the evidence graph"
   `CreatorShiftBenchmarkReport`, `run_creator_shift_benchmark(fixture)`, and
   CLI command `evaluate_p4.py creator-shift`.
 
-- [ ] **Step 1: Write failing benchmark tests**
+- [x] **Step 1: Write failing benchmark tests**
 
 The fixture model contains:
 
@@ -278,7 +278,7 @@ Require unique target post IDs. Tests assert canonical SHA-256 fixture hash,
 mean/max/EMA results for each case, explicit unavailable/insufficient cases,
 stable case ordering, and version/config fields.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -288,7 +288,7 @@ Run:
 
 Expected: benchmark imports are missing.
 
-- [ ] **Step 3: Implement the minimal benchmark**
+- [x] **Step 3: Implement the minimal benchmark**
 
 Canonicalize the fixture with sorted-key compact JSON before hashing. Run
 `assess_post_creator_shift()` for `("mean", "max", "ema")`. Report:
@@ -310,7 +310,7 @@ cases
 Each case records case ID, method, status, score, history count, top features,
 and limitations. Do not add labels or accuracy fields.
 
-- [ ] **Step 4: Add the versioned fixture and CLI**
+- [x] **Step 4: Add the versioned fixture and CLI**
 
 Create four synthetic `PostRecord` cases:
 
@@ -323,7 +323,7 @@ Add `creator-shift --fixture --output` to `evaluate_p4.py`. Bootstrap the
 project root into `sys.path` exactly as `evaluate_p3.py` does. Write UTF-8
 indented JSON and create the output parent directory.
 
-- [ ] **Step 5: Verify CLI through a real subprocess**
+- [x] **Step 5: Verify CLI through a real subprocess**
 
 Run:
 
@@ -334,7 +334,7 @@ Run:
 The subprocess test must invoke the direct script path from a temporary
 working directory and validate the produced JSON.
 
-- [ ] **Step 6: Generate the report**
+- [x] **Step 6: Generate the report**
 
 Run from `implicit-ad-agent`:
 
@@ -342,7 +342,7 @@ Run from `implicit-ad-agent`:
 .\.venv\Scripts\python.exe scripts\evaluate_p4.py creator-shift --fixture tests\fixtures\creator_shift_eval_v1.json --output ..\data\reports\p4\creator_shift_fixture.json
 ```
 
-- [ ] **Step 7: Commit Task 3**
+- [x] **Step 7: Commit Task 3**
 
 ```powershell
 git add -- implicit-ad-agent/impad/creator_shift implicit-ad-agent/scripts/evaluate_p4.py implicit-ad-agent/tests/creator_shift/test_benchmark.py implicit-ad-agent/tests/scripts/test_evaluate_p4.py implicit-ad-agent/tests/fixtures/creator_shift_eval_v1.json data/reports/p4/creator_shift_fixture.json

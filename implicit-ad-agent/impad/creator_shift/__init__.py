@@ -13,10 +13,19 @@ from .runtime import (
     assess_post_creator_shift,
     creator_shift_evidence,
 )
+from .benchmark import (
+    CreatorShiftBenchmarkCase,
+    CreatorShiftBenchmarkFixture,
+    CreatorShiftBenchmarkReport,
+    run_creator_shift_benchmark,
+)
 
 __all__ = [
     "CreatorHistoryView",
     "CreatorShiftResult",
+    "CreatorShiftBenchmarkCase",
+    "CreatorShiftBenchmarkFixture",
+    "CreatorShiftBenchmarkReport",
     "FEATURE_VERSION",
     "HistoryFeature",
     "HistoryPoolingError",
@@ -27,4 +36,5 @@ __all__ = [
     "calculate_shift",
     "creator_shift_evidence",
     "pool_history",
+    "run_creator_shift_benchmark",
 ]

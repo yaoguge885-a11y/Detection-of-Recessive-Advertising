@@ -1,0 +1,174 @@
+{
+  "benchmark_version": "synthetic-creator-shift-v1",
+  "feature_version": "keyword_weights_v1",
+  "posts": [
+    {
+      "schema_version": "runtime-1",
+      "post_id": "shift_high",
+      "platform": "synthetic",
+      "source_type": "synthetic",
+      "creator_id": "creator_high",
+      "published_at": "2026-07-30T00:00:00Z",
+      "text": "限时抢购，强烈推荐，优惠折扣，点击链接购买下单",
+      "media": [],
+      "comments": [],
+      "history_refs": [],
+      "history": [
+        {
+          "post_id": "high_history_1",
+          "creator_id": "creator_high",
+          "text": "今天生活记录",
+          "published_at": "2026-07-27T00:00:00Z"
+        },
+        {
+          "post_id": "high_history_2",
+          "creator_id": "creator_high",
+          "text": "昨天学习记录",
+          "published_at": "2026-07-28T00:00:00Z"
+        },
+        {
+          "post_id": "high_history_3",
+          "creator_id": "creator_high",
+          "text": "周末朋友分享",
+          "published_at": "2026-07-29T00:00:00Z"
+        }
+      ],
+      "provenance": {},
+      "privacy": {},
+      "capture_status": {
+        "source": "synthetic_fixture",
+        "can_assess_disclosure": false,
+        "modalities": {
+          "text": {"status": "complete", "captured_fields": ["text"]},
+          "image": {"status": "not_applicable"},
+          "comment": {"status": "not_applicable"},
+          "history": {"status": "complete", "captured_fields": ["history"]},
+          "metadata": {"status": "complete", "captured_fields": ["published_at"]}
+        }
+      }
+    },
+    {
+      "schema_version": "runtime-1",
+      "post_id": "shift_low",
+      "platform": "synthetic",
+      "source_type": "synthetic",
+      "creator_id": "creator_low",
+      "published_at": "2026-07-30T00:00:00Z",
+      "text": "今天生活记录",
+      "media": [],
+      "comments": [],
+      "history_refs": [],
+      "history": [
+        {
+          "post_id": "low_history_1",
+          "creator_id": "creator_low",
+          "text": "今天生活记录",
+          "published_at": "2026-07-27T00:00:00Z"
+        },
+        {
+          "post_id": "low_history_2",
+          "creator_id": "creator_low",
+          "text": "今天生活记录",
+          "published_at": "2026-07-28T00:00:00Z"
+        },
+        {
+          "post_id": "low_history_3",
+          "creator_id": "creator_low",
+          "text": "今天生活记录",
+          "published_at": "2026-07-29T00:00:00Z"
+        }
+      ],
+      "provenance": {},
+      "privacy": {},
+      "capture_status": {
+        "source": "synthetic_fixture",
+        "can_assess_disclosure": false,
+        "modalities": {
+          "text": {"status": "complete", "captured_fields": ["text"]},
+          "image": {"status": "not_applicable"},
+          "comment": {"status": "not_applicable"},
+          "history": {"status": "complete", "captured_fields": ["history"]},
+          "metadata": {"status": "complete", "captured_fields": ["published_at"]}
+        }
+      }
+    },
+    {
+      "schema_version": "runtime-1",
+      "post_id": "shift_insufficient",
+      "platform": "synthetic",
+      "source_type": "synthetic",
+      "creator_id": "creator_short",
+      "published_at": "2026-07-30T00:00:00Z",
+      "text": "推荐购买",
+      "media": [],
+      "comments": [],
+      "history_refs": [],
+      "history": [
+        {
+          "post_id": "short_history_1",
+          "creator_id": "creator_short",
+          "text": "生活记录",
+          "published_at": "2026-07-29T00:00:00Z"
+        }
+      ],
+      "provenance": {},
+      "privacy": {},
+      "capture_status": {
+        "source": "synthetic_fixture",
+        "can_assess_disclosure": false,
+        "modalities": {
+          "text": {"status": "complete", "captured_fields": ["text"]},
+          "image": {"status": "not_applicable"},
+          "comment": {"status": "not_applicable"},
+          "history": {"status": "complete", "captured_fields": ["history"]},
+          "metadata": {"status": "complete", "captured_fields": ["published_at"]}
+        }
+      }
+    },
+    {
+      "schema_version": "runtime-1",
+      "post_id": "shift_unavailable",
+      "platform": "synthetic",
+      "source_type": "synthetic",
+      "creator_id": "creator_unknown_time",
+      "published_at": null,
+      "text": "推荐购买",
+      "media": [],
+      "comments": [],
+      "history_refs": [],
+      "history": [
+        {
+          "post_id": "unknown_history_1",
+          "creator_id": "creator_unknown_time",
+          "text": "生活记录",
+          "published_at": "2026-07-27T00:00:00Z"
+        },
+        {
+          "post_id": "unknown_history_2",
+          "creator_id": "creator_unknown_time",
+          "text": "学习记录",
+          "published_at": "2026-07-28T00:00:00Z"
+        },
+        {
+          "post_id": "unknown_history_3",
+          "creator_id": "creator_unknown_time",
+          "text": "朋友分享",
+          "published_at": "2026-07-29T00:00:00Z"
+        }
+      ],
+      "provenance": {},
+      "privacy": {},
+      "capture_status": {
+        "source": "synthetic_fixture",
+        "can_assess_disclosure": false,
+        "modalities": {
+          "text": {"status": "complete", "captured_fields": ["text"]},
+          "image": {"status": "not_applicable"},
+          "comment": {"status": "not_applicable"},
+          "history": {"status": "complete", "captured_fields": ["history"]},
+          "metadata": {"status": "partial", "missing_fields": ["published_at"]}
+        }
+      }
+    }
+  ]
+}
