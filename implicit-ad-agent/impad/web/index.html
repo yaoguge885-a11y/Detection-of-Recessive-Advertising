@@ -8,8 +8,146 @@
   <script src="/workbench/assets/workbench.js" defer></script>
 </head>
 <body>
-  <main>
-    <h1>开发者研究工作台</h1>
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">P5 · Evidence Workbench</p>
+      <h1>隐性广告识别</h1>
+      <p class="subtitle">开发者研究工作台</p>
+    </div>
+    <div class="capability-strip" aria-live="polite">
+      <span id="health-status" class="status-chip">API 检查中</span>
+      <span id="capability-status" class="status-chip">能力检查中</span>
+      <span id="url-capability" class="status-chip">URL 检查中</span>
+    </div>
+  </header>
+
+  <main class="workbench-layout">
+    <aside class="input-rail" aria-label="分析输入">
+      <div class="runtime-row">
+        <label for="runtime-mode">运行模式</label>
+        <select id="runtime-mode">
+          <option value="local">local</option>
+          <option value="mcp">mcp</option>
+        </select>
+      </div>
+
+      <div class="tab-list" role="tablist" aria-label="输入方式">
+        <button id="single-tab" role="tab" aria-selected="true"
+                aria-controls="single-panel">单条</button>
+        <button id="batch-tab" role="tab" aria-selected="false"
+                aria-controls="batch-panel" tabindex="-1">批量</button>
+        <button id="url-tab" role="tab" aria-selected="false"
+                aria-controls="url-panel" tabindex="-1">URL预览</button>
+      </div>
+
+      <section id="single-panel" role="tabpanel"
+               aria-labelledby="single-tab">
+        <form id="single-form">
+          <label for="single-text">正文</label>
+          <textarea id="single-text" required></textarea>
+          <div class="field-grid">
+            <label>帖子ID<input id="single-post-id"></label>
+            <label>平台<input id="single-platform" value="other"></label>
+            <label>创作者<input id="single-creator"></label>
+            <label>发布时间<input id="single-published-at"
+                                   type="datetime-local"></label>
+          </div>
+          <label for="single-comments">评论 JSON 数组</label>
+          <textarea id="single-comments">[]</textarea>
+          <label for="single-history">历史 JSON 数组</label>
+          <textarea id="single-history">[]</textarea>
+          <label class="check-row">
+            <input id="single-capture-complete" type="checkbox">
+            已完整采集披露面
+          </label>
+          <div class="button-row">
+            <button type="submit">开始分析</button>
+            <button id="single-clear" type="button"
+                    class="secondary">清空</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="batch-panel" role="tabpanel"
+               aria-labelledby="batch-tab" hidden>
+        <form id="batch-form">
+          <label for="batch-json">批量请求 JSON</label>
+          <textarea id="batch-json">{"items":[]}</textarea>
+          <label for="batch-file">读取本地 JSON 文件</label>
+          <input id="batch-file" type="file"
+                 accept="application/json,.json">
+          <p id="batch-count">0 / 50</p>
+          <div class="button-row">
+            <button type="submit">运行批量分析</button>
+            <button id="batch-clear" type="button"
+                    class="secondary">清空</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="url-panel" role="tabpanel"
+               aria-labelledby="url-tab" hidden>
+        <form id="url-preview-form">
+          <label for="url-input">平台URL</label>
+          <input id="url-input" type="url" autocomplete="off">
+          <button id="url-preview-submit" type="submit">生成预览</button>
+        </form>
+        <p id="url-unavailable" class="notice" hidden></p>
+        <section id="url-preview-result" hidden>
+          <dl id="url-preview-meta"></dl>
+          <form id="url-confirm-form">
+            <label for="correction-text">正文</label>
+            <textarea id="correction-text"></textarea>
+            <label for="correction-creator">创作者ID</label>
+            <input id="correction-creator">
+            <label for="correction-published-at">发布时间</label>
+            <input id="correction-published-at">
+            <label for="correction-media">媒体 JSON 数组</label>
+            <textarea id="correction-media">[]</textarea>
+            <label for="correction-comments">评论 JSON 数组</label>
+            <textarea id="correction-comments">[]</textarea>
+            <label for="correction-history">历史 JSON 数组</label>
+            <textarea id="correction-history">[]</textarea>
+            <label for="correction-capture">采集状态 JSON 对象</label>
+            <textarea id="correction-capture">{}</textarea>
+            <div class="button-row">
+              <button type="submit">确认并分析</button>
+              <button id="url-discard" type="button"
+                      class="secondary">丢弃本地预览</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <p id="submission-status" class="submission-status"
+         aria-live="polite">等待输入</p>
+    </aside>
+
+    <section class="result-canvas" aria-label="分析结果">
+      <section id="batch-results" class="panel" hidden>
+        <div class="section-heading">
+          <h2>批量结果</h2>
+          <span id="batch-summary"></span>
+        </div>
+        <div id="batch-items"></div>
+      </section>
+
+      <div id="result-empty" class="empty-state">
+        <p>提交合成或获准数据后，这里将展示完整证据链。</p>
+      </div>
+
+      <div id="result-content" hidden>
+        <section id="verdict-section" class="panel"></section>
+        <section id="coverage-section" class="panel"></section>
+        <section id="evidence-section" class="panel"></section>
+        <section id="creator-shift-section" class="panel"></section>
+        <section id="history-section" class="panel"></section>
+        <section id="law-section" class="panel"></section>
+        <section id="trace-section" class="panel"></section>
+        <section id="report-section" class="panel"></section>
+        <section id="raw-section" class="panel"></section>
+      </div>
+    </section>
   </main>
 </body>
 </html>

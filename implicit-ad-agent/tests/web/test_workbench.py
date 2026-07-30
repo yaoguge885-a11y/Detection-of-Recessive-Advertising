@@ -1,6 +1,7 @@
 from html.parser import HTMLParser
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -174,3 +175,49 @@ def test_built_wheel_contains_workbench_assets(tmp_path):
         "impad/web/workbench.css",
         "impad/web/workbench.js",
     } <= packaged_files
+
+
+def test_workbench_has_all_input_and_result_landmarks(tmp_path):
+    html = _client(tmp_path).get("/workbench").text
+
+    for marker in (
+        'id="capability-status"',
+        'id="runtime-mode"',
+        'id="single-panel"',
+        'id="batch-panel"',
+        'id="url-panel"',
+        'id="submission-status"',
+        'id="batch-results"',
+        'id="verdict-section"',
+        'id="coverage-section"',
+        'id="evidence-section"',
+        'id="creator-shift-section"',
+        'id="history-section"',
+        'id="law-section"',
+        'id="trace-section"',
+        'id="report-section"',
+        'id="raw-section"',
+    ):
+        assert marker in html
+
+
+def test_workbench_markup_has_no_inline_or_remote_execution_path(tmp_path):
+    html = _client(tmp_path).get("/workbench").text
+
+    assert "<style" not in html.lower()
+    assert re.search(r"<script[^>]+src=", html, re.IGNORECASE)
+    assert not re.search(r"<script(?![^>]+src=)", html, re.IGNORECASE)
+    assert not re.search(r"\son[a-z]+\s*=", html, re.IGNORECASE)
+    assert 'style="' not in html.lower()
+    assert "http://" not in html.lower()
+    assert "https://" not in html.lower()
+
+
+def test_workbench_css_has_narrow_layout_and_no_remote_assets(tmp_path):
+    css = _client(tmp_path).get(
+        "/workbench/assets/workbench.css"
+    ).text
+
+    assert "@media (max-width: 860px)" in css
+    assert "overflow-wrap: anywhere" in css
+    assert "url(http" not in css.lower()
