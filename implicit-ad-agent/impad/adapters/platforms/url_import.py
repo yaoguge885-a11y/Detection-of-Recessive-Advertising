@@ -28,13 +28,14 @@ class InMemoryURLPreviewStore:
         self._records: OrderedDict[str, URLImportPreview] = OrderedDict()
 
     def put(self, preview: URLImportPreview) -> None:
-        self._records[preview.preview_id] = preview
+        self._records[preview.preview_id] = preview.model_copy(deep=True)
         self._records.move_to_end(preview.preview_id)
         while len(self._records) > self.max_entries:
             self._records.popitem(last=False)
 
     def get(self, preview_id: str) -> URLImportPreview | None:
-        return self._records.get(preview_id)
+        preview = self._records.get(preview_id)
+        return preview.model_copy(deep=True) if preview is not None else None
 
     def delete(self, preview_id: str) -> None:
         self._records.pop(preview_id, None)
@@ -126,9 +127,16 @@ class URLImportService:
         ).items():
             payload[field] = value
         try:
+            original_capture = (
+                preview.post.capture_status.model_dump(mode="python")
+            )
             capture_status = dict(payload["capture_status"])
+            capture_status["source"] = original_capture["source"]
+            capture_status["adapter_version"] = (
+                original_capture["adapter_version"]
+            )
             capture_status["user_corrections"] = list(dict.fromkeys([
-                *capture_status.get("user_corrections", []),
+                *original_capture.get("user_corrections", []),
                 *changed_fields,
             ]))
             payload["capture_status"] = capture_status

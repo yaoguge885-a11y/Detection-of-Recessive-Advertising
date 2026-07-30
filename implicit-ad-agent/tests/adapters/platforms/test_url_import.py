@@ -147,6 +147,43 @@ def test_confirm_applies_audited_corrections_and_consumes_preview(
     assert exc.value.status_code == 404
 
 
+def test_returned_preview_cannot_mutate_pending_server_snapshot(tmp_path):
+    service, _ = _url_service(tmp_path)
+    preview = service.preview("https://example.test/post/1")
+
+    preview.post.text = "绕过 corrections 的修改"
+    result = service.confirm(
+        preview.preview_id,
+        URLImportCorrections(),
+    )
+
+    assert result.post.text == "适配器提取正文"
+    assert result.post.capture_status.user_corrections == []
+
+
+def test_capture_correction_cannot_forge_adapter_audit_metadata(
+    tmp_path,
+):
+    service, _ = _url_service(tmp_path)
+    preview = service.preview("https://example.test/post/1")
+    forged_capture = preview.post.capture_status.model_copy(update={
+        "source": "forged",
+        "adapter_version": "forged",
+        "user_corrections": ["platform"],
+    })
+
+    result = service.confirm(
+        preview.preview_id,
+        URLImportCorrections(capture_status=forged_capture),
+    )
+
+    assert result.post.capture_status.source == "url:fixture"
+    assert result.post.capture_status.adapter_version == "static-v1"
+    assert result.post.capture_status.user_corrections == [
+        "capture_status"
+    ]
+
+
 def test_invalid_correction_does_not_consume_preview(tmp_path):
     service, _ = _url_service(tmp_path)
     preview = service.preview("https://example.test/post/1")
