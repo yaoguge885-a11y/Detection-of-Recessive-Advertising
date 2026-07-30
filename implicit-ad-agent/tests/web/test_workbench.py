@@ -201,6 +201,16 @@ def test_workbench_has_all_input_and_result_landmarks(tmp_path):
         assert marker in html
 
 
+def test_workbench_has_accessible_status_and_tabs(tmp_path):
+    html = _client(tmp_path).get("/workbench").text
+
+    assert 'role="tablist"' in html
+    assert html.count('role="tab"') == 3
+    assert 'aria-live="polite"' in html
+    assert 'aria-label="分析输入"' in html
+    assert 'aria-label="分析结果"' in html
+
+
 def test_workbench_markup_has_no_inline_or_remote_execution_path(tmp_path):
     html = _client(tmp_path).get("/workbench").text
 

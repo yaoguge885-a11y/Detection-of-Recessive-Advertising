@@ -550,6 +550,31 @@ function actionButton(label, handler) {
   return button;
 }
 
+async function copyText(text, successMessage) {
+  try {
+    await navigator.clipboard.writeText(text);
+    setSubmissionStatus(successMessage, "success");
+  } catch {
+    setSubmissionStatus(
+      "浏览器拒绝复制，请从文本区域手动复制",
+      "error",
+    );
+  }
+}
+
+function downloadText(filename, text, mediaType) {
+  const blob = new Blob([text], {type: mediaType});
+  const href = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(href), 1000);
+  setSubmissionStatus(`${filename}已下载`, "success");
+}
+
 function updateBatchCount() {
   try {
     const parsed = parseJson(byId("batch-json").value, "批量请求");
@@ -884,4 +909,6 @@ function setupUrlForms() {
     setSubmissionStatus("本地预览视图已丢弃");
   });
 }
-function setupExportActions() {}
+function setupExportActions() {
+  // Export buttons are created only by renderReport and renderRaw after a run.
+}
