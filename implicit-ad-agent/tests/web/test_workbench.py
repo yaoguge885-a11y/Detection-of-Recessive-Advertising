@@ -221,3 +221,23 @@ def test_workbench_css_has_narrow_layout_and_no_remote_assets(tmp_path):
     assert "@media (max-width: 860px)" in css
     assert "overflow-wrap: anywhere" in css
     assert "url(http" not in css.lower()
+
+
+def test_workbench_script_avoids_forbidden_browser_capabilities(tmp_path):
+    script = _client(tmp_path).get(
+        "/workbench/assets/workbench.js"
+    ).text
+
+    for forbidden in (
+        "innerHTML",
+        "outerHTML",
+        "insertAdjacentHTML",
+        "localStorage",
+        "sessionStorage",
+        "indexedDB",
+        "document.cookie",
+        "serviceWorker",
+        "http://",
+        "https://",
+    ):
+        assert forbidden not in script
