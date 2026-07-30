@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from threading import Event, Lock, Thread
 
 import pytest
 
@@ -52,6 +53,33 @@ class QueryValueLeakingAdapter(StaticAdapter):
     def preview(self, source):
         post = super().preview(source)
         return post.model_copy(update={"text": "do-not-store"})
+
+
+class TextAdapter(StaticAdapter):
+    def __init__(self, text):
+        super().__init__()
+        self.text = text
+
+    def preview(self, source):
+        post = super().preview(source)
+        return post.model_copy(update={"text": self.text})
+
+
+class BlockingAnalysisService(AnalysisService):
+    def __init__(self, *, started, release, **kwargs):
+        super().__init__(**kwargs)
+        self.started = started
+        self.release = release
+        self.calls = 0
+        self._calls_lock = Lock()
+
+    def analyze(self, post, *, runtime_mode="local"):
+        with self._calls_lock:
+            self.calls += 1
+        self.started.set()
+        if not self.release.wait(timeout=5):
+            raise RuntimeError("test analysis release timed out")
+        return super().analyze(post, runtime_mode=runtime_mode)
 
 
 def _analysis_service(tmp_path: Path) -> AnalysisService:
@@ -121,6 +149,43 @@ def test_preview_rejects_adapter_output_containing_query_value(tmp_path):
     assert not (tmp_path / "runs").exists()
 
 
+def test_preview_allows_short_query_value_that_only_occurs_in_text(
+    tmp_path,
+):
+    analysis = _analysis_service(tmp_path)
+    service = URLImportService(
+        analysis_service=analysis,
+        registry=PlatformAdapterRegistry([
+            TextAdapter("版本 1 的正文"),
+        ]),
+    )
+
+    preview = service.preview(
+        "https://example.test/post/1?page=1#1"
+    )
+
+    assert preview.post.text == "版本 1 的正文"
+
+
+def test_preview_rejects_json_escaped_query_value(tmp_path):
+    analysis = _analysis_service(tmp_path)
+    service = URLImportService(
+        analysis_service=analysis,
+        registry=PlatformAdapterRegistry([
+            TextAdapter('prefix line\n"quoted" suffix'),
+        ]),
+    )
+
+    with pytest.raises(URLImportError) as exc:
+        service.preview(
+            "https://example.test/post/1"
+            "?token=line%0A%22quoted%22"
+        )
+
+    assert exc.value.code == "adapter_failed"
+    assert "quoted" not in exc.value.message
+
+
 def test_confirm_applies_audited_corrections_and_consumes_preview(
     tmp_path,
 ):
@@ -145,6 +210,51 @@ def test_confirm_applies_audited_corrections_and_consumes_preview(
         )
     assert exc.value.code == "preview_not_found"
     assert exc.value.status_code == 404
+
+
+def test_concurrent_confirm_reserves_preview_once(tmp_path):
+    started = Event()
+    release = Event()
+    analysis = BlockingAnalysisService(
+        started=started,
+        release=release,
+        retriever=EmptyRetriever(),
+        run_store=JsonRunStore(tmp_path / "runs"),
+    )
+    service = URLImportService(
+        analysis_service=analysis,
+        registry=PlatformAdapterRegistry([StaticAdapter()]),
+    )
+    preview = service.preview("https://example.test/post/1")
+    results = []
+    errors = []
+
+    def confirm():
+        try:
+            results.append(service.confirm(
+                preview.preview_id,
+                URLImportCorrections(),
+            ))
+        except Exception as exc:
+            errors.append(exc)
+
+    first = Thread(target=confirm)
+    second = Thread(target=confirm)
+    first.start()
+    assert started.wait(timeout=2)
+    second.start()
+    second.join(timeout=1)
+    second_finished_before_release = not second.is_alive()
+    release.set()
+    first.join(timeout=5)
+    second.join(timeout=5)
+
+    assert second_finished_before_release
+    assert analysis.calls == 1
+    assert len(results) == 1
+    assert len(errors) == 1
+    assert isinstance(errors[0], URLImportError)
+    assert errors[0].code == "preview_not_found"
 
 
 def test_returned_preview_cannot_mutate_pending_server_snapshot(tmp_path):
@@ -179,9 +289,7 @@ def test_capture_correction_cannot_forge_adapter_audit_metadata(
 
     assert result.post.capture_status.source == "url:fixture"
     assert result.post.capture_status.adapter_version == "static-v1"
-    assert result.post.capture_status.user_corrections == [
-        "capture_status"
-    ]
+    assert result.post.capture_status.user_corrections == []
 
 
 def test_invalid_correction_does_not_consume_preview(tmp_path):

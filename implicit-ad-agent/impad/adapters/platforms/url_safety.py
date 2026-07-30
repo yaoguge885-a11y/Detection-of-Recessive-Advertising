@@ -109,6 +109,7 @@ def validate_public_https_url(url: str) -> ValidatedSourceURL:
         token
         for token in (
             parsed.query,
+            unquote(parsed.query),
             *(
                 value
                 for _, value in parse_qsl(
