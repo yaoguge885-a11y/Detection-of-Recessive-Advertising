@@ -1,7 +1,7 @@
 # P4 Engineering Admission Design
 
 **Date:** 2026-07-30
-**Status:** Approved by the user's autonomous-execution instruction
+**Status:** Implemented and verified on 2026-07-30
 **Scope:** P1-independent CreatorShift runtime integration and evaluation infrastructure
 
 ## 1. Goal
@@ -33,7 +33,8 @@ M4 has passed.
   deterministic Judge.
 - `VerdictReport.creator_shift_evidence_ids` exists, but no runtime node
   currently creates those evidence items.
-- the full zero-key baseline is `299 passed, 2 skipped, 1 warning`.
+- the pre-P4 zero-key baseline was `299 passed, 2 skipped, 1 warning`;
+  the verified post-P4 baseline is `326 passed, 2 skipped, 1 warning`.
 - formal M1 remains `passed=false`; real Gold, formal blind agreement,
   leakage-safe splits, terms completion, and privacy approval are absent.
 
@@ -186,6 +187,9 @@ real threshold selection requires a leakage-safe validation split.
    regeneration, report safety scan, and `git diff --check` pass.
 8. `HANDOFF.md`, `docs/已有功能测试指令库.md`, and phase/status documentation
    state both the new engineering facts and the formal M1/M4 boundary.
+
+All eight criteria were verified on 2026-07-30. The engineering package does
+not change the formal M1/M4 status.
 
 ## 9. Non-goals
 

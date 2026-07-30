@@ -501,7 +501,7 @@ git commit -m "feat: add P4 selective evaluation reports"
 - Produces: factual handoff, copyable commands, explicit acceptance criteria,
   and unchanged M1/M4 boundaries.
 
-- [ ] **Step 1: Update factual status**
+- [x] **Step 1: Update factual status**
 
 Record:
 
@@ -512,7 +512,7 @@ Record:
 - the fact that learned CreatorShift, real calibration, final thresholds,
   real-data gain, and M4 remain incomplete.
 
-- [ ] **Step 2: Add copyable test commands**
+- [x] **Step 2: Add copyable test commands**
 
 Add commands for:
 
@@ -525,14 +525,14 @@ Add commands for:
 For each command document expected artifacts, pass criteria, optional paths,
 and unfinished research boundaries.
 
-- [ ] **Step 3: Run the focused gate**
+- [x] **Step 3: Run the focused gate**
 
 ```powershell
 cd implicit-ad-agent
 .\.venv\Scripts\python.exe -m pytest tests\creator_shift tests\evaluation tests\scripts\test_evaluate_p4.py tests\test_graph_evidence_flow.py tests\services\test_analysis_service.py -q
 ```
 
-- [ ] **Step 4: Run the full gate as separate commands**
+- [x] **Step 4: Run the full gate as separate commands**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip check
@@ -548,7 +548,7 @@ From the repository root:
 git diff --check
 ```
 
-- [ ] **Step 5: Audit generated reports**
+- [x] **Step 5: Audit generated reports**
 
 Parse both P4 reports and assert:
 
@@ -561,13 +561,13 @@ Parse both P4 reports and assert:
 - no source URL, creator ID, raw post text, annotator ID, secret, or API key
   fields are present.
 
-- [ ] **Step 6: Review the complete diff**
+- [x] **Step 6: Review the complete diff**
 
 Compare the implementation to every acceptance criterion in the design.
 Inspect production code, tests, reports, HANDOFF, test library, and phase/spec
 status. Fix every Critical or Important issue and rerun the affected gate.
 
-- [ ] **Step 7: Commit documentation and final corrections**
+- [x] **Step 7: Commit documentation and final corrections**
 
 ```powershell
 git add -- HANDOFF.md docs/已有功能测试指令库.md docs/隐性广告识别项目_分阶段计划表.md docs/隐性广告识别项目_说明书.md docs/superpowers/specs/2026-07-30-p4-engineering-admission-design.md docs/superpowers/plans/2026-07-30-p4-engineering-admission.md

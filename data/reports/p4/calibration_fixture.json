@@ -1,6 +1,6 @@
 {
   "benchmark_version": "synthetic-calibration-v1",
-  "generated_at": "2026-07-30T09:32:05.849360Z",
+  "generated_at": "2026-07-30T09:41:43.612685Z",
   "sample_count": 6,
   "bootstrap_resamples": 500,
   "bootstrap_seed": 20260730,
