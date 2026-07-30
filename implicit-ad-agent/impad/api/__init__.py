@@ -7,6 +7,9 @@ from .schemas import (
     BatchAnalyzeItemResponse,
     BatchAnalyzeRequest,
     BatchAnalyzeResponse,
+    URLConfirmRequest,
+    URLPreviewRequest,
+    URLPreviewResponse,
 )
 
 __all__ = [
@@ -15,5 +18,8 @@ __all__ = [
     "BatchAnalyzeItemResponse",
     "BatchAnalyzeRequest",
     "BatchAnalyzeResponse",
+    "URLConfirmRequest",
+    "URLPreviewRequest",
+    "URLPreviewResponse",
     "create_api_router",
 ]

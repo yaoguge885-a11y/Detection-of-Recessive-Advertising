@@ -5,6 +5,10 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from ..adapters.platforms import (
+    URLImportCorrections,
+    URLImportPreview,
+)
 from ..contracts import EvidenceBundle, RunMetadata, VerdictReport
 from ..orchestration import RunEvent
 from ..services import BATCH_MAX_ITEMS, BatchAnalysisError
@@ -56,3 +60,19 @@ class BatchAnalyzeResponse(BaseModel):
     succeeded: int
     failed: int
     items: list[BatchAnalyzeItemResponse]
+
+
+class URLPreviewRequest(BaseModel):
+    url: str = Field(min_length=1, max_length=4096)
+
+
+class URLPreviewResponse(URLImportPreview):
+    pass
+
+
+class URLConfirmRequest(BaseModel):
+    preview_id: str = Field(pattern=r"^preview_[0-9a-f]{32}$")
+    corrections: URLImportCorrections = Field(
+        default_factory=URLImportCorrections
+    )
+    runtime_mode: Literal["local", "mcp"] = "local"

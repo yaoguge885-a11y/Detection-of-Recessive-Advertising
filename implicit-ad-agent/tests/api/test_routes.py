@@ -2,6 +2,11 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app import create_app
+from impad.adapters import post_record_from_manual
+from impad.adapters.platforms import (
+    PlatformAdapterRegistry,
+    URLImportService,
+)
 from impad.contracts import LawEvidence
 from impad.services import AnalysisService, JsonRunStore
 
@@ -19,12 +24,50 @@ class StubRetriever:
         )]
 
 
+class StaticURLAdapter:
+    name = "static"
+    version = "static-v1"
+    platform = "fixture"
+    supported_hosts = ("example.test",)
+
+    def preview(self, source):
+        return post_record_from_manual({
+            "post_id": "fixture-post",
+            "platform": self.platform,
+            "source_type": "url_import",
+            "creator_id": "creator-1",
+            "published_at": "2026-07-30T00:00:00Z",
+            "text": "适配器正文",
+            "history": [{
+                "post_id": "history-1",
+                "creator_id": "creator-1",
+                "published_at": "2026-07-29T00:00:00Z",
+                "text": "历史正文",
+            }],
+        })
+
+
 def _client(tmp_path) -> TestClient:
     service = AnalysisService(
         retriever=StubRetriever(),
         run_store=JsonRunStore(tmp_path / "runs"),
     )
     return TestClient(create_app(service))
+
+
+def _url_client(tmp_path) -> TestClient:
+    service = AnalysisService(
+        retriever=StubRetriever(),
+        run_store=JsonRunStore(tmp_path / "runs"),
+    )
+    url_service = URLImportService(
+        analysis_service=service,
+        registry=PlatformAdapterRegistry([StaticURLAdapter()]),
+    )
+    return TestClient(create_app(
+        service,
+        url_import_service=url_service,
+    ))
 
 
 def test_versioned_analyze_and_run_query_share_the_service(tmp_path):
@@ -118,3 +161,96 @@ def test_batch_route_rejects_invalid_size(tmp_path, items):
     )
 
     assert response.status_code == 422
+
+
+def test_url_preview_and_confirm_routes(tmp_path):
+    client = _url_client(tmp_path)
+
+    preview_response = client.post(
+        "/api/v1/import/url/preview",
+        json={
+            "url": (
+                "https://example.test/post/1"
+                "?token=secret#fragment"
+            )
+        },
+    )
+
+    assert preview_response.status_code == 200
+    preview = preview_response.json()
+    assert preview["display_url"] == (
+        "https://example.test/post/1"
+    )
+    assert "token=secret" not in preview_response.text
+    assert "fragment" not in preview_response.text
+
+    confirmed = client.post(
+        "/api/v1/import/url/confirm",
+        json={
+            "preview_id": preview["preview_id"],
+            "corrections": {"text": "人工修正"},
+            "runtime_mode": "local",
+        },
+    )
+
+    assert confirmed.status_code == 200
+    assert confirmed.json()["run_metadata"]["run_id"]
+
+
+def test_default_app_rejects_unsupported_url_before_fetch():
+    response = TestClient(create_app()).post(
+        "/api/v1/import/url/preview",
+        json={"url": "https://example.test/post/1"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == (
+        "unsupported_url_host"
+    )
+
+
+def test_url_confirm_maps_missing_and_invalid_preview_errors(tmp_path):
+    client = _url_client(tmp_path)
+    missing = client.post(
+        "/api/v1/import/url/confirm",
+        json={
+            "preview_id": "preview_" + "0" * 32,
+            "corrections": {},
+        },
+    )
+    assert missing.status_code == 404
+    assert missing.json()["detail"]["code"] == "preview_not_found"
+
+    preview = client.post(
+        "/api/v1/import/url/preview",
+        json={"url": "https://example.test/post/1"},
+    ).json()
+    invalid = client.post(
+        "/api/v1/import/url/confirm",
+        json={
+            "preview_id": preview["preview_id"],
+            "corrections": {"creator_id": "different"},
+        },
+    )
+
+    assert invalid.status_code == 422
+    assert invalid.json()["detail"]["code"] == "invalid_corrections"
+
+
+def test_capabilities_report_batch_and_registered_url_adapters(tmp_path):
+    payload = _url_client(tmp_path).get(
+        "/api/v1/capabilities"
+    ).json()
+
+    assert payload["batch_analysis"] == {
+        "enabled": True,
+        "max_items": 50,
+    }
+    assert payload["url_import"]["enabled"] is True
+    assert payload["url_import"]["workflow"] == ["preview", "confirm"]
+    assert payload["url_import"]["platforms"] == [{
+        "platform": "fixture",
+        "adapter": "static",
+        "version": "static-v1",
+        "hosts": ["example.test"],
+    }]

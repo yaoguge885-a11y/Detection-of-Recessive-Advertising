@@ -4,18 +4,26 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
+from impad.adapters.platforms import URLImportService
 from impad.api import AnalyzeRequest, create_api_router
 from impad.services import AnalysisService, get_default_analysis_service
 
 
-def create_app(service: AnalysisService | None = None) -> FastAPI:
+def create_app(
+    service: AnalysisService | None = None,
+    *,
+    url_import_service: URLImportService | None = None,
+) -> FastAPI:
     application = FastAPI(
         title="隐性广告识别 API",
         version="0.3.0",
         description="证据型三分类、法规引用与可追溯运行记录。",
     )
     application.include_router(
-        create_api_router(service),
+        create_api_router(
+            service,
+            url_import_service=url_import_service,
+        ),
         prefix="/api/v1",
         tags=["analysis"],
     )

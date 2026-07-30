@@ -3,9 +3,15 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
+from ..adapters.platforms import (
+    PlatformAdapterRegistry,
+    URLImportError,
+    URLImportService,
+)
 from ..services import (
     AnalysisResult,
     AnalysisService,
+    BATCH_MAX_ITEMS,
     BatchAnalysisInput,
     get_default_analysis_service,
 )
@@ -15,6 +21,9 @@ from .schemas import (
     BatchAnalyzeItemResponse,
     BatchAnalyzeRequest,
     BatchAnalyzeResponse,
+    URLConfirmRequest,
+    URLPreviewRequest,
+    URLPreviewResponse,
 )
 
 
@@ -28,22 +37,58 @@ def _analyze_response(result: AnalysisResult) -> AnalyzeResponse:
     )
 
 
+def _raise_url_error(exc: URLImportError):
+    raise HTTPException(
+        status_code=exc.status_code,
+        detail={"code": exc.code, "message": exc.message},
+    )
+
+
 def create_api_router(
     service: AnalysisService | None = None,
+    url_import_service: URLImportService | None = None,
 ) -> APIRouter:
     router = APIRouter()
+    resolved_url_service = url_import_service
 
     def active_service() -> AnalysisService:
         return service or get_default_analysis_service()
 
+    def active_url_service() -> URLImportService:
+        nonlocal resolved_url_service
+        if resolved_url_service is None:
+            resolved_url_service = URLImportService(
+                analysis_service=active_service(),
+                registry=PlatformAdapterRegistry(),
+            )
+        return resolved_url_service
+
     @router.get("/capabilities")
     def capabilities():
+        url_service = active_url_service()
         return {
             "runtime_modes": ["local", "mcp"],
             "labels": ["明广", "暗广", "非广", "需复核"],
             "detection_tools": 7,
             "legal_retrieval": "chroma_offline_official_corpus",
             "run_query": True,
+            "batch_analysis": {
+                "enabled": True,
+                "max_items": BATCH_MAX_ITEMS,
+            },
+            "url_import": {
+                "enabled": True,
+                "workflow": ["preview", "confirm"],
+                "platforms": [
+                    {
+                        "platform": adapter.platform,
+                        "adapter": adapter.name,
+                        "version": adapter.version,
+                        "hosts": list(adapter.supported_hosts),
+                    }
+                    for adapter in url_service.registry.adapters
+                ],
+            },
         }
 
     @router.post("/analyze", response_model=AnalyzeResponse)
@@ -84,6 +129,31 @@ def create_api_router(
                 for item in batch.items
             ],
         )
+
+    @router.post(
+        "/import/url/preview",
+        response_model=URLPreviewResponse,
+    )
+    def preview_url(request: URLPreviewRequest):
+        try:
+            return active_url_service().preview(request.url)
+        except URLImportError as exc:
+            _raise_url_error(exc)
+
+    @router.post(
+        "/import/url/confirm",
+        response_model=AnalyzeResponse,
+    )
+    def confirm_url(request: URLConfirmRequest):
+        try:
+            result = active_url_service().confirm(
+                request.preview_id,
+                request.corrections,
+                runtime_mode=request.runtime_mode,
+            )
+        except URLImportError as exc:
+            _raise_url_error(exc)
+        return _analyze_response(result)
 
     @router.get("/runs/{run_id}")
     def get_run(run_id: str):
