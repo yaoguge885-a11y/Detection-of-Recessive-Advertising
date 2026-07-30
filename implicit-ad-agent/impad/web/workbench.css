@@ -405,6 +405,37 @@ blockquote {
   overflow-wrap: anywhere;
 }
 
+#url-preview-meta {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) minmax(0, 1fr);
+  gap: 6px 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #faf8f2;
+}
+
+#url-preview-meta dt {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+#url-preview-meta dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+#url-unavailable {
+  color: var(--warning);
+}
+
+#url-confirm-form textarea {
+  min-height: 120px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.82rem;
+}
+
 @media (max-width: 860px) {
   .masthead {
     align-items: start;
@@ -432,6 +463,10 @@ blockquote {
 
 @media (max-width: 520px) {
   .definition-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #url-preview-meta {
     grid-template-columns: 1fr;
   }
 

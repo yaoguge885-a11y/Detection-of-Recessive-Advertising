@@ -155,6 +155,54 @@ function jsonText(value) {
   return JSON.stringify(value, null, 2);
 }
 
+function metadataPair(term, value) {
+  return [element("dt", term), element("dd", value ?? "未知")];
+}
+
+function renderUrlPreview(preview) {
+  state.activePreview = preview;
+  byId("url-preview-result").hidden = false;
+  const metadata = byId("url-preview-meta");
+  replaceChildren(
+    metadata,
+    ...metadataPair("平台", preview.platform),
+    ...metadataPair("适配器", preview.adapter_name),
+    ...metadataPair("版本", preview.adapter_version),
+    ...metadataPair("展示URL", preview.display_url),
+    ...metadataPair("来源哈希", preview.source_ref_hash),
+  );
+  const post = preview.post;
+  byId("correction-text").value = post.text;
+  byId("correction-creator").value = post.creator_id;
+  byId("correction-published-at").value = post.published_at || "";
+  byId("correction-media").value = jsonText(post.media);
+  byId("correction-comments").value = jsonText(post.comments);
+  byId("correction-history").value = jsonText(post.history);
+  byId("correction-capture").value = jsonText(post.capture_status);
+}
+
+function urlCorrections() {
+  return {
+    text: byId("correction-text").value,
+    creator_id: byId("correction-creator").value,
+    published_at: byId("correction-published-at").value || null,
+    media: parseJsonArray(byId("correction-media").value, "媒体"),
+    comments: parseJsonArray(byId("correction-comments").value, "评论"),
+    history: parseJsonArray(byId("correction-history").value, "历史"),
+    capture_status: parseJsonObject(
+      byId("correction-capture").value,
+      "采集状态",
+    ),
+  };
+}
+
+function clearLocalPreview() {
+  state.activePreview = null;
+  byId("url-preview-result").hidden = true;
+  replaceChildren(byId("url-preview-meta"));
+  byId("url-confirm-form").reset();
+}
+
 function setupTabs() {
   const tabs = [
     ["single-tab", "single-panel"],
@@ -738,5 +786,76 @@ function setupBatchForm() {
   });
   updateBatchCount();
 }
-function setupUrlForms() {}
+function setupUrlForms() {
+  const previewForm = byId("url-preview-form");
+  const confirmForm = byId("url-confirm-form");
+  previewForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      setBusy(previewForm, true);
+      setSubmissionStatus("正在生成URL预览");
+      const preview = await fetchJson("/api/v1/import/url/preview", {
+        method: "POST",
+        body: JSON.stringify({url: byId("url-input").value}),
+      });
+      byId("url-input").value = "";
+      renderUrlPreview(preview);
+      setSubmissionStatus("URL预览已生成，请核对后确认", "success");
+    } catch (error) {
+      setSubmissionStatus(
+        `${error.code || "client_error"}：${error.message}`,
+        "error",
+      );
+    } finally {
+      setBusy(previewForm, false);
+    }
+  });
+  confirmForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const activePreview = state.activePreview;
+    if (!activePreview) {
+      setSubmissionStatus("没有可确认的URL预览", "error");
+      return;
+    }
+    try {
+      setBusy(confirmForm, true);
+      setSubmissionStatus("正在确认并分析URL预览");
+      const response = await fetchJson("/api/v1/import/url/confirm", {
+        method: "POST",
+        body: JSON.stringify({
+          preview_id: activePreview.preview_id,
+          corrections: urlCorrections(),
+          runtime_mode: byId("runtime-mode").value,
+        }),
+      });
+      try {
+        await loadAndRenderRun(response);
+      } catch (error) {
+        if (state.activePreview?.preview_id === activePreview.preview_id) {
+          clearLocalPreview();
+        }
+        setSubmissionStatus(
+          `URL预览已确认，但完整运行加载失败：${error.message}`,
+          "error",
+        );
+        return;
+      }
+      if (state.activePreview?.preview_id === activePreview.preview_id) {
+        clearLocalPreview();
+      }
+      setSubmissionStatus("URL预览确认并分析完成", "success");
+    } catch (error) {
+      setSubmissionStatus(
+        `${error.code || "client_error"}：${error.message}`,
+        "error",
+      );
+    } finally {
+      setBusy(confirmForm, false);
+    }
+  });
+  byId("url-discard").addEventListener("click", () => {
+    clearLocalPreview();
+    setSubmissionStatus("本地预览视图已丢弃");
+  });
+}
 function setupExportActions() {}
