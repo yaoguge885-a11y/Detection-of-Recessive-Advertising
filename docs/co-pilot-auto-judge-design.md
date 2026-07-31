@@ -93,11 +93,18 @@ POST http://localhost:11434/api/chat
   ],
   "format": "json",
   "stream": false,
+  "think": false,
+  "keep_alive": "30m",
   "options": {"temperature": 0.0, "num_predict": 1024}
 }
 ```
 
 Ollama 的 `"format": "json"` 模式强制输出合法 JSON，无需手动正则提取。
+
+**关键参数（实测 v1.1 补充）：**
+- `"think": false`（**顶层**参数）：Qwen3.5 默认开启 thinking 会消耗上千 token、每帖 30-50s；顶层禁用后每帖仅 2-4 秒（放进 `options` 里不生效）
+- `"keep_alive": "30m"`：模型常驻，避免每条帖子冷启动加载 6.6GB（默认 5 分钟会卸载）
+- 服务器管理工具 `data-tooling/annotation/ollama_server.py`：显式启动/状态查询/模型预热（会自动探测桌面应用的 `OLLAMA_MODELS` 目录，本机为 `E:\ollama`）
 
 ### 4.2 System Prompt（证判分离设计）
 

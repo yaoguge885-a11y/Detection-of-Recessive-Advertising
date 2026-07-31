@@ -51,6 +51,14 @@ OLLAMA_DEFAULT_URL = "http://localhost:11434"
 OLLAMA_DEFAULT_MODEL = "qwen3.5:9b"
 OLLAMA_TIMEOUT = 120          # 单条推理超时（秒）
 OLLAMA_HEALTH_TIMEOUT = 5     # 健康检查超时（秒）
+# 模型常驻时间：默认 5 分钟后 Ollama 会卸载模型，冷启动加载 6.6GB 很慢。
+# 设为较长时间（或 -1 永久常驻），避免每条帖子都重新加载模型。
+OLLAMA_KEEP_ALIVE = "30m"
+# 预热模型超时（秒）：首次加载 6.6GB 模型可能需要较长时间，单独放宽
+OLLAMA_WARMUP_TIMEOUT = 300
+# Qwen3.5 默认开启 thinking 会消耗大量 token 并拖慢推理；
+# 自动判断只关心最终 JSON 判定，关闭 thinking 模式可显著加速。
+OLLAMA_DISABLE_THINKING = True
 
 DEFAULT_AUTO_THRESHOLD = 0.85  # 自动保存阈值（默认，可调 0.70–0.95）
 SUGGESTION_LOWER_BOUND = 0.55  # 建议展示下限：低于此值不展示建议（防锚定）
@@ -184,7 +192,12 @@ OLLAMA_SYSTEM_PROMPT = """你是社交媒体内容审核专家，专门识别隐
   "reasoning": "综合推理过程（50-150字）",
   "uncertain_reason": null,
   "information_gaps": ["如果能看到评论区置顶..."]
-}"""
+}
+
+## 输出要求
+- **直接输出最终 JSON 结果**，不要输出思考过程、不要使用 <think> 等推理标签
+- 只输出一个 JSON 对象，不要 markdown 代码块包裹
+- 如果确实需要简短思考，请确保最终以完整 JSON 对象结尾"""
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -294,7 +307,15 @@ def ollama_available(url: str = OLLAMA_DEFAULT_URL,
 
 
 def _extract_json_content(raw: str) -> Optional[Dict[str, Any]]:
-    """从 Ollama 返回的文本中提取并解析 JSON 对象（容忍 markdown 代码块包裹）。"""
+    """从 Ollama 返回的文本中提取并解析 JSON 对象。
+
+    容忍：
+      - markdown 代码块包裹（```json ... ```）
+      - Qwen3.5 的 thinking 前缀（模型可能先输出思考过程再输出 JSON）
+      - JSON 前后混有其他文本
+
+    使用括号配平定位 JSON 对象，避免贪婪正则把 thinking 内容也算进去。
+    """
     if not raw:
         return None
     raw = raw.strip()
@@ -304,17 +325,44 @@ def _extract_json_content(raw: str) -> Optional[Dict[str, Any]]:
             lines = lines[1:]
         if lines and lines[-1].strip().startswith("```"):
             lines = lines[:-1]
-        raw = "\n".join(lines)
+        raw = "\n".join(lines).strip()
+
+    # 直接解析
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group())
-            except json.JSONDecodeError:
-                return None
-        return None
+        pass
+
+    # 括号配平定位最外层 JSON 对象
+    start = raw.find("{")
+    while start != -1:
+        depth = 0
+        in_str = False
+        esc = False
+        for i in range(start, len(raw)):
+            ch = raw[i]
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+            else:
+                if ch == '"':
+                    in_str = True
+                elif ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if depth == 0:
+                        candidate = raw[start:i + 1]
+                        try:
+                            return json.loads(candidate)
+                        except json.JSONDecodeError:
+                            break
+        start = raw.find("{", start + 1)
+    return None
 
 
 def run_ollama_judge(
@@ -324,6 +372,7 @@ def run_ollama_judge(
     model: str = OLLAMA_DEFAULT_MODEL,
     url: str = OLLAMA_DEFAULT_URL,
     timeout: float = OLLAMA_TIMEOUT,
+    keep_alive: Optional[str] = None,
 ) -> Dict[str, Any]:
     """调用 Ollama /api/chat 对单条帖子做综合判定。
 
@@ -334,6 +383,8 @@ def run_ollama_judge(
         model: Ollama 模型名（默认 qwen3.5:9b）
         url: Ollama 服务地址
         timeout: 请求超时（秒）
+        keep_alive: 模型常驻时长（如 "30m"、"-1"）；None 用全局默认。
+                   设长可避免每条帖子重新加载模型（冷启动加载 6.6GB 很慢）。
 
     Returns:
         标准化判定结果：
@@ -355,6 +406,11 @@ def run_ollama_judge(
     weights = keyword_weights or compute_keyword_weights_for_post(text)
     user_prompt = build_user_prompt(post, img_summary, weights)
 
+    # Qwen3.5 默认开启 thinking 会消耗上千 token、每帖 30-50s。
+    # 顶层 "think": false 是 Qwen3 在 Ollama 0.32.5 下验证有效的禁用方式
+    # （放进 options 里不生效）。禁用后每帖约 2-5 秒。
+    options: Dict[str, Any] = {"temperature": 0.0, "num_predict": 1024}
+
     payload = {
         "model": model,
         "messages": [
@@ -363,8 +419,13 @@ def run_ollama_judge(
         ],
         "format": "json",
         "stream": False,
-        "options": {"temperature": 0.0, "num_predict": 1024},
+        "keep_alive": keep_alive or OLLAMA_KEEP_ALIVE,
+        "options": options,
     }
+    if OLLAMA_DISABLE_THINKING:
+        # 顶层参数：禁用思考（Qwen3 在 Ollama 0.32.5 下验证有效，
+        # 每帖从 ~30-50s 降到 ~2-5s；放进 options 里不生效）
+        payload["think"] = False
 
     resp = requests.post(
         f"{url.rstrip('/')}/api/chat",
@@ -381,6 +442,34 @@ def run_ollama_judge(
     parsed["_model"] = model
     parsed["_backend"] = "ollama"
     return normalize_suggestion(parsed)
+
+
+def warm_up_model(model: str = OLLAMA_DEFAULT_MODEL,
+                  url: str = OLLAMA_DEFAULT_URL,
+                  timeout: float = OLLAMA_WARMUP_TIMEOUT,
+                  keep_alive: Optional[str] = None) -> bool:
+    """预加载模型：批处理前用最小请求把模型加载进内存并驻留。
+
+    6.6GB 模型首次冷启动加载需要 60~120s+，容易超过单条推理超时。
+    先预热一次，后续每条帖子的推理即可命中已加载模型，显著提速。
+
+    Returns:
+        True=模型已就绪（加载成功或已加载）；False=预热失败（继续走回退）。
+    """
+    try:
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": "hi"}],
+            "stream": False,
+            "keep_alive": keep_alive or OLLAMA_KEEP_ALIVE,
+            "options": {"num_predict": 1, "temperature": 0.0},
+        }
+        if OLLAMA_DISABLE_THINKING:
+            payload["think"] = False
+        resp = requests.post(f"{url.rstrip('/')}/api/chat", json=payload, timeout=timeout)
+        return resp.status_code == 200
+    except Exception:
+        return False
 
 
 def normalize_suggestion(suggestion: Dict[str, Any]) -> Dict[str, Any]:
@@ -550,6 +639,7 @@ def run_auto_judge(
     url: str = OLLAMA_DEFAULT_URL,
     timeout: float = OLLAMA_TIMEOUT,
     auto_threshold: float = DEFAULT_AUTO_THRESHOLD,
+    keep_alive: Optional[str] = None,
 ) -> Dict[str, Any]:
     """完整自动判断管线：Ollama 判定 → 失败回退 → 三级分类。
 
@@ -570,7 +660,7 @@ def run_auto_judge(
     try:
         suggestion = run_ollama_judge(
             post, image_analyses, keyword_weights,
-            model=model, url=url, timeout=timeout,
+            model=model, url=url, timeout=timeout, keep_alive=keep_alive,
         )
     except Exception as exc:  # noqa: BLE001 - Ollama 不可用/超时/非 JSON 一律回退
         error = str(exc)[:300]

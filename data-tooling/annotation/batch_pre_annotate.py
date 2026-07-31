@@ -52,11 +52,14 @@ from auto_judge import (  # type: ignore # noqa: E402
     OLLAMA_DEFAULT_MODEL,
     OLLAMA_DEFAULT_URL,
     OLLAMA_TIMEOUT,
+    OLLAMA_KEEP_ALIVE,
+    OLLAMA_WARMUP_TIMEOUT,
     DEFAULT_AUTO_THRESHOLD,
     SUGGESTION_LOWER_BOUND,
     classify_confidence,
     compute_keyword_weights_for_post,
     run_auto_judge,
+    warm_up_model,
 )
 
 CST = timezone(timedelta(hours=8))
@@ -157,6 +160,10 @@ def main() -> None:
                         help=f"Ollama 服务地址（默认 {OLLAMA_DEFAULT_URL}）")
     parser.add_argument("--timeout", type=float, default=OLLAMA_TIMEOUT,
                         help=f"单条推理超时秒数（默认 {OLLAMA_TIMEOUT}）")
+    parser.add_argument("--keep-alive", default=None,
+                        help=f"模型常驻时长（默认 {OLLAMA_KEEP_ALIVE}；-1=永久常驻）")
+    parser.add_argument("--no-warmup", action="store_true",
+                        help="跳过模型预热（默认先预热再批量，避免每条都冷启动加载模型）")
     parser.add_argument("--no-images", action="store_true",
                         help="跳过图片分析（无 vision 依赖或追求速度时使用）")
     parser.add_argument("--media-base", default="data",
@@ -192,6 +199,8 @@ def main() -> None:
     print(f"  🟡 建议输出:     {suggest_path}")
     print(f"  📊 统计输出:     {stats_path}")
 
+    keep_alive = args.keep_alive or OLLAMA_KEEP_ALIVE
+
     # ── 统计 ──
     stats = {
         "started_at": datetime.now(CST).isoformat(),
@@ -206,6 +215,25 @@ def main() -> None:
         "error_count": 0,
         "duration_sec": 0.0,
     }
+
+    # ── 模型预热：先加载并驻留模型，避免每条帖子冷启动加载 6.6GB ──
+    if not args.no_warmup:
+        print(f"\n⏳ 预热模型 {args.ollama_model}（首次加载可能需要 1~2 分钟）...")
+        ok = warm_up_model(
+            model=args.ollama_model,
+            url=args.ollama_url,
+            timeout=OLLAMA_WARMUP_TIMEOUT,
+            keep_alive=keep_alive,
+        )
+        if ok:
+            print(f"  ✅ 模型已就绪（常驻 {keep_alive}，后续推理直接命中已加载模型）")
+        else:
+            print(f"  ⚠️ 预热失败，将降级为关键词回退")
+        stats["warmup_ok"] = ok
+        stats["keep_alive"] = keep_alive
+    else:
+        stats["warmup_ok"] = None
+        stats["keep_alive"] = keep_alive
 
     auto_records: List[Dict[str, Any]] = []
     suggest_records: List[Dict[str, Any]] = []
@@ -238,6 +266,7 @@ def main() -> None:
                 url=args.ollama_url,
                 timeout=args.timeout,
                 auto_threshold=args.auto_threshold,
+                keep_alive=keep_alive,
             )
 
             tier = result["tier"]

@@ -53,6 +53,7 @@ try:
         OLLAMA_DEFAULT_MODEL,
         OLLAMA_DEFAULT_URL,
         OLLAMA_TIMEOUT,
+        OLLAMA_KEEP_ALIVE,
         DEFAULT_AUTO_THRESHOLD,
         classify_confidence,
         keyword_fallback,
@@ -64,6 +65,7 @@ except Exception:  # pragma: no cover - auto_judge 不可用时降级为纯人�
     OLLAMA_DEFAULT_MODEL = "qwen3.5:9b"
     OLLAMA_DEFAULT_URL = "http://localhost:11434"
     OLLAMA_TIMEOUT = 120
+    OLLAMA_KEEP_ALIVE = "30m"
     DEFAULT_AUTO_THRESHOLD = 0.85
 
     def classify_confidence(confidence, auto_threshold=DEFAULT_AUTO_THRESHOLD):  # type: ignore
@@ -340,6 +342,7 @@ def call_ollama_pre_analysis(
     model: str = OLLAMA_DEFAULT_MODEL,
     url: str = OLLAMA_DEFAULT_URL,
     timeout: float = OLLAMA_TIMEOUT,
+    keep_alive: Optional[str] = None,
     image_analyses: Optional[Dict[int, Dict]] = None,
 ) -> Dict[str, Any]:
     """调用本地 Ollama 模型做预分析（分置信度自动判断系统）。
@@ -355,6 +358,7 @@ def call_ollama_pre_analysis(
             model=model,
             url=url,
             timeout=timeout,
+            keep_alive=keep_alive or OLLAMA_KEEP_ALIVE,
         )
     except Exception as exc:
         # ── 失败回退（设计文档 §4.4）：先尝试关键词规则，再无建议则低置信度强制人工 ──
