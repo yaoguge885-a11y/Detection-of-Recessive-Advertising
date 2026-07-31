@@ -1,0 +1,11 @@
+{
+  "original_count": 90,
+  "deduped_count": 90,
+  "exact_duplicates_removed": 0,
+  "near_duplicate_pairs": 0,
+  "content_groups_assigned": 7,
+  "platform_distribution": {
+    "wechat_official_account": 90
+  },
+  "content_group_threshold": 0.85
+}

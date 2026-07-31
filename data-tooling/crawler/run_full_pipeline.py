@@ -327,6 +327,8 @@ def main():
     parser.add_argument("--retry-rounds", type=int, default=3, help="单篇文章抓取失败重试轮数 (默认3轮)")
     parser.add_argument("--delay-min", type=float, default=2.0, help="文章间抓取间隔最小秒数 (默认2.0)")
     parser.add_argument("--delay-max", type=float, default=5.0, help="文章间抓取间隔最大秒数 (默认5.0)")
+    parser.add_argument("--greedy", action="store_true",
+                        help="贪婪模式：最大化抓取，上限提至 10000 篇/号、遍历 100 页、早停阈值放宽")
     args = parser.parse_args()
 
     # 校验参数
@@ -456,6 +458,8 @@ def main():
                 "--max-articles", str(args.max_articles),
                 "--output", str(account_url_file),
             ]
+            if args.greedy:
+                cmd.append("--greedy")
             try:
                 run(cmd)
                 per_account_url_files.append(account_url_file)
@@ -520,6 +524,8 @@ def main():
             "--max-articles", str(args.max_articles),
             "--output", str(urls_file),
         ]
+        if args.greedy:
+            cmd.append("--greedy")
         run(cmd)
 
     # ── Step 2: 抓取内容 + 匿名化（传入全部 URL 列表作为博主历史）──
