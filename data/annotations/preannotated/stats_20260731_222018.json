@@ -1,0 +1,22 @@
+{
+  "started_at": "2026-07-31T22:20:18.202871+08:00",
+  "total": 3,
+  "auto_threshold": 0.85,
+  "suggestion_lower_bound": 0.55,
+  "ollama_model": "qwen3:8b",
+  "ollama_url": "http://localhost:11434",
+  "tiers": {
+    "auto": 1,
+    "suggest": 0,
+    "manual": 2
+  },
+  "labels": {
+    "明广": 1
+  },
+  "fallback_count": 3,
+  "error_count": 3,
+  "duration_sec": 63.46,
+  "finished_at": "2026-07-31T22:21:21.667350+08:00",
+  "auto_saved": 1,
+  "suggested": 0
+}

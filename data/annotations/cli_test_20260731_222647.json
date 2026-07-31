@@ -1,0 +1,39 @@
+{
+  "post": {
+    "post_id": "post_test_ad",
+    "platform": "wechat_official_account",
+    "source_type": "synthetic",
+    "blogger_id": "blogger_test",
+    "title": "#广告 感谢品牌方赞助",
+    "text": "#广告 感谢品牌方赞助。这款精华真的太好用了，限时优惠价只要99元，点击下方链接立即下单，无限回购！",
+    "media": [],
+    "provenance": {},
+    "privacy": {}
+  },
+  "post_id": "post_test_ad",
+  "annotator_id": "cli_test",
+  "guide_version": "1.0",
+  "label": "明广",
+  "confidence": 0.9,
+  "evidence_codes": [
+    "D"
+  ],
+  "evidence": [
+    "正文含明广标识（如广告/赞助/推广/合作等）"
+  ],
+  "uncertain_reason": null,
+  "annotation_method": "auto_accepted",
+  "image_analyses": [],
+  "markdown_notes": "",
+  "edge_case_discussion": null,
+  "annotated_at": "2026-07-31T22:26:57.622571+08:00",
+  "_llm_suggestion": {
+    "label": "明广",
+    "confidence": 0.9,
+    "evidence_codes": [
+      "D"
+    ],
+    "reasoning": "正文出现明确广告/赞助/合作标识（D 类证据），且无相反证据，判定为明广。"
+  }
+}
+

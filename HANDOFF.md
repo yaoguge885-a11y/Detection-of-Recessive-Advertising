@@ -135,6 +135,19 @@
 - M1门禁退出码为2且`passed=false`：指南通过；候选规模、Gold和Dataset Card失败；正式一致性与合规需复核；切分证据缺失。
 - 当前验收：数据测试`62 passed`；默认全量`260 passed, 2 skipped`；`pip check`、`compileall`、两套P1资产校验和6组镜像文件字节一致性均通过。
 
+### 4.7 2026-07-31 分置信度自动判断标注系统（co-pilot-auto-judge）
+
+- 设计文档：`docs/co-pilot-auto-judge-design.md`（v1.1，本地推理 Ollama + `qwen3.5:9b`）。
+- 核心模块：`data-tooling/annotation/auto_judge.py` —— 三级自动判断（≥0.85 自动保存 / 0.55–0.84 建议 / <0.55 纯人工）、Ollama `/api/chat` JSON 推理、关键词失败回退、自动保存记录构建。
+- 配套工具：`batch_pre_annotate.py`（批量预标注，输出 auto/suggest/stats 三文件）、`manual_review_annotate.py`（新增 `--auto-threshold`/`--ollama-backend`/`--ollama-model` 等）、`flet_annotator.py`（新增自动模式开关、阈值滑块、Toast、底部状态栏）。
+- `impad/llm.py` 新增 `get_ollama_llm()` 工厂（OpenAI 兼容端点指向本地 Ollama）。
+- 自动保存审计约定：`annotator_id="system"`、`annotation_method="auto_accepted"`、`_llm_suggestion` 记录模型与是否自动采纳；**自动标注记录不参与双人 κ 计算**。
+- 关键环境事实：Ollama 服务在本机运行（`http://localhost:11434`），需 `ollama pull qwen3.5:9b`（约 6.6GB）后方可走 LLM 判定路径；模型未就绪时自动降级为关键词规则（明广 0.90 自动保存 / 暗广 0.45 强制人工 / 无信号纯人工）。
+- 单元测试：`data-tooling/annotation/tests/test_auto_judge.py`（21 passed，mock 掉 Ollama，不依赖模型）。
+- 已实测：批量预标注端到端跑通（含 Ollama 失败回退自动保存明广记录）；CLI 自动保存流程验证通过；GUI 模块导入与集成正常。
+- Windows GBK 控制台兼容：三个 CLI 脚本均强制 `sys.stdout.reconfigure(encoding="utf-8")`。
+- 修复 `flet_annotator.py` 原有 4 处无法解析的延迟导入（`scripts.data.annotation.*`/`data_tooling.annotation.*` → 同目录直接导入）。
+
 ## 5. P1数据资产事实
 
 远端最新P1成果已经合并到本地P2，但“资产合并”不等于M1验收完成。

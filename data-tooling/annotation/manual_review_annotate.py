@@ -37,7 +37,43 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# ── Windows GBK 控制台兼容：强制 UTF-8 输出（emoji/中文不乱码）──
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 CST = timezone(timedelta(hours=8))  # 中国标准时间 +08:00
+
+# ── 分置信度自动判断（co-pilot-auto-judge-design）──
+try:
+    from auto_judge import (  # type: ignore
+        OLLAMA_DEFAULT_MODEL,
+        OLLAMA_DEFAULT_URL,
+        OLLAMA_TIMEOUT,
+        DEFAULT_AUTO_THRESHOLD,
+        classify_confidence,
+        keyword_fallback,
+        run_ollama_judge,
+    )
+    _HAS_AUTO_JUDGE = True
+except Exception:  # pragma: no cover - auto_judge 不可用时降级为纯人工
+    _HAS_AUTO_JUDGE = False
+    OLLAMA_DEFAULT_MODEL = "qwen3.5:9b"
+    OLLAMA_DEFAULT_URL = "http://localhost:11434"
+    OLLAMA_TIMEOUT = 120
+    DEFAULT_AUTO_THRESHOLD = 0.85
+
+    def classify_confidence(confidence, auto_threshold=DEFAULT_AUTO_THRESHOLD):  # type: ignore
+        return "manual"
+
+    def keyword_fallback(post, keyword_weights=None):  # type: ignore
+        return None
+
+    def run_ollama_judge(*args, **kwargs):  # type: ignore
+        raise RuntimeError("auto_judge 模块不可用")
 
 # ── 标签与证据代码 ──
 VALID_LABELS = {"明广", "暗广", "非广", "out_of_scope"}
@@ -298,6 +334,65 @@ def call_llm_pre_analysis(
     return result
 
 
+def call_ollama_pre_analysis(
+    post: Dict[str, Any],
+    guide_text: Optional[str] = None,
+    model: str = OLLAMA_DEFAULT_MODEL,
+    url: str = OLLAMA_DEFAULT_URL,
+    timeout: float = OLLAMA_TIMEOUT,
+    image_analyses: Optional[Dict[int, Dict]] = None,
+) -> Dict[str, Any]:
+    """调用本地 Ollama 模型做预分析（分置信度自动判断系统）。
+
+    与 call_llm_pre_analysis 返回结构一致（中文标签），失败时返回低置信度
+    结果并说明原因（confidence=0.3 < 0.55，强制人工判断）。
+    """
+    try:
+        result = run_ollama_judge(
+            post,
+            image_analyses=image_analyses,
+            keyword_weights=None,
+            model=model,
+            url=url,
+            timeout=timeout,
+        )
+    except Exception as exc:
+        # ── 失败回退（设计文档 §4.4）：先尝试关键词规则，再无建议则低置信度强制人工 ──
+        fb = keyword_fallback(post)
+        if fb is not None:
+            return fb
+        result = {
+            "label": "非广",
+            "confidence": 0.3,
+            "evidence_codes": [],
+            "evidence": [],
+            "reasoning": f"Ollama 调用失败: {exc}",
+            "uncertain_reason": "Ollama 不可用/超时，需人工独立判断",
+            "_model": model,
+            "_backend": "ollama-error",
+        }
+
+    # 标准化字段（与 call_llm_pre_analysis 对齐）
+    result.setdefault("label", "非广")
+    result.setdefault("confidence", 0.5)
+    result.setdefault("evidence_codes", [])
+    result.setdefault("evidence", [])
+    result.setdefault("reasoning", "")
+    result.setdefault("uncertain_reason", None)
+
+    if isinstance(result.get("evidence"), str):
+        raw = result["evidence"].strip()
+        result["evidence"] = [raw] if raw else []
+
+    if result["label"] not in VALID_LABELS:
+        result["label"] = "非广"
+
+    result["evidence_codes"] = [
+        c for c in result["evidence_codes"] if c in EVIDENCE_CODES
+    ]
+    return result
+
+
 def format_post_display(post: Dict[str, Any], index: int, total: int) -> str:
     """格式化帖子展示文本。"""
     title = post.get("title") or "(无标题)"
@@ -537,6 +632,8 @@ def make_annotation_record(
         "evidence_codes": evidence_codes,
         "evidence": evidence,
         "uncertain_reason": uncertain_reason,
+        # ── 标注方式标记（"human"=人工，"auto_accepted"=自动保存，自动不参与 κ）──
+        "annotation_method": "human",
         # ── 补充 Schema 字段 (05-标注补充-图像与备注结构.md) ──
         "image_analyses": image_analyses or [],
         "markdown_notes": markdown_notes,
@@ -748,6 +845,36 @@ def main() -> None:
         default="",
         help="直接指定标注人 ID（跳过交互式询问）",
     )
+    parser.add_argument(
+        "--auto-threshold",
+        type=float,
+        default=0.0,
+        help=(
+            "分置信度自动判断：置信度 ≥ 此阈值时自动保存标注并跳过人工确认"
+            f"（默认 0=关闭；建议 0.85，范围 0.70–0.95）"
+        ),
+    )
+    parser.add_argument(
+        "--ollama-backend",
+        action="store_true",
+        help="使用本地 Ollama 做预分析（代替 OpenAI 云端 LLM）",
+    )
+    parser.add_argument(
+        "--ollama-model",
+        default=OLLAMA_DEFAULT_MODEL,
+        help=f"Ollama 模型名（默认 {OLLAMA_DEFAULT_MODEL}）",
+    )
+    parser.add_argument(
+        "--ollama-url",
+        default=OLLAMA_DEFAULT_URL,
+        help=f"Ollama 服务地址（默认 {OLLAMA_DEFAULT_URL}）",
+    )
+    parser.add_argument(
+        "--ollama-timeout",
+        type=float,
+        default=OLLAMA_TIMEOUT,
+        help=f"Ollama 单条推理超时秒数（默认 {OLLAMA_TIMEOUT}）",
+    )
     args = parser.parse_args()
 
     # ── 1. 加载帖子数据 ──
@@ -828,9 +955,42 @@ def main() -> None:
 
             llm_result = None
             if not args.no_llm:
-                print("⏳ 正在调用 LLM 预分析...")
-                llm_result = call_llm_pre_analysis(post, guide_text)
+                if args.ollama_backend:
+                    print("⏳ 正在调用 Ollama 预分析...")
+                    llm_result = call_ollama_pre_analysis(
+                        post, guide_text,
+                        model=args.ollama_model,
+                        url=args.ollama_url,
+                        timeout=args.ollama_timeout,
+                    )
+                else:
+                    print("⏳ 正在调用 LLM 预分析...")
+                    llm_result = call_llm_pre_analysis(post, guide_text)
                 print(format_llm_suggestion(llm_result))
+
+            # ── 自动保存：高置信度直接记录，跳过人工确认 ──
+            if (args.auto_threshold > 0 and llm_result
+                    and llm_result.get("confidence", 0) >= args.auto_threshold):
+                record = make_annotation_record(
+                    post_id=post["post_id"],
+                    annotator_id=annotator_id,
+                    label=llm_result["label"],
+                    confidence=llm_result["confidence"],
+                    evidence_codes=llm_result["evidence_codes"],
+                    evidence=llm_result["evidence"],
+                    uncertain_reason=llm_result.get("uncertain_reason"),
+                    llm_suggestion=llm_result,
+                    post=post,
+                )
+                record["annotation_method"] = "auto_accepted"  # 自动保存标记（不参与 κ）
+                append_annotation(output_file, record)
+                annotated_this_session.append(record)
+                print(
+                    f"  🟢 自动保存 [置信度 {llm_result['confidence']:.0%} ≥ "
+                    f"{args.auto_threshold:.0%}]: {llm_result['label']}"
+                )
+                print(f"  ⏭️  已自动保存 {post.get('post_id')}，跳至下一条\n")
+                continue
 
             # 交互式确认
             default_label = llm_result.get("label", "非广") if llm_result else "非广"

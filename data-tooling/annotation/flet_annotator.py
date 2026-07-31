@@ -43,6 +43,43 @@ _LLM_CONFIG = {
     "text_api_key": os.getenv("OPENAI_API_KEY", None),
 }
 
+# ── 分置信度自动判断（co-pilot-auto-judge-design v1.0）──
+try:
+    from auto_judge import (  # type: ignore
+        run_ollama_judge as _aj_run_ollama_judge,
+        compute_keyword_weights_for_post,
+        classify_confidence,
+        build_auto_record,
+        DEFAULT_AUTO_THRESHOLD,
+        SUGGESTION_LOWER_BOUND,
+        OLLAMA_DEFAULT_MODEL,
+        OLLAMA_DEFAULT_URL,
+        OLLAMA_TIMEOUT,
+        LABEL_TO_CODE,
+    )
+    _HAS_AUTO_JUDGE = True
+except Exception:  # pragma: no cover - auto_judge 不可用时降级为旧行为
+    _HAS_AUTO_JUDGE = False
+    DEFAULT_AUTO_THRESHOLD = 0.85
+    SUGGESTION_LOWER_BOUND = 0.55
+    OLLAMA_DEFAULT_MODEL = "qwen3.5:9b"
+    OLLAMA_DEFAULT_URL = "http://localhost:11434"
+    OLLAMA_TIMEOUT = 120
+    LABEL_TO_CODE = {"明广": "mingguang", "暗广": "anguang",
+                     "非广": "feiguang", "out_of_scope": "out_of_scope"}
+
+    def _aj_run_ollama_judge(*a, **k):  # type: ignore
+        raise RuntimeError("auto_judge 模块不可用")
+
+    def compute_keyword_weights_for_post(text):  # type: ignore
+        return {}
+
+    def classify_confidence(conf, auto_threshold=DEFAULT_AUTO_THRESHOLD):  # type: ignore
+        return "manual"
+
+    def build_auto_record(*a, **k):  # type: ignore
+        return {}
+
 def _border_all(width=1, color=None):
     """Flet 0.86.x compatible border helper (ft.border.all removed)."""
     if color is None: color = ft.Colors.GREY_300
@@ -167,7 +204,7 @@ def save_annotation(output_dir: Path, aid: str, record: Dict) -> Path:
 
 def run_image_analysis_bg(post: Dict, media_base: Path, callback):
     try:
-        from scripts.data.annotation.image_prefilter import extract_content_image_indices
+        from image_prefilter import extract_content_image_indices
         text = post.get("text", "")
         indices = extract_content_image_indices(text)
         media = post.get("media", [])
@@ -180,7 +217,7 @@ def run_image_analysis_bg(post: Dict, media_base: Path, callback):
                 results[i] = {"error": "file missing"}
                 continue
             try:
-                from scripts.data.annotation.auto_image_annotate import load_yolo, load_ocr, analyze_image
+                from auto_image_annotate import load_yolo, load_ocr, analyze_image
                 yolo = load_yolo()
                 ocr = load_ocr()
                 analysis = analyze_image(yolo, ocr, img_path, i + 1, ref, "")
@@ -204,8 +241,8 @@ def run_llm_image_analysis_bg(post: Dict, media_base: Path, callback, model=None
     与 run_image_analysis_bg 接口一致，输出兼容的 results dict。
     """
     try:
-        from data_tooling.annotation.image_prefilter import extract_content_image_indices
-        from data_tooling.annotation.multimodal_image_analyzer import analyze_images_multimodal
+        from image_prefilter import extract_content_image_indices
+        from multimodal_image_analyzer import analyze_images_multimodal
 
         text = post.get("text", "")
         indices = extract_content_image_indices(text)
@@ -257,8 +294,12 @@ def run_llm_image_analysis_bg(post: Dict, media_base: Path, callback, model=None
         if callback: callback({"__error__": str(e)[:200]})
 
 
-def run_llm_copilot_suggestion_bg(post: Dict, image_analyses: Dict, callback, model=None, base_url=None, api_key=None):
+def run_llm_copilot_suggestion_bg(post: Dict, image_analyses: Dict, callback, model=None, base_url=None, api_key=None, backend="openai", ollama_url=None, ollama_timeout=120):
     """LLM ：根据帖子文本 + 图片分析结果，生成标注建议。
+
+    backend 支持：
+      - "openai"（默认）：OpenAI 兼容云端 LLM
+      - "ollama"：本地 Ollama（Qwen3.5 9B，分置信度自动判断系统）
 
     输出格式（通过 callback 传递）:
     {
@@ -270,6 +311,21 @@ def run_llm_copilot_suggestion_bg(post: Dict, image_analyses: Dict, callback, mo
     }
     """
     try:
+        # ── 本地 Ollama 后端：走分置信度自动判断系统 ──
+        if backend == "ollama":
+            suggestion = _aj_run_ollama_judge(
+                post,
+                image_analyses=image_analyses,
+                keyword_weights=None,
+                model=model or OLLAMA_DEFAULT_MODEL,
+                url=ollama_url or OLLAMA_DEFAULT_URL,
+                timeout=ollama_timeout,
+            )
+            # auto_judge 已归一化出 suggested_* 字段，直接回调
+            if callback:
+                callback(suggestion)
+            return
+
         from openai import OpenAI
 
         client = OpenAI(
@@ -391,7 +447,12 @@ def run_llm_copilot_suggestion_bg(post: Dict, image_analyses: Dict, callback, mo
 class AnnotatorApp:
     def __init__(self, posts, output_dir, media_base, aid="D", completed=None,
                  llm_image_model=None, llm_image_backend=None, llm_text_model=None,
-                 api_base_url=None, api_key=None):
+                 api_base_url=None, api_key=None,
+                 auto_threshold=DEFAULT_AUTO_THRESHOLD,
+                 ollama_model=OLLAMA_DEFAULT_MODEL,
+                 ollama_url=OLLAMA_DEFAULT_URL,
+                 ollama_backend=False,
+                 ollama_timeout=OLLAMA_TIMEOUT):
         self.posts = posts
         self.output_dir = output_dir
         self.media_base = media_base
@@ -402,6 +463,17 @@ class AnnotatorApp:
         self.analyzing = False
         self.suggesting = False  # LLM 协驾建议进行中
         self.page = None
+
+        # ── 分置信度自动判断状态（co-pilot-auto-judge-design）──
+        # 模式: "auto"=自动保存 | "suggest"=仅建议 | "manual"=纯人工
+        self.auto_mode = "auto"
+        self.auto_threshold = float(auto_threshold or DEFAULT_AUTO_THRESHOLD)
+        self.ollama_model = ollama_model
+        self.ollama_url = ollama_url
+        self.ollama_backend = bool(ollama_backend)
+        self.ollama_timeout = ollama_timeout
+        self.auto_count = 0      # 自动保存计数
+        self.manual_count = 0    # 人工标注计数（本次会话）
 
         # ── LLM 配置 ──
         if llm_image_model: _LLM_CONFIG["image_model"] = llm_image_model
@@ -449,11 +521,33 @@ class AnnotatorApp:
         self.analyze_btn = ft.Button("分析图片", icon=ft.Icons.IMAGE_SEARCH, on_click=self.run_analysis)
         self.copilot_btn = ft.Button("AI 建议标注", icon=ft.Icons.AUTO_AWESOME, on_click=self.run_copilot_suggestion)
         self.save_btn = ft.Button("保存标注", icon=ft.Icons.SAVE, on_click=self.save_current)
+
+        # ── 分置信度自动判断 UI（设计文档 §3/§6.1）──
+        self.auto_mode_dd = ft.Dropdown(
+            value=self.auto_mode,
+            options=[
+                ft.dropdown.Option("auto", "🟢 自动"),
+                ft.dropdown.Option("suggest", "🟡 建议"),
+                ft.dropdown.Option("manual", "🔴 纯人工"),
+            ],
+            width=120, dense=True,
+            tooltip="自动模式：高置信度自动保存 / 建议模式：仅展示建议 / 纯人工：不展示建议",
+        )
+        self.auto_mode_dd.on_change = self._on_auto_mode_change
+        self.threshold_slider = ft.Slider(
+            min=0.70, max=0.95, value=self.auto_threshold,
+            divisions=25, label="{value}", width=180,
+        )
+        self.threshold_slider.on_change = self._on_threshold_change
+        self.threshold_text = ft.Text(f"{self.auto_threshold:.2f}", size=12, color=ft.Colors.GREY_700)
+
         top_bar = ft.Row([
             ft.IconButton(ft.Icons.ARROW_BACK, tooltip="Previous (Ctrl+Left)", on_click=lambda e: self.go(-1)),
             ft.IconButton(ft.Icons.ARROW_FORWARD, tooltip="Next (Ctrl+Right)", on_click=lambda e: self.go(1)),
             self.progress_text,
             ft.Container(expand=True),
+            self.auto_mode_dd, ft.Text("阈值:", size=12), self.threshold_slider, self.threshold_text,
+            ft.VerticalDivider(width=12),
             ft.Text("分析引擎:", size=12), self.analysis_mode_dd,
             self.analyze_btn, self.copilot_btn, self.save_btn,
         ], spacing=6)
@@ -533,7 +627,10 @@ class AnnotatorApp:
             ft.Container(right_col, expand=3, padding=10),
         ], expand=True)
 
-        page.add(top_bar, ft.Divider(), main_row, annotation_panel)
+        # ── 底部状态栏（设计文档 §5.3）──
+        self.status_bar = ft.Text("", size=12, color=ft.Colors.GREY_700)
+
+        page.add(top_bar, ft.Divider(), main_row, annotation_panel, ft.Divider(), self.status_bar)
         page.on_keyboard_event = self._on_keyboard
         self._refresh()
 
@@ -834,6 +931,71 @@ class AnnotatorApp:
     def _on_analysis_mode_change(self, e=None):
         self.analysis_mode = self.analysis_mode_dd.value or "yolo"
 
+    def _on_auto_mode_change(self, e=None):
+        """自动模式切换：🟢自动 / 🟡建议 / 🔴纯人工。"""
+        self.auto_mode = self.auto_mode_dd.value or "auto"
+        self._update_status_bar()
+        self.page.update()
+
+    def _on_threshold_change(self, e=None):
+        """置信度阈值滑块变化。"""
+        try:
+            self.auto_threshold = float(self.threshold_slider.value)
+        except (TypeError, ValueError):
+            self.auto_threshold = DEFAULT_AUTO_THRESHOLD
+        self.threshold_text.value = f"{self.auto_threshold:.2f}"
+        self._update_status_bar()
+        self.page.update()
+
+    def _update_status_bar(self):
+        """刷新底部状态栏：自动标注 / 人工标注 / 待标注 计数。"""
+        mode_label = {"auto": "🟢 自动", "suggest": "🟡 建议", "manual": "🔴 纯人工"}.get(self.auto_mode, "?")
+        pending = len(self.posts) - len(self.completed) - self.auto_count
+        if pending < 0:
+            pending = 0
+        if self.status_bar:
+            self.status_bar.value = (
+                f"模式: {mode_label} | 阈值: {self.auto_threshold:.2f} | "
+                f"自动标注: {self.auto_count} | 人工标注: {self.manual_count} | "
+                f"待标注: {pending}"
+            )
+
+    def auto_save_if_confident(self, suggestion: Dict, auto: bool = True) -> bool:
+        """检查置信度，达到阈值时自动保存标注并跳转（设计文档 §5.3）。
+
+        Args:
+            suggestion: LLM 判定结果（含 label/confidence/evidence_codes 等）
+            auto: 是否属于自动采纳（区别于手动点击采纳）
+
+        Returns:
+            True=已自动保存并跳转；False=未触发自动保存
+        """
+        if self.auto_mode != "auto":
+            return False
+        conf = suggestion.get("suggested_confidence", suggestion.get("confidence", 0))
+        if conf < self.auto_threshold:
+            return False
+
+        # 构造自动保存记录（annotation_method="auto_accepted"，不参与 κ）
+        record = build_auto_record(
+            self.post,
+            suggestion,
+            model=self.ollama_model,
+            auto_accepted=auto,
+        )
+        record["annotator_id"] = "system" if auto else self.aid
+        record["markdown_notes"] = f"[自动标注] {suggestion.get('reasoning', '')}"
+        save_annotation(self.output_dir, record["annotator_id"], record)
+        self.completed.add(self.pid)
+        self.auto_count += 1
+        self._update_status_bar()
+
+        label_cn = suggestion.get("label", suggestion.get("suggested_label", "?"))
+        self._snack(f"✅ 已自动标注为「{label_cn}」(置信度 {conf:.0%})", ft.Colors.GREEN)
+        self.page.update()
+        self.go(1)
+        return True
+
     def run_analysis(self, e=None):
         if self.analyzing: return
 
@@ -905,13 +1067,15 @@ class AnnotatorApp:
 
     # ---- LLM 协驾建议 ----
     def run_copilot_suggestion(self, e=None):
-        """触发 LLM 协驾建议生成。"""
+        """触发 LLM 协驾建议生成（支持 Ollama 后端 + 分置信度自动判断）。"""
         if self.suggesting: return
         self.suggesting = True; self.copilot_btn.disabled = True
         self.suggestion_title.value = "🤔 正在分析..."
         self.suggestion_text.value = "LLM 正在阅读帖子和图片分析结果，生成标注建议..."
         self.accept_suggestion_btn.visible = False
         self.page.update()
+
+        backend = "ollama" if self.ollama_backend else "openai"
 
         def cb(result):
             self.suggesting = False; self.copilot_btn.disabled = False
@@ -922,26 +1086,55 @@ class AnnotatorApp:
                 self.accept_suggestion_btn.visible = False
             else:
                 self.copilot_suggestion = result
-                label_cn = LABEL_NAMES.get(result.get("suggested_label", ""), result.get("suggested_label", "?"))
-                self.suggestion_title.value = f"📋 建议标签: {label_cn}  (确信度: {result.get('suggested_confidence', 0):.0%})"
-                lines = [f"**理由**: {result.get('reasoning', '')}"]
-                codes = result.get("suggested_evidence_codes", [])
-                if codes:
-                    code_desc = ", ".join(f"{c}({EVIDENCE_CODES.get(c, '?')})" for c in codes)
-                    lines.append(f"**建议证据代码**: {code_desc}")
-                evidence = result.get("suggested_evidence", [])
-                if evidence:
-                    lines.append(f"**建议证据描述**:")
-                    for ev in evidence:
-                        lines.append(f"  • {ev}")
-                self.suggestion_text.value = "\n".join(lines)
-                self.accept_suggestion_btn.visible = True
+                conf = result.get("suggested_confidence", result.get("confidence", 0))
+                tier = classify_confidence(conf, self.auto_threshold)
+
+                # 🟢 高置信度 → 自动保存并跳转（auto_save_if_confident 内部处理）
+                if self.auto_save_if_confident(result):
+                    self.suggestion_title.value = ""
+                    self.suggestion_text.value = ""
+                    self.accept_suggestion_btn.visible = False
+                    self.page.update()
+                    return
+
+                label_cn = LABEL_NAMES.get(result.get("suggested_label", ""),
+                                           result.get("suggested_label", "?"))
+                self.suggestion_title.value = f"📋 建议标签: {label_cn}  (确信度: {conf:.0%})"
+
+                if tier == "manual":
+                    # 🔴 低置信度：不展示建议细节（防锚定效应）
+                    self.suggestion_text.value = (
+                        "⚠️ 此帖置信度低于人工判断下限，建议完全由人工独立判断，不展示模型建议。"
+                    )
+                    self.accept_suggestion_btn.visible = False
+                else:
+                    # 🟡 中置信度：展示建议，等待人工确认
+                    lines = [f"**理由**: {result.get('reasoning', '')}"]
+                    codes = result.get("suggested_evidence_codes", [])
+                    if codes:
+                        code_desc = ", ".join(f"{c}({EVIDENCE_CODES.get(c, '?')})" for c in codes)
+                        lines.append(f"**建议证据代码**: {code_desc}")
+                    evidence = result.get("suggested_evidence", [])
+                    if evidence:
+                        lines.append(f"**建议证据描述**:")
+                        for ev in evidence:
+                            lines.append(f"  • {ev}")
+                    self.suggestion_text.value = "\n".join(lines)
+                    self.accept_suggestion_btn.visible = True
             self.page.update()
         threading.Thread(target=run_llm_copilot_suggestion_bg,
-                         args=(self.post, self.image_analyses, cb), daemon=True).start()
+                         args=(self.post, self.image_analyses, cb,
+                               _LLM_CONFIG["text_model"], None, None, backend,
+                               self.ollama_url, self.ollama_timeout),
+                         daemon=True).start()
 
-    def accept_suggestion(self, e=None):
-        """采纳 LLM 协驾建议，自动填充标注表单。"""
+    def accept_suggestion(self, e=None, auto=False):
+        """采纳 LLM 协驾建议，自动填充标注表单。
+
+        Args:
+            auto: True=自动采纳（填充后立即保存并跳转，annotation_method=auto_accepted）；
+                  False=手动采纳（填充表单等待人工检查后保存）
+        """
         if not self.copilot_suggestion:
             self._snack("没有可用的建议", ft.Colors.ORANGE); return
         s = self.copilot_suggestion
@@ -972,7 +1165,11 @@ class AnnotatorApp:
             self.notes_input.value = f"[AI 建议理由] {reasoning}"
 
         self.accept_suggestion_btn.visible = False
-        self._snack("已采纳 AI 建议，请检查后保存", ft.Colors.GREEN)
+        if auto:
+            # 自动采纳：直接保存并跳转
+            self.save_current(auto=True)
+        else:
+            self._snack("已采纳 AI 建议，请检查后保存", ft.Colors.GREEN)
         self.page.update()
 
     def select_label(self, label: str):
@@ -981,7 +1178,7 @@ class AnnotatorApp:
         self.selected_label.color = color_map.get(label, ft.Colors.ORANGE)
         self.page.update()
 
-    def save_current(self, e=None):
+    def save_current(self, e=None, auto=False):
         label = self.selected_label.value
         for k, v in LABEL_NAMES.items():
             if label == v: label = k; break
@@ -1014,12 +1211,14 @@ class AnnotatorApp:
             image_analysis_entries.append(entry)
 
         record = {
-            "post_id": self.pid, "annotator_id": self.aid, "guide_version": "1.1",
+            "post_id": self.pid, "annotator_id": "system" if auto else self.aid, "guide_version": "1.1",
             "label": label, "confidence": round(self.conf_slider.value, 2),
             "evidence_codes": [c for c, cb in self.evidence_cbs.items() if cb.value],
             "evidence": [e.strip() for e in self.evidence_input.value.split("\n") if e.strip()] if self.evidence_input.value else [],
             "uncertain_reason": None,
             "annotated_at": datetime.now(CST).isoformat(),
+            # 标注方式标记（"auto_accepted"=自动保存，不参与 κ；"human"=人工标注）
+            "annotation_method": "auto_accepted" if auto else "human",
             "markdown_notes": self.notes_input.value,
             "image_analyses": image_analysis_entries,
             # 如果有 AI 协驾建议，也记录下来
@@ -1030,9 +1229,29 @@ class AnnotatorApp:
                 "reasoning": self.copilot_suggestion.get("reasoning", ""),
             } if self.copilot_suggestion else None,
         }
-        save_annotation(self.output_dir, self.aid, record)
+        # 自动保存时附加完整 _llm_suggestion（设计文档 §5.1）
+        if auto and self.copilot_suggestion:
+            record["_llm_suggestion"] = {
+                "label": self.copilot_suggestion.get("label",
+                        self.copilot_suggestion.get("suggested_label", label)),
+                "confidence": self.copilot_suggestion.get("confidence",
+                        self.copilot_suggestion.get("suggested_confidence", 0)),
+                "evidence_codes": self.copilot_suggestion.get("evidence_codes",
+                        self.copilot_suggestion.get("suggested_evidence_codes", [])),
+                "evidence": self.copilot_suggestion.get("evidence",
+                        self.copilot_suggestion.get("suggested_evidence", [])),
+                "reasoning": self.copilot_suggestion.get("reasoning", ""),
+                "model": self.ollama_model,
+                "auto_accepted": True,
+            }
+        save_annotation(self.output_dir, record["annotator_id"], record)
         self.completed.add(self.pid)
-        self._snack(f"Saved: {self.pid[:24]}...", ft.Colors.GREEN)
+        if auto:
+            self.auto_count += 1
+        else:
+            self.manual_count += 1
+        self._update_status_bar()
+        self._snack(f"✅ 已{'自动' if auto else ''}保存: {self.pid[:24]}...", ft.Colors.GREEN)
         self.go(1)
 
     def _snack(self, msg, color=ft.Colors.GREEN):
@@ -1044,6 +1263,9 @@ class AnnotatorApp:
         new_idx = self.idx + delta
         if 0 <= new_idx < len(self.posts):
             self.idx = new_idx; self._refresh()
+        self._update_status_bar()
+        if self.page:
+            self.page.update()
 
     def _on_keyboard(self, e: ft.KeyboardEvent):
         if e.ctrl and e.key == "Arrow Left": self.go(-1)
@@ -1076,6 +1298,17 @@ def main():
                    help="API 密钥")
     p.add_argument("--skip-garbage", action="store_true",
                    help="自动跳过抓取失败的帖子（含页面源码/登录墙/乱码）")
+    # ── 分置信度自动判断（co-pilot-auto-judge-design）──
+    p.add_argument("--auto-threshold", type=float, default=None,
+                   help=f"自动保存置信度阈值（默认 {DEFAULT_AUTO_THRESHOLD}，范围 0.70–0.95）")
+    p.add_argument("--ollama-backend", action="store_true",
+                   help="使用本地 Ollama 做 AI 协驾建议（代替 OpenAI 云端 LLM）")
+    p.add_argument("--ollama-model", default=None,
+                   help=f"Ollama 模型名（默认 {OLLAMA_DEFAULT_MODEL}）")
+    p.add_argument("--ollama-url", default=None,
+                   help=f"Ollama 服务地址（默认 {OLLAMA_DEFAULT_URL}）")
+    p.add_argument("--ollama-timeout", type=float, default=OLLAMA_TIMEOUT,
+                   help=f"Ollama 单条推理超时秒数（默认 {OLLAMA_TIMEOUT}）")
     args = p.parse_args()
 
     ip = PROJECT_ROOT / args.input; od = PROJECT_ROOT / args.output_dir; mb = PROJECT_ROOT / args.media_base
@@ -1097,10 +1330,17 @@ def main():
                        llm_image_backend=args.llm_image_backend,
                        llm_text_model=args.llm_text_model,
                        api_base_url=args.api_base_url,
-                       api_key=args.api_key)
+                       api_key=args.api_key,
+                       auto_threshold=args.auto_threshold,
+                       ollama_model=args.ollama_model or OLLAMA_DEFAULT_MODEL,
+                       ollama_url=args.ollama_url or OLLAMA_DEFAULT_URL,
+                       ollama_backend=args.ollama_backend,
+                       ollama_timeout=args.ollama_timeout)
     print(f"\nStarting workbench (desktop)...")
     print(f"  Shortcuts: Ctrl+Arrows=Navigate | Ctrl+S=Save | Ctrl+A=Analyze | Ctrl+G=AI建议 | Ctrl+Y=采纳 | 1-4=Quick label")
     print(f"  Analysis engines: YOLO+OCR / LLM ({_LLM_CONFIG['image_model']})")
+    if args.ollama_backend:
+        print(f"  AI 协驾: Ollama ({app.ollama_model}) | 自动阈值: {app.auto_threshold:.2f}")
     ft.app(target=app.build)  # legacy entry, ok for 0.86.x desktop
 
 if __name__ == "__main__":
