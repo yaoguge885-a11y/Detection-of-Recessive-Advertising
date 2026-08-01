@@ -86,7 +86,7 @@ python flet_annotator.py
 以下命令均从仓库根目录运行。桌面路径只是本地示例；原始数据不会写回，迁移产物位于已忽略的 `data/interim/`，包含 ID 映射的私有报告位于已忽略的 `data/reports/m1/private/`。
 
 ```powershell
-$DatasetRoot = 'C:\Users\31729\Desktop\dataset_full'
+$DatasetRoot = '<外部数据目录>'
 $Python = '.\implicit-ad-agent\.venv\Scripts\python.exe'
 
 # 1. 只读聚合审计

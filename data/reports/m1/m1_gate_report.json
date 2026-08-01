@@ -11,7 +11,7 @@
       "status": "passed"
     },
     "candidate_pool": {
-      "observed": 282,
+      "observed": 2901,
       "required": 3000,
       "status": "failed"
     },

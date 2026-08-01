@@ -1,6 +1,6 @@
 # HANDOFF：隐性广告识别项目
 
-> 面向下一位接手开发者的事实交接。最后更新：2026-07-31（P5.2研究工作台工程门复核后）。
+> 面向下一位接手开发者的事实交接。最后更新：2026-07-31（P1→P3本地整合与M1数据复核后）。
 > 先读本文件，再读 `docs/隐性广告识别项目_说明书.md`、`docs/隐性广告识别项目_分阶段计划表.md` 和 `docs/superpowers/` 下已确认的设计/实施记录。
 
 ## 1. 一句话目标
@@ -35,15 +35,13 @@
 
 ## 3. 当前Git与工作区事实
 
-- 当前工作分支：`P2_Tool-Compartment-Model-Tooling`。
-- P1远程分支：`origin/P1-·-数据地基与标注规范`，本次拉取到的最新提交为 `6679671d35abf6d4bd9f17ec92f5585397244202`。
-- 本地P1→P2合并提交：`98cb599e280d97dddf779cfaa1b0a90d4f2b7608`；两个父提交分别是原P2 `76fb13f` 与最新P1 `6679671`。
-- 已用 `git merge-base --is-ancestor` 验证 `6679671` 是当前P2的祖先；两边历史均被保留。
-- P3实现提交`c3ed82d`已通过合并提交`1aad3f2`进入当前P2，`origin/P2_Tool-Compartment-Model-Tooling`已指向该合并提交。
-- P2.5/M1代码准入、P3工程MVP/收尾、P4工程准入、P5.1服务工程准入和P5.2研究工作台工程门均已按职责拆分为本地提交，尚未推送；接手时以`git status --short --branch`和`git log`复核。
-- 安全备份仍保留在 `stash@{0}`：`codex-pre-p1-merge-2026-07-26`，对象为 `6c0bfedd4c8d990a5ffccd8a089bb3ee9bafcba3`。确认工作区无误前不要删除。
+- 当前本地整合分支：`codex/p1-m1-into-p3`，工作树位于 `.worktrees/codex-p1-m1-into-p3`。
+- 整合基线：`origin/P3` 的 `ba0ab5802b75ddb58967bbf66b83eb360c395e77`。
+- P1来源：`origin/P1-·-数据地基与标注规范` 的 `43c59ac11770ea29b87c0612da31ab02d579e165`。
+- 本地合并提交：`ca8fc2d`；Schema v1.2运行时兼容提交：`1db5160`。已用 `git merge-base --is-ancestor` 验证P3与P1来源均为当前分支祖先。
+- 该分支和提交均仅在本地，尚未推送，也尚未合并回`P3`。原始`P3`工作区保持在`ba0ab58`。
 
-不要从最新 `main` 重新建空目录复制文件，也不要再次把P1或P3整分支覆盖到P2。后续开发直接从当前P2继续，保留无关修改并按职责拆成可Review提交。
+不要覆盖式复制P1或P3目录。后续从当前整合分支继续验证，确认后再决定是否合并回P3；保留无关修改并按职责拆成可Review提交。
 
 ## 4. 当前代码状态
 
@@ -98,7 +96,7 @@
 
 ### 4.3 尚未完成
 
-- **M1数据关口仍未通过**：本地外部数据已完成只读审计，只有282个唯一候选、15个创作者；无正式Gold、第二轮盲标、无泄漏切分、条款完成证明或隐私人工审批。P2.5及M1工具代码已具备开始P3工程开发的接口，但不能把这写成“P3正式阶段已通过”。
+- **M1数据关口仍未通过**：用户提供ZIP已完成本地审计，权威JSONL有2,901个唯一候选、108个创作者，距3,000还差99；无正式Gold、第二轮盲标、无泄漏切分、条款完成证明、隐私人工审批或Dataset Card审批。M1工具与P3接口可运行，但不能把这写成“M1已验收”或“P3研究实验已就绪”。
 - **P3非数据依赖工程范围已完成，但正式M3仍受M1事实证据约束**：统一服务、API/CLI、MCP超时回落、Knowledge MCP、混合检索、版本绑定报告、run查询、追踪和分类错误分析已通过离线测试；远程MCP可达性、法规覆盖质量和真实数据效果尚未证明。
 - **P4研究门仍未通过**：独立CreatorShift节点、版本化mean/max/EMA夹具基准、bootstrap和risk-coverage工程框架已完成；真实纵向特征/学习模型、Judge验证集校准、阈值选择、消融、置信区间和增益结论仍等待M1 Gold与无泄漏split。
 - **P5.2仅完成工程门，不是P5/M5完成**：批量分析、URL安全边界、显式适配器注册、预览/确认和修正审计，以及同源无构建研究工作台均已实现；四人团队UAT、真实小红书/B站适配、A2A远程专家、local/A2A对照、P5.3～P5.7和完整P5安全验收均未完成，M5未通过。
@@ -211,13 +209,25 @@
 - Windows GBK 控制台兼容：CLI 脚本均强制 `sys.stdout.reconfigure(encoding="utf-8")`。
 - 修复 `flet_annotator.py` 原有 4 处无法解析的延迟导入（`scripts.data.annotation.*`/`data_tooling.annotation.*` → 同目录直接导入）。
 
+### 4.13 2026-07-31 P1→P3本地整合与M1数据复核
+
+- 从`origin/P3@ba0ab58`建立隔离工作树与`codex/p1-m1-into-p3`分支；合并`origin/P1-·-数据地基与标注规范@43c59ac`，合并提交为`ca8fc2d`，两边历史均保留。
+- 删除P1分支中的一次性URL/作者列表、临时诊断脚本、运行日志和本机输出；保留可参数化的增量合并工具，并用窄范围`.gitignore`防止同类产物再次进入Git。
+- P3运行时适配器按`schema_version`加载v1.0或v1.2权威Schema；v1.1按v1.2兼容验证，未知版本和未知字段继续fail closed。v1.2来源扩展字段经Schema验证后只映射运行时所需字段。
+- 用户ZIP只读检查无路径穿越，解压到`data/run_outputs/merged_20260728`（Git忽略）；原始ZIP未修改，真实正文、媒体、URL和ID映射均未提交。
+- 当前权威JSONL审计：2,901行/2,901唯一帖子、108个创作者、Bilibili 2,182 + WeChat 719、14,174个唯一媒体引用全部可定位、15,066个磁盘媒体文件、0重复帖子。
+- Schema v1.2校验为2,901有效/0无效；这次未启用隐私扫描，不能沿用其他数据批次的PII处置结论。
+- M1门禁仍为`passed=false`、退出码2：候选差99、Gold为0、正式第二轮κ待复核、条款与隐私审批未完成、无泄漏切分缺失、Dataset Card未审批。
+- 数据集指纹：`adb39f1840df62cbeef52faabde85177536478c1c06d37bbb747a9a2bb59a3a5`。该指纹是后续增量补齐、标注与审批的版本锚点。
+
 ## 5. P1数据资产事实
 
-远端最新P1成果已经合并到本地P2，但“资产合并”不等于M1验收完成。
+远端最新P1成果已经合并到本地P3整合分支，但“资产合并”不等于M1验收完成。
 
 ### 5.1 已有资产
 
-- `data/schema/data_schema_v1.json`：JSON Schema Draft 2020-12，当前权威字段标准。
+- `data/schema/data_schema_v1.json`：JSON Schema Draft 2020-12，v1.0权威字段标准。
+- `data/schema/data_schema_v1_2.json`与`data-tooling/schema/data_schema_v1_2.json`：v1.2权威Schema镜像，哈希一致；P3运行时已支持。
 - `docs/data_schema.md`：schema交付说明。
 - `data/synthetic/simulated_posts_v1.json`：30条全合成内容、参考标注和补充标注，只用于冒烟与校验。
 - `scripts/data/validate_submission_assets.py`：标准库校验器。
@@ -232,9 +242,9 @@
 ### 5.2 未过关项
 
 - 仓库仍只跟踪30条合成fixture；真实数据只存在于外部本地目录，不得提交正文、媒体、ID映射或私有审查材料。
-- 外部数据已验证为282个唯一候选，仍远低于M1候选池≥3000；当前没有可计为正式Gold的记录，低于≥1500。
-- 外部数据格式和媒体引用已完成试跑；条款核验为0，隐私人工审批未完成，因此所有记录最多停留在`interim`。
-- Schema v1.0与`data-tooling/schema/data_schema_v1_1.json`并存，尚未完成兼容评审与唯一运行版本冻结。
+- 当前ZIP已验证为2,901个唯一候选，距M1候选池≥3,000还差99；当前没有可计为正式Gold的记录，低于≥1,500。
+- 外部数据Schema v1.2和媒体引用完整性已通过；条款核验为0，隐私人工审批未完成，因此所有记录最多停留在`interim`。
+- Schema v1.0继续服务历史提交资产；v1.1按v1.2兼容验证，v1.2是当前扩展Schema。运行时按记录版本选择Schema，不静默升级或宽松接收未知版本。
 - `data-tooling/`与`implicit-ad-agent/scripts/data/`仍有脚本副本；当前6组M1文件字节一致并有镜像测试，但长期仍应决定唯一维护来源。
 - 标注指南已有24个边界案例；这只关闭指南数量项，不替代真实双标和Gold。
 - 尚无可确认的第二轮独立盲标、仲裁包、Gold v1和零泄漏正式切分报告；pilot κ不得冒充正式证据。
@@ -242,9 +252,9 @@
 
 ### 5.3 Schema使用原则
 
-当前提交资产校验以`data/schema/data_schema_v1.json`为唯一权威来源。代码中的Pydantic模型、采集适配器和测试fixture都应从它映射，不再另造平行字段表。
+历史v1.0提交资产继续由`data/schema/data_schema_v1.json`校验；当前Bilibili/扩展字段由内容相同的两份`data_schema_v1_2.json`校验。P3适配器必须先做对应版本的JSON Schema验证，再显式映射到窄运行时契约。
 
-`data-tooling/schema/data_schema_v1_1.json`只能作为兼容变更候选；如需支持B站或新增字段，必须完成v1.1评审、changelog和适配测试，不得直接修改v1.0后仍声称版本不变。
+v1.1记录按v1.2兼容Schema验证；未知版本、未知字段或缺少必填字段必须拒绝。后续修改字段时应新增版本、changelog和适配测试，不得原地改变v1.0/v1.2含义。
 
 ## 6. 目标数据流
 
@@ -352,7 +362,7 @@ $env:LANGCHAIN_TRACING_V2 = 'false'
 .\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
 ```
 
-当前预期：P5.2工程门聚焦`28 passed, 1 warning`，零Key全量`390 passed, 2 skipped, 1 warning`；P5.1工程准入聚焦`58 passed`，P4历史聚焦`61 passed`，P3非数据依赖工程历史聚焦`45 passed`，M1数据治理历史聚焦`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；校验器绿不替代M1事实门。
+本次整合后的当前预期：零Key全量`398 passed, 2 skipped, 1 warning`，Schema v1.2/P1适配聚焦`16 passed`，自动判断模块`21 passed`，两个P1校验器均输出`VALIDATION PASSED`。P5.2、P5.1、P4和P3的历史聚焦结果保留在对应验收章节。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；校验器绿不替代M1事实门。
 
 M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的PowerShell命令见`data-tooling/README.md`。当前门禁预期退出码为2；在外部证据补齐前，不要把它改成成功预期。
 
@@ -368,7 +378,7 @@ M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的Powe
 - `mcp`与`chromadb`是可选依赖；契约层不得因未安装可选依赖而无法导入。
 - CreatorShift当前输出是简单历史基线证据，不是校准概率，也不能直接决定暗广。
 - A2A必须是独立Agent服务间的真实任务交换；同一进程内函数互调不能算A2A验收。
-- 不要把外部本地目录中的282个唯一候选和6,697个媒体引用说成仓库已跟踪资产或可公开数据。
+- 不要把外部本地ZIP中的2,901个唯一候选、14,174个唯一媒体引用和15,066个媒体文件说成仓库已跟踪资产或可公开数据。
 - 不要把pilot的κ=1.0说成正式第二轮结果：它只有22对有效三元样本、没有暗广样本，且明确标记为非正式。
 - 不要只改`data-tooling/`或`implicit-ad-agent/scripts/data/`其中一份后假设另一份会自动同步。
 - 不把真实用户名、头像、手机号、群二维码、精确URL参数、密钥或内部地址提交到公开仓库。

@@ -10,12 +10,12 @@
 
 ## Global Constraints
 
-- Do not modify or delete `C:\Users\31729\Desktop\merged_20260728.zip`.
+- Do not modify or delete the user-provided external `merged_20260728.zip`.
 - Do not commit raw JSONL, media, source URLs, account lists, private mappings, or human-review materials.
 - Preserve P3 `AnalysisService`, P4 engineering admission, and P5.2 workbench behavior.
 - Preserve M1 thresholds: unique candidates `>=3000`, formal Gold `>=1500`, second-round Cohen kappa `>=0.6`, zero creator/near-duplicate leakage, complete terms/privacy approval, and complete Dataset Card.
 - Automatic annotations never count as formal double annotation, kappa, or Gold.
-- Use the project venv at `D:\AAA Jobs\Detection-of-Recessive-Advertising\implicit-ad-agent\.venv\Scripts\python.exe`.
+- Use the existing P3 workspace virtual environment; an isolated worktree does not copy ignored `.venv` files.
 - Synchronize `HANDOFF.md` and `docs/已有功能测试指令库.md` with the final verified facts and unfinished boundaries.
 
 ---
@@ -48,7 +48,7 @@ Expected: worktree HEAD is `ba0ab58` on `codex/p1-m1-into-p3`.
 Run from `implicit-ad-agent/`:
 
 ```powershell
-$Python = 'D:\AAA Jobs\Detection-of-Recessive-Advertising\implicit-ad-agent\.venv\Scripts\python.exe'
+$Python = '<P3主工作区>\implicit-ad-agent\.venv\Scripts\python.exe'
 & $Python -m pip check
 & $Python -m compileall -q impad tests scripts app.py run_demo.py run_tools_demo.py
 & $Python -m pytest -q
@@ -341,7 +341,7 @@ Expected: hashes match and commit succeeds.
 ### Task 5: Safely extract and audit the supplied local dataset
 
 **Files:**
-- Read-only input: `C:\Users\31729\Desktop\merged_20260728.zip`
+- Read-only input: user-provided external `merged_20260728.zip`
 - Ignored output: `data/run_outputs/merged_20260728/`
 - Update: `data/reports/m1/dataset_full_audit.json`
 - Update: `data/reports/m1/merged_20260728_schema_validate.json`
@@ -460,4 +460,3 @@ Expected: no tracked runtime data, no uncommitted task changes, and no whitespac
 - [ ] **Step 4: Audit each requested item**
 
 Record evidence separately for: integration branch, P1 merge ancestry, artifact cleanup, Schema v1.2 runtime compatibility, and local dataset audit. A green test suite does not substitute for missing data-governance evidence.
-
