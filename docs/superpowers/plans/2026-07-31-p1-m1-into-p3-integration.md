@@ -69,7 +69,7 @@ Expected: no broken requirements; compilation exits 0; `390 passed, 2 skipped, 1
 - Consumes: P3 integration branch and P1 commit `43c59ac11770ea29b87c0612da31ab02d579e165`.
 - Produces: a merge state whose eventual commit has P3 and P1 as parents.
 
-- [ ] **Step 1: Start a reviewable non-fast-forward merge**
+- [x] **Step 1: Start a reviewable non-fast-forward merge**
 
 Run:
 
@@ -81,7 +81,7 @@ git diff --name-only --diff-filter=U
 
 Expected: merge stops before commit; any unmerged paths are explicitly listed.
 
-- [ ] **Step 2: Reconstruct both document intents**
+- [x] **Step 2: Reconstruct both document intents**
 
 For every unmerged path, inspect:
 
@@ -96,7 +96,7 @@ git show ':3:docs/已有功能测试指令库.md'
 
 Keep P3's latest P3/P4/P5 facts and add only verified P1/M1 facts. Remove every conflict marker and do not restore claims that P3 is unstarted.
 
-- [ ] **Step 3: Verify the merge ancestry before commit**
+- [x] **Step 3: Verify the merge ancestry before commit**
 
 Run: `git status --short --branch`
 
@@ -127,11 +127,11 @@ Expected: merge is active, no unexplained unmerged paths remain after resolution
 - Consumes: uncommitted merge result from Task 2.
 - Produces: reviewable repository tree containing reusable code but no local run artifacts.
 
-- [ ] **Step 1: Remove the exact non-product paths from the merge result**
+- [x] **Step 1: Remove the exact non-product paths from the merge result**
 
 Use `git rm --ignore-unmatch -- <exact paths above>` so no external file is touched.
 
-- [ ] **Step 2: Add narrow ignore rules**
+- [x] **Step 2: Add narrow ignore rules**
 
 Append these repository rules:
 
@@ -149,7 +149,7 @@ diagnose_jsonl.py
 
 Existing `data/run_outputs/`, `*.log`, `*.bak`, and `*.zip` rules remain authoritative.
 
-- [ ] **Step 3: Verify cleanup behavior**
+- [x] **Step 3: Verify cleanup behavior**
 
 Run:
 
@@ -161,7 +161,7 @@ git diff --check
 
 Expected: the tracked-path search returns no matches; local run output is ignored; diff check exits 0.
 
-- [ ] **Step 4: Complete the merge commit**
+- [x] **Step 4: Complete the merge commit**
 
 Run:
 
@@ -190,7 +190,7 @@ Expected: one merge commit with two parents; P1 head is an ancestor of HEAD.
 - Consumes: content records with `schema_version` equal to `1.0`, `1.1`, or `1.2`.
 - Produces: `post_record_from_content_record(record: dict) -> PostRecord` with strict version-routed validation.
 
-- [ ] **Step 1: Write the failing v1.2 adapter test**
+- [x] **Step 1: Write the failing v1.2 adapter test**
 
 Add this literal helper and test to `test_p1_schema_adapter.py`:
 
@@ -246,7 +246,7 @@ def test_p1_adapter_validates_and_maps_schema_v12_record():
 
 The break this catches: routing every P1 record through the v1.0 schema.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 
@@ -256,7 +256,7 @@ Run:
 
 Expected: FAIL because v1.0 rejects schema version `1.2` and v1.2 fields.
 
-- [ ] **Step 3: Add failing version and strictness tests**
+- [x] **Step 3: Add failing version and strictness tests**
 
 Add tests asserting:
 
@@ -281,7 +281,7 @@ def test_p1_adapter_rejects_unknown_v12_fields():
 
 Run the three tests and confirm they fail only because version routing is absent.
 
-- [ ] **Step 4: Implement minimal version-routed validators**
+- [x] **Step 4: Implement minimal version-routed validators**
 
 In `p1_schema.py`, replace the single schema path/validator with:
 
@@ -309,7 +309,7 @@ Call `_load_validator(str(record.get("schema_version", "")))` from validation. K
 
 In `supervisor.py`, use the explicit supported set `{"1.0", "1.1", "1.2"}` while retaining the structural P1 detection for compatible records.
 
-- [ ] **Step 5: Verify GREEN and existing v1.0 behavior**
+- [x] **Step 5: Verify GREEN and existing v1.0 behavior**
 
 Run:
 
@@ -321,7 +321,7 @@ Run:
 
 Expected: all adapter/agent tests pass and both v1.0 synthetic asset validators print `VALIDATION PASSED`.
 
-- [ ] **Step 6: Verify schema mirrors and commit**
+- [x] **Step 6: Verify schema mirrors and commit**
 
 Run:
 
@@ -353,7 +353,7 @@ Expected: hashes match and commit succeeds.
 - Consumes: safe ZIP with `anonymized_posts.jsonl` and `media/`.
 - Produces: aggregate-only audit facts and an ignored local dataset directory.
 
-- [ ] **Step 1: Re-run ZIP safety checks**
+- [x] **Step 1: Re-run ZIP safety checks**
 
 Open the central directory with `[System.IO.Compression.ZipFile]::OpenRead()` and assert:
 
@@ -367,11 +367,11 @@ if ($unsafe.Count -ne 0) { throw "Unsafe ZIP entries: $($unsafe.Count)" }
 
 Expected: 16,577 entries and 0 unsafe entries.
 
-- [ ] **Step 2: Extract to the ignored run directory**
+- [x] **Step 2: Extract to the ignored run directory**
 
 Run `Expand-Archive` into `data/run_outputs/merged_20260728/` after asserting the resolved destination remains inside the worktree. Never extract over the external ZIP.
 
-- [ ] **Step 3: Validate Schema v1.2**
+- [x] **Step 3: Validate Schema v1.2**
 
 Run from repository root:
 
@@ -385,13 +385,13 @@ Run from repository root:
 
 Expected: the report gives exact total/valid/invalid counts; invalid count must be reported, not hidden.
 
-- [ ] **Step 4: Run the aggregate M1 audit**
+- [x] **Step 4: Run the aggregate M1 audit**
 
 Inspect `python data-tooling/m1_readiness.py audit --help`, then call the current CLI with the extracted dataset directory, candidate JSONL, media directory, and aggregate report path. Do not pass `.bak` or `anonymized_posts_fixed.jsonl` as additional candidate batches.
 
 Expected report fields: candidate rows, unique posts, duplicates, creators, platform counts, media references, available references, missing references, terms counts, privacy claims, annotation file count, and dataset fingerprint.
 
-- [ ] **Step 5: Interpret the candidate threshold literally**
+- [x] **Step 5: Interpret the candidate threshold literally**
 
 Assert from the generated JSON:
 
@@ -406,7 +406,7 @@ if ($audit.candidates.unique_posts -lt 3000) {
 
 This step succeeds when it reports the true state; it must not pad or lower the threshold.
 
-- [ ] **Step 6: Update aggregate documentation and commit only safe reports**
+- [x] **Step 6: Update aggregate documentation and commit only safe reports**
 
 Update the audit Markdown, `HANDOFF.md`, and test runbook with exact generated counts, command lines, and remaining M1 gates. Before staging, scan report diffs for source URLs, post text, creator IDs, annotator IDs, tokens, and secrets.
 
