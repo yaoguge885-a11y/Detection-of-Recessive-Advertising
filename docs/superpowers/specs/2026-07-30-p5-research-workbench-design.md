@@ -441,9 +441,9 @@ existing local contracts and render their evidence safely. It does not prove:
 8. Task 7 records keyboard navigation, 1440px/390px no-overflow layouts, and
    zero new console errors.
 9. Fresh Task 8 checks establish focused/full pytest, dependency/compilation,
-   both validators, and `git diff --check`; the broad secret regex found only
-   two old `api_key=do-not-store` fixture literals in the P5.1 plan, while the
-   runtime/current-document scoped scan was clean.
+   both validators, and `git diff --check`; the fail-closed secret scan permits
+   exactly two named historical fixture matches in the P5.1 plan and asserts
+   zero unexpected matches.
 10. `HANDOFF.md`, the test library, phase plan, this design, and the project
    specification record the P5.2 engineering facts and retain explicit
    UAT/P5.3-P5.7/M1/M4/M5 non-claims.

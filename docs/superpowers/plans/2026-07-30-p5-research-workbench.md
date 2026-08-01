@@ -2340,18 +2340,32 @@ foreach ($pattern in $forbidden) {
     throw "forbidden workbench API: $pattern"
   }
 }
-if ($html -match 'https?://' -or $css -match 'url\\(https?://') {
+if ($html -match 'https?://' -or $css -match 'url\(https?://') {
   throw 'remote workbench asset reference found'
 }
 
-$secretMatches = rg -n `
-  'api[_-]?key\\s*[=:]|access[_-]?token\\s*[=:]|bearer\\s+[A-Za-z0-9]' `
-  implicit-ad-agent\impad\web HANDOFF.md docs
+$secretPattern = 'api[_-]?key\s*[=:]\s*[^\s|]+|access[_-]?token\s*[=:]\s*[^\s|]+|bearer\s+[A-Za-z0-9][^\s|]*'
+$secretMatches = @(rg -n --no-heading -o $secretPattern `
+  implicit-ad-agent\impad\web HANDOFF.md docs |
+  ForEach-Object { $_.TrimEnd([char]96) })
 if ($LASTEXITCODE -gt 1) { throw 'secret scan failed to run' }
-if ($LASTEXITCODE -eq 0) {
+
+$allowedHistoricalPath = 'docs\superpowers\plans\2026-07-30-p5-service-admission.md'
+$allowedHistoricalLiteral = ('api_key' + '=do-not-store')
+$allowedLinePattern = '^{0}:\d+:{1}$' -f `
+  [regex]::Escape($allowedHistoricalPath), `
+  [regex]::Escape($allowedHistoricalLiteral)
+$expectedHistoricalMatches = @(
+  $secretMatches | Where-Object { $_ -match $allowedLinePattern }
+)
+$unexpectedSecretMatches = @(
+  $secretMatches | Where-Object { $_ -notmatch $allowedLinePattern }
+)
+if ($expectedHistoricalMatches.Count -ne 2 -or $unexpectedSecretMatches.Count -ne 0) {
   $secretMatches
-  throw 'possible secret assignment found'
+  throw 'secret scan expected exactly 2 historical fixture matches and 0 unexpected matches'
 }
+Write-Output 'secret scan: 2 expected historical fixture matches, 0 unexpected matches'
 
 git diff --check
 ```

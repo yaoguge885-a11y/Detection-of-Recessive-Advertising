@@ -190,7 +190,7 @@
 - 页面覆盖单条分析、批量JSON/UTF-8文件、能力门控URL预览/确认；默认平台注册表为空时URL输入与提交按钮禁用，且在能力未就绪/失败时也fail closed。单条、批量和确认后的URL分析都读取持久化`run_id`并渲染结论、覆盖/缺失、证据、CreatorShift、历史、法规、轨迹、报告和raw JSON九区。
 - 2026-07-31新鲜工程门：`pip check`输出`No broken requirements found.`；`compileall -q impad tests scripts app.py run_demo.py run_tools_demo.py`退出0；P5.2聚焦`27 passed, 1 warning in 4.01s`；全量`389 passed, 2 skipped, 1 warning in 12.65s`。唯一warning是既有Starlette/httpx TestClient弃用提示；两个skip仍为显式视觉路径。
 - 两个P1校验器均输出`VALIDATION PASSED`（各30条content、30条supplement）。这是提交资产一致性验证，**不**代表M1通过。
-- 运行资产扫描未发现`innerHTML`等禁止sink、远程workbench资产或本轮路径的凭据赋值；广域历史文档扫描仅命中旧P5.1计划中两处`api_key=do-not-store`示例字面量，未把它误报为真实凭据。`git diff --check`通过。
+- 运行资产扫描未发现`innerHTML`等禁止sink或远程workbench资产；可复制的fail-closed密钥扫描精确允许旧P5.1计划文件内两处指定历史fixture，并断言为**2 expected historical fixture matches, 0 unexpected matches**。少于/多于两处或任何其他匹配都会失败。`git diff --check`通过。
 - Task 7真实浏览器证据（实施提交`fde1e4a`）：单条run为`run_bf717e85fd934afc81d227edf3720ab6`；混合批量为2成功/1失败/3总计；默认URL禁用；键盘ArrowLeft/Right/Home/End可用；剪贴板复制成功，实际UTF-8 `.md`和`.json`下载已核对；1440px和390px均无横向溢出；GREEN新增console errors为0。截图临时路径为`C:\Users\31729\AppData\Local\Temp\impad-p5-workbench\workbench-desktop.png`和`...\workbench-narrow.png`，不提交。
 - 此节只关闭P5.2工程门：不声称四人团队UAT、真实平台采集、A2A、P5.3～P5.7、M1/M4/M5或分类/法规研究结论已完成。M1仍被候选池、Gold、合规、正式协议、无泄漏切分和Dataset Card证据缺口阻塞。
 
