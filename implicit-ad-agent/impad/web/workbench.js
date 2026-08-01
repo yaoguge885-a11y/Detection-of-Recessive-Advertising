@@ -6,6 +6,8 @@ const state = {
   activeResponse: null,
   activeRun: null,
   batch: null,
+  resultIntent: 0,
+  singleRecoveryResponse: null,
 };
 
 const byId = (id) => document.getElementById(id);
@@ -36,6 +38,15 @@ function setBusy(form, busy) {
     control.disabled = busy;
   }
   form.dataset.state = busy ? "loading" : "idle";
+}
+
+function beginResultIntent() {
+  state.resultIntent += 1;
+  return state.resultIntent;
+}
+
+function isCurrentResultIntent(intent) {
+  return intent === state.resultIntent;
 }
 
 async function fetchJson(path, options = {}) {
@@ -365,17 +376,35 @@ function renderEvidence(bundle) {
     const grid = element("div", null, "evidence-grid");
     for (const item of items) {
       const card = element("article", null, "evidence-card");
+      card.dataset.evidenceId = item.evidence_id;
       card.dataset.polarity = item.polarity;
       card.dataset.status = item.status;
+      const traceability = [
+        ["证据ID", item.evidence_id],
+        ["工具", `${item.tool_name} @ ${item.tool_version}`],
+        ["调用ID", item.call_id],
+      ];
+      if (item.span) {
+        traceability.push(["文本位置", JSON.stringify(item.span)]);
+      }
+      if (item.bbox) {
+        traceability.push(["图像位置", JSON.stringify(item.bbox)]);
+      }
+      if (item.related_post_id) {
+        traceability.push(["关联帖子", item.related_post_id]);
+      }
+      if (item.comment_ids?.length) {
+        traceability.push(["关联评论", item.comment_ids.join("、")]);
+      }
       card.append(
         element("h4", item.kind),
         definitionList([
+          ...traceability,
           ["状态", item.status],
           ["极性", item.polarity],
           ["强度", formatScore(item.strength)],
           ["生产者", item.producer],
           ["来源", item.source_ref],
-          ["关联帖子", item.related_post_id],
         ]),
         element("p", item.quote || "没有可显示引用", "evidence-quote"),
         listOrEmpty(item.limitations, "没有记录局限"),
@@ -609,12 +638,17 @@ function renderBatchResults(batch) {
         ),
         element("code", metadata.run_id),
         actionButton("查看", async () => {
+          const intent = beginResultIntent();
           try {
             setSubmissionStatus(`正在加载第${item.index + 1}条结果`);
-            await loadAndRenderRun(item.result);
-            setSubmissionStatus("批量结果已加载", "success");
+            const record = await loadAndRenderRun(item.result, intent);
+            if (record && isCurrentResultIntent(intent)) {
+              setSubmissionStatus("批量结果已加载", "success");
+            }
           } catch (error) {
-            setSubmissionStatus(error.message, "error");
+            if (isCurrentResultIntent(intent)) {
+              setSubmissionStatus(error.message, "error");
+            }
           }
         }),
       );
@@ -667,7 +701,10 @@ function renderRaw(record, response) {
   );
 }
 
-function renderRun(record, response) {
+function renderRun(record, response, intent) {
+  if (intent !== undefined && !isCurrentResultIntent(intent)) {
+    return false;
+  }
   state.activeRun = record;
   state.activeResponse = response;
   byId("result-empty").hidden = true;
@@ -681,15 +718,53 @@ function renderRun(record, response) {
   renderTrace(record);
   renderReport(record);
   renderRaw(record, response);
+  return true;
 }
 
-async function loadAndRenderRun(response) {
+async function loadAndRenderRun(response, intent) {
   const runId = response.run_metadata.run_id;
   const record = await fetchJson(
     `/api/v1/runs/${encodeURIComponent(runId)}`
   );
-  renderRun(record, response);
-  return record;
+  if (intent !== undefined && !isCurrentResultIntent(intent)) {
+    return null;
+  }
+  return renderRun(record, response, intent) ? record : null;
+}
+
+function clearSingleRecovery() {
+  const target = byId("single-recovery");
+  state.singleRecoveryResponse = null;
+  target.hidden = true;
+  replaceChildren(target);
+}
+
+function showSingleRecovery(response) {
+  const target = byId("single-recovery");
+  const runId = response.run_metadata.run_id;
+  target.hidden = false;
+  replaceChildren(
+    target,
+    element("span", `run已持久化：${runId}；完整运行加载失败。`),
+    actionButton("重试加载", async () => {
+      const intent = beginResultIntent();
+      try {
+        setSubmissionStatus(`正在重新加载run：${runId}`);
+        const record = await loadAndRenderRun(response, intent);
+        if (record && isCurrentResultIntent(intent)) {
+          clearSingleRecovery();
+          setSubmissionStatus("持久化run已加载", "success");
+        }
+      } catch (error) {
+        if (isCurrentResultIntent(intent)) {
+          setSubmissionStatus(
+            `run已持久化：${runId}；完整运行加载失败：${error.message}`,
+            "error",
+          );
+        }
+      }
+    }),
+  );
 }
 
 function singlePayload() {
@@ -745,20 +820,39 @@ function setupSingleForm() {
   const form = byId("single-form");
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const intent = beginResultIntent();
     try {
       setBusy(form, true);
+      clearSingleRecovery();
       setSubmissionStatus("正在运行单条分析");
       const response = await fetchJson("/api/v1/analyze", {
         method: "POST",
         body: JSON.stringify(singlePayload()),
       });
-      await loadAndRenderRun(response);
-      setSubmissionStatus("单条分析完成", "success");
+      if (isCurrentResultIntent(intent)) {
+        state.singleRecoveryResponse = response;
+      }
+      const record = await loadAndRenderRun(response, intent);
+      if (record && isCurrentResultIntent(intent)) {
+        clearSingleRecovery();
+        setSubmissionStatus("单条分析完成", "success");
+      }
     } catch (error) {
-      setSubmissionStatus(
-        `${error.code || "client_error"}：${error.message}`,
-        "error",
-      );
+      if (isCurrentResultIntent(intent)) {
+        const response = state.singleRecoveryResponse;
+        if (response && response.run_metadata?.run_id) {
+          showSingleRecovery(response);
+          setSubmissionStatus(
+            `run已持久化：${response.run_metadata.run_id}；完整运行加载失败：${error.message}`,
+            "error",
+          );
+        } else {
+          setSubmissionStatus(
+            `${error.code || "client_error"}：${error.message}`,
+            "error",
+          );
+        }
+      }
     } finally {
       setBusy(form, false);
     }
@@ -795,6 +889,7 @@ function setupBatchForm() {
   });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const intent = beginResultIntent();
     try {
       setBusy(form, true);
       const request = parseBatchPayload(editor.value);
@@ -803,17 +898,26 @@ function setupBatchForm() {
         method: "POST",
         body: JSON.stringify(request),
       });
-      renderBatchResults(batch);
+      if (isCurrentResultIntent(intent)) {
+        renderBatchResults(batch);
+      }
       const firstSuccess = batch.items.find((item) => item.ok);
       if (firstSuccess) {
-        await loadAndRenderRun(firstSuccess.result);
+        const record = await loadAndRenderRun(firstSuccess.result, intent);
+        if (!record || !isCurrentResultIntent(intent)) {
+          return;
+        }
       }
-      setSubmissionStatus("批量分析完成", "success");
+      if (isCurrentResultIntent(intent)) {
+        setSubmissionStatus("批量分析完成", "success");
+      }
     } catch (error) {
-      setSubmissionStatus(
-        `${error.code || "client_error"}：${error.message}`,
-        "error",
-      );
+      if (isCurrentResultIntent(intent)) {
+        setSubmissionStatus(
+          `${error.code || "client_error"}：${error.message}`,
+          "error",
+        );
+      }
     } finally {
       setBusy(form, false);
     }
@@ -863,6 +967,7 @@ function setupUrlForms() {
   });
   confirmForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const intent = beginResultIntent();
     const activePreview = state.activePreview;
     if (!activePreview) {
       setSubmissionStatus("没有可确认的URL预览", "error");
@@ -880,26 +985,41 @@ function setupUrlForms() {
         }),
       });
       try {
-        await loadAndRenderRun(response);
+        const record = await loadAndRenderRun(response, intent);
+        if (!record || !isCurrentResultIntent(intent)) {
+          return;
+        }
       } catch (error) {
-        if (state.activePreview?.preview_id === activePreview.preview_id) {
+        if (
+          isCurrentResultIntent(intent)
+          && state.activePreview?.preview_id === activePreview.preview_id
+        ) {
           clearLocalPreview();
         }
-        setSubmissionStatus(
-          `URL预览已确认，但完整运行加载失败：${error.message}`,
-          "error",
-        );
+        if (isCurrentResultIntent(intent)) {
+          setSubmissionStatus(
+            `URL预览已确认，但完整运行加载失败：${error.message}`,
+            "error",
+          );
+        }
         return;
       }
-      if (state.activePreview?.preview_id === activePreview.preview_id) {
+      if (
+        isCurrentResultIntent(intent)
+        && state.activePreview?.preview_id === activePreview.preview_id
+      ) {
         clearLocalPreview();
       }
-      setSubmissionStatus("URL预览确认并分析完成", "success");
+      if (isCurrentResultIntent(intent)) {
+        setSubmissionStatus("URL预览确认并分析完成", "success");
+      }
     } catch (error) {
-      setSubmissionStatus(
-        `${error.code || "client_error"}：${error.message}`,
-        "error",
-      );
+      if (isCurrentResultIntent(intent)) {
+        setSubmissionStatus(
+          `${error.code || "client_error"}：${error.message}`,
+          "error",
+        );
+      }
     } finally {
       setBusy(confirmForm, false);
     }

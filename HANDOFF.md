@@ -77,7 +77,7 @@
 | URL服务边界 | HTTPS/authority/port/本地地址校验、显式PlatformAdapter注册、无网络预览、可审计修正和一次性确认已实现；默认注册表为空，不声称支持真实平台 |
 | P5.2开发者研究工作台 | 同源、无构建的`/workbench`已接入既有API：单条、混合有效/无效批量、能力门控URL预览/确认、完整run九区渲染、复制/UTF-8下载；默认URL适配器为空且fail closed |
 | 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、混淆/错误桶；P4新增固定种子bootstrap区间、显式拒答前预测和risk-coverage工程报告 |
-| 默认回归 | 2026-07-31零Key/零网络全量`389 passed, 2 skipped, 1 warning`；P5.2聚焦`27 passed, 1 warning`；P5.1历史聚焦`58 passed`；P4历史聚焦`61 passed` |
+| 默认回归 | 2026-07-31零Key/零网络全量`390 passed, 2 skipped, 1 warning`；P5.2聚焦`28 passed, 1 warning`；P5.1历史聚焦`58 passed`；P4历史聚焦`61 passed` |
 | 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
 
 ### 4.2 P2.5缺口关闭状态
@@ -188,7 +188,7 @@
 
 - `GET /workbench`由既有FastAPI同源提供，只有仓库资产；无Node构建、远程资产、浏览器存储或后台网络采集。CSP限制为同源，`Cache-Control: no-store`、`nosniff`和`no-referrer`保持生效。
 - 页面覆盖单条分析、批量JSON/UTF-8文件、能力门控URL预览/确认；默认平台注册表为空时URL输入与提交按钮禁用，且在能力未就绪/失败时也fail closed。单条、批量和确认后的URL分析都读取持久化`run_id`并渲染结论、覆盖/缺失、证据、CreatorShift、历史、法规、轨迹、报告和raw JSON九区。
-- 2026-07-31新鲜工程门：`pip check`输出`No broken requirements found.`；`compileall -q impad tests scripts app.py run_demo.py run_tools_demo.py`退出0；P5.2聚焦`27 passed, 1 warning in 4.01s`；全量`389 passed, 2 skipped, 1 warning in 12.65s`。唯一warning是既有Starlette/httpx TestClient弃用提示；两个skip仍为显式视觉路径。
+- 2026-07-31新鲜工程门：`pip check`输出`No broken requirements found.`；`compileall -q impad tests scripts app.py run_demo.py run_tools_demo.py`退出0；P5.2聚焦`28 passed, 1 warning in 3.18s`；全量`390 passed, 2 skipped, 1 warning in 12.13s`。唯一warning是既有Starlette/httpx TestClient弃用提示；两个skip仍为显式视觉路径。
 - 两个P1校验器均输出`VALIDATION PASSED`（各30条content、30条supplement）。这是提交资产一致性验证，**不**代表M1通过。
 - 运行资产扫描未发现`innerHTML`等禁止sink或远程workbench资产；可复制的fail-closed密钥扫描精确允许旧P5.1计划文件内两处指定历史fixture，并断言为**2 expected historical fixture matches, 0 unexpected matches**。少于/多于两处或任何其他匹配都会失败。`git diff --check`通过。
 - Task 7真实浏览器证据（实施提交`fde1e4a`）：单条run为`run_bf717e85fd934afc81d227edf3720ab6`；混合批量为2成功/1失败/3总计；默认URL禁用；键盘ArrowLeft/Right/Home/End可用；剪贴板复制成功，实际UTF-8 `.md`和`.json`下载已核对；1440px和390px均无横向溢出；GREEN新增console errors为0。截图临时路径为`C:\Users\31729\AppData\Local\Temp\impad-p5-workbench\workbench-desktop.png`和`...\workbench-narrow.png`，不提交。
@@ -335,7 +335,7 @@ $env:LANGCHAIN_TRACING_V2 = 'false'
 .\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
 ```
 
-当前预期：P5.2工程门聚焦`27 passed, 1 warning`，零Key全量`389 passed, 2 skipped, 1 warning`；P5.1工程准入聚焦`58 passed`，P4历史聚焦`61 passed`，P3非数据依赖工程历史聚焦`45 passed`，M1数据治理历史聚焦`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；校验器绿不替代M1事实门。
+当前预期：P5.2工程门聚焦`28 passed, 1 warning`，零Key全量`390 passed, 2 skipped, 1 warning`；P5.1工程准入聚焦`58 passed`，P4历史聚焦`61 passed`，P3非数据依赖工程历史聚焦`45 passed`，M1数据治理历史聚焦`62 passed`，P2.5代码准入重点历史验收为`116 passed`，两个P1校验器均输出`VALIDATION PASSED`。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；校验器绿不替代M1事实门。
 
 M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的PowerShell命令见`data-tooling/README.md`。当前门禁预期退出码为2；在外部证据补齐前，不要把它改成成功预期。
 

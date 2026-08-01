@@ -336,8 +336,8 @@ The focused P5.2 gate is:
   tests\web tests\test_app.py tests\api -q
 ```
 
-Fresh 2026-07-31 result: `27 passed, 1 warning in 4.01s`. The full default
-suite was `389 passed, 2 skipped, 1 warning in 12.65s`; the warning is the
+Fresh 2026-07-31 result: `28 passed, 1 warning in 3.18s`. The full default
+suite was `390 passed, 2 skipped, 1 warning in 12.13s`; the warning is the
 existing Starlette/httpx TestClient deprecation notice, and the two skips are
 the intentional vision skips. `pip check` reported `No broken requirements
 found.` and `compileall -q impad tests scripts app.py run_demo.py

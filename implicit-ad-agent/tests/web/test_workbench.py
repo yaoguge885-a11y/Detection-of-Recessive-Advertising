@@ -8,6 +8,7 @@ import sys
 from urllib.parse import urljoin, urlsplit
 import zipfile
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app import create_app
@@ -251,3 +252,16 @@ def test_workbench_script_avoids_forbidden_browser_capabilities(tmp_path):
         "https://",
     ):
         assert forbidden not in script
+
+
+def test_workbench_behavior_regressions_run_with_node():
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node.js is not installed; workbench VM behavior test skipped")
+
+    project_root = Path(__file__).resolve().parents[2]
+    subprocess.run(
+        [node, "tests/web/workbench_behavior.test.cjs"],
+        check=True,
+        cwd=project_root,
+    )
