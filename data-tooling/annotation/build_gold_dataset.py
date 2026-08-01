@@ -43,6 +43,20 @@ def _is_valid_gold_label(label: str) -> bool:
     return label in ("明广", "暗广", "非广")
 
 
+def _pair_ineligibility_reason(rec_a: Dict, rec_b: Dict) -> Optional[str]:
+    methods = (rec_a.get("annotation_method"), rec_b.get("annotation_method"))
+    annotators = (rec_a.get("annotator_id"), rec_b.get("annotator_id"))
+    if "auto_accepted" in methods or "system" in annotators:
+        return "automated_annotation"
+    if any(method != "human" for method in methods):
+        return "non_human_method"
+    if any(not isinstance(annotator, str) or not annotator for annotator in annotators):
+        return "missing_annotator_id"
+    if annotators[0] == annotators[1]:
+        return "same_annotator"
+    return None
+
+
 def merge_annotations(
     ann_a: Dict[str, Dict],
     ann_b: Dict[str, Dict],
@@ -77,6 +91,14 @@ def merge_annotations(
                 "reason": "missing_one_annotator",
                 "annotator_a": rec_a.get("annotator_id") if rec_a else None,
                 "annotator_b": rec_b.get("annotator_id") if rec_b else None,
+            })
+            continue
+
+        ineligibility_reason = _pair_ineligibility_reason(rec_a, rec_b)
+        if ineligibility_reason:
+            excluded.append({
+                "post_id": post_id,
+                "reason": ineligibility_reason,
             })
             continue
 

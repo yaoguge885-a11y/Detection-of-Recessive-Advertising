@@ -430,7 +430,7 @@ git commit -m "docs: record integrated M1 dataset audit"
 - Consumes: completed Tasks 1–5.
 - Produces: requirement-by-requirement evidence without claiming formal M1 unless every gate passes.
 
-- [ ] **Step 1: Verify branch ancestry and merge shape**
+- [x] **Step 1: Verify branch ancestry and merge shape**
 
 ```powershell
 git merge-base --is-ancestor P3 HEAD
@@ -438,7 +438,7 @@ git merge-base --is-ancestor 'origin/P1-·-数据地基与标注规范' HEAD
 git log --oneline --decorate --graph -12
 ```
 
-- [ ] **Step 2: Run focused and full verification**
+- [x] **Step 2: Run focused and full verification**
 
 ```powershell
 & $Python -m pip check
@@ -447,7 +447,7 @@ git log --oneline --decorate --graph -12
 & $Python -m pytest -q
 ```
 
-- [ ] **Step 3: Verify privacy boundaries and clean Git state**
+- [x] **Step 3: Verify privacy boundaries and clean Git state**
 
 ```powershell
 git status --short --branch
@@ -457,6 +457,6 @@ git diff --check
 
 Expected: no tracked runtime data, no uncommitted task changes, and no whitespace errors.
 
-- [ ] **Step 4: Audit each requested item**
+- [x] **Step 4: Audit each requested item**
 
 Record evidence separately for: integration branch, P1 merge ancestry, artifact cleanup, Schema v1.2 runtime compatibility, and local dataset audit. A green test suite does not substitute for missing data-governance evidence.

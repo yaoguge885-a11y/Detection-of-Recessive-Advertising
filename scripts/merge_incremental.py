@@ -7,8 +7,8 @@
   - 合并前自动备份目标 anonymized_posts.jsonl
 
 用法：
-  python scripts/merge_incremental.py \
-    --source data/run_outputs/wechat_20260731_203808 \
+  python scripts/merge_incremental.py `
+    --source data/run_outputs/wechat_20260731_203808 `
     --target data/run_outputs/merged_20260728
 """
 from __future__ import annotations
@@ -20,6 +20,14 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Set
+
+from jsonschema import Draft202012Validator, FormatChecker
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SCHEMA_PATH = REPO_ROOT / "data" / "schema" / "data_schema_v1_2.json"
+SCHEMA = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+VALIDATOR = Draft202012Validator(SCHEMA, format_checker=FormatChecker())
 
 
 def load_objects(path: Path) -> List[Dict]:
@@ -44,16 +52,28 @@ def upgrade_to_v1_2(record: Dict) -> None:
     """防御性 schema 升级：1.1 -> 1.2（已是 1.2 则跳过）。"""
     if record.get("schema_version") == "1.2":
         return
+    if record.get("schema_version") != "1.1":
+        raise ValueError(
+            f"unsupported schema_version: {record.get('schema_version')!r}"
+        )
     record["schema_version"] = "1.2"
     for m in record.get("media", []):
         m.setdefault("source_url", None)
         m.setdefault("caption", None)
-        m.setdefault("is_content", None)
     record.setdefault("comments", [])
     record.setdefault("blogger_history_refs", [])
-    if "provenance" in record:
-        record["provenance"].setdefault("llm_summary", None)
-        record["provenance"].setdefault("llm_extracted_at", None)
+
+
+def validate_v1_2_record(record: Dict, *, source: str, index: int) -> None:
+    errors = sorted(VALIDATOR.iter_errors(record), key=lambda error: list(error.path))
+    if not errors:
+        return
+    first = errors[0]
+    field = ".".join(str(part) for part in first.absolute_path) or "<root>"
+    raise ValueError(
+        f"{source} record {index} is not valid Schema v1.2 at {field}: "
+        f"{first.message}"
+    )
 
 
 def copy_new_media(source_media: Path, target_media: Path) -> tuple[int, int, List[str]]:
@@ -112,12 +132,13 @@ def main() -> int:
             continue
         records = load_objects(jsonl_path)
         added = 0
-        for record in records:
+        for index, record in enumerate(records, start=1):
             pid = record.get("post_id", "")
             if pid in existing_ids:
                 skipped_dupes += 1
                 continue
             upgrade_to_v1_2(record)
+            validate_v1_2_record(record, source=src_dir.name, index=index)
             existing_ids.add(pid)
             new_records.append(record)
             source_platforms[record.get("platform", "unknown")] += 1
@@ -127,6 +148,8 @@ def main() -> int:
     if not new_records:
         print("没有需要合并的新记录。")
         return 0
+
+    target.mkdir(parents=True, exist_ok=True)
 
     # 3. 备份目标 jsonl
     if target_jsonl.exists():

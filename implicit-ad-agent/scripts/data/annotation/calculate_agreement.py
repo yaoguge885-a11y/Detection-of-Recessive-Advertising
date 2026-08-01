@@ -19,14 +19,14 @@ LABEL_INDEX = {label: idx for idx, label in enumerate(LABELS)}
 SPECIAL_LABELS = {"uncertain", "out_of_scope"}
 
 
-def load_annotations(path: Path) -> Dict[str, str]:
-    """从 JSONL 加载标注，返回 {post_id: label}。
+def load_annotations(path: Path) -> Dict[str, Dict[str, Any]]:
+    """从 JSONL 加载标注，保留判断独立人工标注所需的元数据。
 
     兼容两种格式：
       - 标准 JSONL（每行一个完整 JSON 对象）
       - 美化打印拼接的 JSON（每个对象跨多行）
     """
-    data: Dict[str, str] = {}
+    data: Dict[str, Dict[str, Any]] = {}
     raw_text = path.read_text(encoding="utf-8-sig")
     decoder = json.JSONDecoder()
     idx = 0
@@ -39,7 +39,7 @@ def load_annotations(path: Path) -> Dict[str, str]:
         try:
             obj, end = decoder.raw_decode(raw_text, idx)
             if isinstance(obj, dict) and "post_id" in obj and "label" in obj:
-                data[str(obj["post_id"])] = str(obj["label"])
+                data[str(obj["post_id"])] = dict(obj)
             idx = end
         except json.JSONDecodeError as exc:
             raise json.JSONDecodeError(
@@ -48,6 +48,27 @@ def load_annotations(path: Path) -> Dict[str, str]:
                 exc.pos,
             ) from exc
     return data
+
+
+def _label(record: Mapping[str, Any]) -> str:
+    return str(record.get("label", ""))
+
+
+def _pair_ineligibility_reason(
+    record_a: Mapping[str, Any],
+    record_b: Mapping[str, Any],
+) -> Optional[str]:
+    methods = (record_a.get("annotation_method"), record_b.get("annotation_method"))
+    annotators = (record_a.get("annotator_id"), record_b.get("annotator_id"))
+    if "auto_accepted" in methods or "system" in annotators:
+        return "automated_annotation"
+    if any(method != "human" for method in methods):
+        return "non_human_method"
+    if any(not isinstance(annotator, str) or not annotator for annotator in annotators):
+        return "missing_annotator_id"
+    if annotators[0] == annotators[1]:
+        return "same_annotator"
+    return None
 
 
 def _cohen_kappa_from_arrays(a: List[int], b: List[int]) -> float:
@@ -118,22 +139,30 @@ def analyze_disagreements(
 
 
 def calculate_agreement(
-    a: Mapping[str, str],
-    b: Mapping[str, str],
+    a: Mapping[str, Mapping[str, Any]],
+    b: Mapping[str, Mapping[str, Any]],
     *,
     formal_second_round: bool = False,
 ) -> Dict[str, Any]:
     """Return an aggregate agreement report without record identifiers."""
     common_ids = sorted(set(a) & set(b))
 
+    ineligible_reasons = {
+        post_id: reason
+        for post_id in common_ids
+        if (reason := _pair_ineligibility_reason(a[post_id], b[post_id]))
+    }
+
     valid_ids = [
         post_id
         for post_id in common_ids
-        if a[post_id] in LABEL_INDEX and b[post_id] in LABEL_INDEX
+        if post_id not in ineligible_reasons
+        and _label(a[post_id]) in LABEL_INDEX
+        and _label(b[post_id]) in LABEL_INDEX
     ]
     excluded_ids = [post_id for post_id in common_ids if post_id not in valid_ids]
-    labels_a = [LABEL_INDEX[a[pid]] for pid in valid_ids]
-    labels_b = [LABEL_INDEX[b[pid]] for pid in valid_ids]
+    labels_a = [LABEL_INDEX[_label(a[pid])] for pid in valid_ids]
+    labels_b = [LABEL_INDEX[_label(b[pid])] for pid in valid_ids]
     if valid_ids:
         kappa, ci_low, ci_high = cohen_kappa_ci(labels_a, labels_b)
     else:
@@ -156,15 +185,25 @@ def calculate_agreement(
 
     excluded_label_counts: Counter[str] = Counter()
     for post_id in excluded_ids:
-        if a[post_id] not in LABEL_INDEX:
-            excluded_label_counts[f"a:{a[post_id]}"] += 1
-        if b[post_id] not in LABEL_INDEX:
-            excluded_label_counts[f"b:{b[post_id]}"] += 1
+        if post_id in ineligible_reasons:
+            continue
+        label_a = _label(a[post_id])
+        label_b = _label(b[post_id])
+        if label_a not in LABEL_INDEX:
+            excluded_label_counts[f"a:{label_a}"] += 1
+        if label_b not in LABEL_INDEX:
+            excluded_label_counts[f"b:{label_b}"] += 1
+
+    requested_formal = bool(formal_second_round)
 
     return {
         "common_pair_count": len(common_ids),
         "valid_pair_count": len(valid_ids),
         "excluded_pair_count": len(excluded_ids),
+        "ineligible_pair_count": len(ineligible_reasons),
+        "excluded_reason_counts": dict(
+            sorted(Counter(ineligible_reasons.values()).items())
+        ),
         "excluded_label_counts": dict(sorted(excluded_label_counts.items())),
         "kappa": kappa,
         "kappa_ci_95": {"lower": ci_low, "upper": ci_high},
@@ -172,7 +211,8 @@ def calculate_agreement(
         "labels": LABELS,
         "confusion_matrix": matrix,
         "per_class_agreement": per_class,
-        "formal_second_round": formal_second_round,
+        "formal_second_round_requested": requested_formal,
+        "formal_second_round": requested_formal and not ineligible_reasons,
     }
 
 

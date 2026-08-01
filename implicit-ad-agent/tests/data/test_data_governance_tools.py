@@ -233,10 +233,29 @@ def test_public_allowlist_contains_only_explicitly_approved_safe_ids(
     assert allowlist == [valid_v1_record["post_id"]]
 
 
+@pytest.mark.parametrize(
+    "script_name",
+    ["calculate_agreement.py", "build_gold_dataset.py"],
+)
+def test_annotation_governance_script_mirrors_match(script_name: str) -> None:
+    canonical = REPO_ROOT / "data-tooling" / "annotation" / script_name
+    runtime = AGENT_ROOT / "scripts" / "data" / "annotation" / script_name
+
+    assert runtime.read_bytes() == canonical.read_bytes()
+
+
 def test_agreement_excludes_special_and_unknown_labels() -> None:
     report = calculate_agreement.calculate_agreement(
-        {"p1": "明广", "p2": "uncertain", "p3": "bad"},
-        {"p1": "明广", "p2": "非广", "p3": "非广"},
+        {
+            "p1": {"label": "明广", "annotator_id": "a", "annotation_method": "human"},
+            "p2": {"label": "uncertain", "annotator_id": "a", "annotation_method": "human"},
+            "p3": {"label": "bad", "annotator_id": "a", "annotation_method": "human"},
+        },
+        {
+            "p1": {"label": "明广", "annotator_id": "b", "annotation_method": "human"},
+            "p2": {"label": "非广", "annotator_id": "b", "annotation_method": "human"},
+            "p3": {"label": "非广", "annotator_id": "b", "annotation_method": "human"},
+        },
     )
 
     assert report["valid_pair_count"] == 1
@@ -265,7 +284,90 @@ def test_agreement_loader_skips_non_annotation_objects(tmp_path: Path) -> None:
 
     annotations = calculate_agreement.load_annotations(path)
 
-    assert annotations == {"p1": "明广"}
+    assert annotations == {"p1": {"post_id": "p1", "label": "明广"}}
+
+
+def test_agreement_excludes_automated_or_non_independent_pairs() -> None:
+    report = calculate_agreement.calculate_agreement(
+        {
+            "auto": {
+                "label": "明广",
+                "annotator_id": "system",
+                "annotation_method": "auto_accepted",
+            },
+            "same": {
+                "label": "非广",
+                "annotator_id": "annotator-a",
+                "annotation_method": "human",
+            },
+            "missing_method": {
+                "label": "明广",
+                "annotator_id": "annotator-a",
+            },
+            "missing_id": {
+                "label": "非广",
+                "annotation_method": "human",
+            },
+        },
+        {
+            "auto": {
+                "label": "明广",
+                "annotator_id": "system",
+                "annotation_method": "auto_accepted",
+            },
+            "same": {
+                "label": "非广",
+                "annotator_id": "annotator-a",
+                "annotation_method": "human",
+            },
+            "missing_method": {
+                "label": "明广",
+                "annotator_id": "annotator-b",
+            },
+            "missing_id": {
+                "label": "非广",
+                "annotator_id": "annotator-b",
+                "annotation_method": "human",
+            },
+        },
+        formal_second_round=True,
+    )
+
+    assert report["valid_pair_count"] == 0
+    assert report["ineligible_pair_count"] == 4
+    assert report["excluded_reason_counts"] == {
+        "automated_annotation": 1,
+        "missing_annotator_id": 1,
+        "non_human_method": 1,
+        "same_annotator": 1,
+    }
+    assert report["kappa"] is None
+    assert report["formal_second_round"] is False
+    assert report["formal_second_round_requested"] is True
+
+
+def test_agreement_keeps_formal_flag_for_distinct_human_annotators() -> None:
+    report = calculate_agreement.calculate_agreement(
+        {
+            "p1": {
+                "label": "明广",
+                "annotator_id": "annotator-a",
+                "annotation_method": "human",
+            },
+        },
+        {
+            "p1": {
+                "label": "明广",
+                "annotator_id": "annotator-b",
+                "annotation_method": "human",
+            },
+        },
+        formal_second_round=True,
+    )
+
+    assert report["valid_pair_count"] == 1
+    assert report["kappa"] == 1.0
+    assert report["formal_second_round"] is True
 
 
 def test_agreement_cli_has_one_entrypoint_and_writes_json(tmp_path: Path) -> None:
@@ -273,11 +375,25 @@ def test_agreement_cli_has_one_entrypoint_and_writes_json(tmp_path: Path) -> Non
     path_b = tmp_path / "b.jsonl"
     output = tmp_path / "agreement.json"
     record = json.dumps(
-        {"post_id": "p1", "label": "明广"},
+        {
+            "post_id": "p1",
+            "label": "明广",
+            "annotator_id": "annotator-a",
+            "annotation_method": "human",
+        },
+        ensure_ascii=False,
+    )
+    second_record = json.dumps(
+        {
+            "post_id": "p1",
+            "label": "明广",
+            "annotator_id": "annotator-b",
+            "annotation_method": "human",
+        },
         ensure_ascii=False,
     )
     path_a.write_text(record + "\n", encoding="utf-8")
-    path_b.write_text(record + "\n", encoding="utf-8")
+    path_b.write_text(second_record + "\n", encoding="utf-8")
     script = REPO_ROOT / "data-tooling" / "annotation" / "calculate_agreement.py"
 
     result = subprocess.run(
@@ -336,19 +452,19 @@ def test_split_leakage_validator_counts_creator_and_content_group_overlap() -> N
 
 def test_gold_merge_enforces_agreement_adjudication_and_exclusions() -> None:
     ann_a = {
-        "agreed": {"label": "明广", "annotator_id": "a"},
-        "disputed": {"label": "明广", "annotator_id": "a"},
-        "adjudicated": {"label": "暗广", "annotator_id": "a"},
-        "uncertain": {"label": "uncertain", "annotator_id": "a"},
-        "out": {"label": "out_of_scope", "annotator_id": "a"},
-        "missing": {"label": "非广", "annotator_id": "a"},
+        "agreed": {"label": "明广", "annotator_id": "a", "annotation_method": "human"},
+        "disputed": {"label": "明广", "annotator_id": "a", "annotation_method": "human"},
+        "adjudicated": {"label": "暗广", "annotator_id": "a", "annotation_method": "human"},
+        "uncertain": {"label": "uncertain", "annotator_id": "a", "annotation_method": "human"},
+        "out": {"label": "out_of_scope", "annotator_id": "a", "annotation_method": "human"},
+        "missing": {"label": "非广", "annotator_id": "a", "annotation_method": "human"},
     }
     ann_b = {
-        "agreed": {"label": "明广", "annotator_id": "b"},
-        "disputed": {"label": "非广", "annotator_id": "b"},
-        "adjudicated": {"label": "非广", "annotator_id": "b"},
-        "uncertain": {"label": "非广", "annotator_id": "b"},
-        "out": {"label": "非广", "annotator_id": "b"},
+        "agreed": {"label": "明广", "annotator_id": "b", "annotation_method": "human"},
+        "disputed": {"label": "非广", "annotator_id": "b", "annotation_method": "human"},
+        "adjudicated": {"label": "非广", "annotator_id": "b", "annotation_method": "human"},
+        "uncertain": {"label": "非广", "annotator_id": "b", "annotation_method": "human"},
+        "out": {"label": "非广", "annotator_id": "b", "annotation_method": "human"},
     }
     adjudication = {
         "adjudicated": {
@@ -375,6 +491,60 @@ def test_gold_merge_enforces_agreement_adjudication_and_exclusions() -> None:
     assert reasons["out"] == "uncertain_or_out_of_scope"
 
 
+def test_gold_excludes_automated_and_same_annotator_records() -> None:
+    ann_a = {
+        "auto": {
+            "label": "明广",
+            "annotator_id": "system",
+            "annotation_method": "auto_accepted",
+        },
+        "same": {
+            "label": "非广",
+            "annotator_id": "annotator-a",
+            "annotation_method": "human",
+        },
+        "missing_method": {
+            "label": "明广",
+            "annotator_id": "annotator-a",
+        },
+        "missing_id": {
+            "label": "非广",
+            "annotation_method": "human",
+        },
+    }
+    ann_b = {
+        "auto": {
+            "label": "明广",
+            "annotator_id": "system",
+            "annotation_method": "auto_accepted",
+        },
+        "same": {
+            "label": "非广",
+            "annotator_id": "annotator-a",
+            "annotation_method": "human",
+        },
+        "missing_method": {
+            "label": "明广",
+            "annotator_id": "annotator-b",
+        },
+        "missing_id": {
+            "label": "非广",
+            "annotator_id": "annotator-b",
+            "annotation_method": "human",
+        },
+    }
+
+    gold, excluded = build_gold_dataset.merge_annotations(ann_a, ann_b, {})
+
+    assert gold == []
+    assert {record["post_id"]: record["reason"] for record in excluded} == {
+        "auto": "automated_annotation",
+        "missing_id": "missing_annotator_id",
+        "missing_method": "non_human_method",
+        "same": "same_annotator",
+    }
+
+
 def test_gold_cli_writes_safe_aggregate_report(tmp_path: Path) -> None:
     ann_a = tmp_path / "a.jsonl"
     ann_b = tmp_path / "b.jsonl"
@@ -386,6 +556,7 @@ def test_gold_cli_writes_safe_aggregate_report(tmp_path: Path) -> None:
             {
                 "post_id": "private-post-1",
                 "annotator_id": "annotator-a",
+                "annotation_method": "human",
                 "label": "明广",
                 "confidence": 0.9,
                 "evidence": ["private evidence text"],
@@ -400,6 +571,7 @@ def test_gold_cli_writes_safe_aggregate_report(tmp_path: Path) -> None:
             {
                 "post_id": "private-post-1",
                 "annotator_id": "annotator-b",
+                "annotation_method": "human",
                 "label": "明广",
                 "confidence": 0.9,
                 "evidence": ["different private evidence text"],

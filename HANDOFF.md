@@ -75,7 +75,7 @@
 | URL服务边界 | HTTPS/authority/port/本地地址校验、显式PlatformAdapter注册、无网络预览、可审计修正和一次性确认已实现；默认注册表为空，不声称支持真实平台 |
 | P5.2开发者研究工作台 | 同源、无构建的`/workbench`已接入既有API：单条、混合有效/无效批量、能力门控URL预览/确认、完整run九区渲染、复制/UTF-8下载；默认URL适配器为空且fail closed |
 | 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、混淆/错误桶；P4新增固定种子bootstrap区间、显式拒答前预测和risk-coverage工程报告 |
-| 默认回归 | 2026-07-31零Key/零网络全量`390 passed, 2 skipped, 1 warning`；P5.2聚焦`28 passed, 1 warning`；P5.1历史聚焦`58 passed`；P4历史聚焦`61 passed` |
+| 默认回归 | 2026-07-31 P1→P3整合收尾全量`405 passed, 2 skipped, 1 warning`；P5.2历史聚焦`28 passed, 1 warning`；P5.1历史聚焦`58 passed`；P4历史聚焦`61 passed` |
 | 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
 
 ### 4.2 P2.5缺口关闭状态
@@ -217,8 +217,11 @@
 - 用户ZIP只读检查无路径穿越，解压到`data/run_outputs/merged_20260728`（Git忽略）；原始ZIP未修改，真实正文、媒体、URL和ID映射均未提交。
 - 当前权威JSONL审计：2,901行/2,901唯一帖子、108个创作者、Bilibili 2,182 + WeChat 719、14,174个唯一媒体引用全部可定位、15,066个磁盘媒体文件、0重复帖子。
 - Schema v1.2校验为2,901有效/0无效；这次未启用隐私扫描，不能沿用其他数据批次的PII处置结论。
+- 独立代码审查发现并关闭治理旁路：一致性与Gold工具现在只接受`annotation_method="human"`且标注者ID非空、不同、非`system`的标注对；`auto_accepted`、缺失方法/ID和同一标注者均聚合排除，正式轮次标记会fail closed。两份运行镜像字节一致并有回归保护。
+- `scripts/merge_incremental.py`只升级v1.1或接收v1.2；不再写入`is_content=null`或未定义的LLM字段，每条记录在目标备份、追加或媒体复制前先通过权威v1.2 Schema校验。
 - M1门禁仍为`passed=false`、退出码2：候选差99、Gold为0、正式第二轮κ待复核、条款与隐私审批未完成、无泄漏切分缺失、Dataset Card未审批。
 - 数据集指纹：`adb39f1840df62cbeef52faabde85177536478c1c06d37bbb747a9a2bb59a3a5`。该指纹是后续增量补齐、标注与审批的版本锚点。
+- 审查修复后新鲜验证：治理/增量聚焦`30 passed`，自动判断`21 passed`，全量`405 passed, 2 skipped, 1 warning`；`pip check`、`compileall`和两套P1资产校验通过。
 
 ## 5. P1数据资产事实
 
@@ -362,7 +365,7 @@ $env:LANGCHAIN_TRACING_V2 = 'false'
 .\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
 ```
 
-本次整合后的当前预期：零Key全量`398 passed, 2 skipped, 1 warning`，Schema v1.2/P1适配聚焦`16 passed`，自动判断模块`21 passed`，两个P1校验器均输出`VALIDATION PASSED`。P5.2、P5.1、P4和P3的历史聚焦结果保留在对应验收章节。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；校验器绿不替代M1事实门。
+本次整合后的当前预期：零Key全量`405 passed, 2 skipped, 1 warning`，治理/增量聚焦`30 passed`，自动判断模块`21 passed`，两个P1校验器均输出`VALIDATION PASSED`。P5.2、P5.1、P4和P3的历史聚焦结果保留在对应验收章节。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；校验器绿不替代M1事实门。
 
 M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的PowerShell命令见`data-tooling/README.md`。当前门禁预期退出码为2；在外部证据补齐前，不要把它改成成功预期。
 
