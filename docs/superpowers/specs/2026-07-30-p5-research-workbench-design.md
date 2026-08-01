@@ -1,7 +1,7 @@
 # P5.2 Research Workbench Engineering Admission Design
 
 **Date:** 2026-07-30
-**Status:** Approved by the user on 2026-07-30
+**Status:** Implemented and verified on 2026-07-30
 **Scope:** Same-origin developer research workbench for the existing P5.1 API
 
 ## 1. Goal
@@ -39,7 +39,7 @@ research accuracy.
   configuration, or established component system.
 - The verified pre-P5.2 default baseline is
   `380 passed, 2 skipped, 1 warning`.
-- Formal M1 and M4 remain incomplete; P5.3-P5.7 have not been implemented.
+- P5.2 is implemented; formal M1 and M4 remain incomplete, as do team UAT and P5.3-P5.7.
 
 ## 3. Considered Approaches
 
@@ -92,7 +92,7 @@ It does not include:
 
 ## 5. Architecture and Files
 
-Add a focused `impad/web` asset package:
+The focused `impad/web` asset package now contains:
 
 - `implicit-ad-agent/impad/web/index.html`
   - semantic workbench structure only;
@@ -106,7 +106,7 @@ Add a focused `impad/web` asset package:
   - marks assets as package-owned and provides a stable asset-directory
     resolver.
 
-Modify `implicit-ad-agent/app.py` to:
+`implicit-ad-agent/app.py` now:
 
 - mount `/workbench/assets` from the package asset directory;
 - serve `index.html` at `GET /workbench`;
@@ -114,7 +114,7 @@ Modify `implicit-ad-agent/app.py` to:
 - attach the document security headers defined below;
 - leave every existing API and compatibility route unchanged.
 
-Add `implicit-ad-agent/tests/web/test_workbench.py` for route, document,
+`implicit-ad-agent/tests/web/test_workbench.py` covers route, document,
 asset, and security invariants. Existing API/service tests remain the source
 of truth for analysis behavior.
 
@@ -316,7 +316,7 @@ The workbench uses a restrained research-console style:
 
 ### 11.1 Automated tests
 
-Tests must verify:
+Committed tests verify:
 
 - `/workbench` returns UTF-8 HTML;
 - the document references only same-origin repository assets;
@@ -336,6 +336,14 @@ The focused P5.2 gate is:
   tests\web tests\test_app.py tests\api -q
 ```
 
+Fresh 2026-07-31 result: `27 passed, 1 warning in 4.01s`. The full default
+suite was `389 passed, 2 skipped, 1 warning in 12.65s`; the warning is the
+existing Starlette/httpx TestClient deprecation notice, and the two skips are
+the intentional vision skips. `pip check` reported `No broken requirements
+found.` and `compileall -q impad tests scripts app.py run_demo.py
+run_tools_demo.py` exited 0. Both P1 submission validators reported
+`VALIDATION PASSED`; this validates assets, not M1 readiness.
+
 ### 11.2 Browser verification
 
 Run the local app with zero tracing and use a real browser to verify:
@@ -351,8 +359,14 @@ Run the local app with zero tracing and use a real browser to verify:
 9. desktop and 390px responsive layouts;
 10. browser console contains no application errors.
 
-Capture desktop and narrow screenshots as local verification artifacts. They
-are not committed unless explicitly needed by later project documentation.
+Task 7 controller browser evidence recorded a synthetic single run
+`run_bf717e85fd934afc81d227edf3720ab6`, a `2成功 / 1失败 / 3总计` mixed batch,
+the default disabled URL input, matching keyboard tab focus/selection,
+clipboard copy and actual UTF-8 downloads. It observed no horizontal overflow
+at 1440px or 390px, and `newLogs=[]` (no GREEN-run console errors). The local,
+uncommitted screenshots are
+`C:\Users\31729\AppData\Local\Temp\impad-p5-workbench\workbench-desktop.png`
+and `C:\Users\31729\AppData\Local\Temp\impad-p5-workbench\workbench-narrow.png`.
 
 ### 11.3 Completion gate
 
@@ -405,3 +419,36 @@ existing local contracts and render their evidence safely. It does not prove:
 - remote MCP or A2A deployment;
 - four-person UAT;
 - P5 or M5 completion.
+
+## 14. Completion Evidence (Task 8)
+
+1. Production `app.py`, package-owned `impad/web` assets, and route tests
+   establish same-origin `/workbench` with no frontend build or network
+   dependency.
+2. Task 7 browser evidence establishes the synthetic single run and complete
+   persisted run rendering through the existing APIs.
+3. Task 7 browser evidence establishes the ordered mixed batch with
+   independently visible/selectable success and failure rows.
+4. Task 6 browser evidence and the executable capability-gate regression
+   establish that the empty/default, pending, and failed capability states
+   disable URL preview without sending a request.
+5. Task 6 fixture evidence establishes preview/correction/confirm with only
+   the allowed correction fields and no raw query/fragment display.
+6. Task 4/7 browser evidence establishes all required explicit result
+   renderers, report/raw views, clipboard copy, and actual UTF-8 downloads.
+7. Production safe DOM helpers, committed web tests, and the fresh scan prove
+   the tested no-HTML-sink, no-storage, same-origin asset, and CSP boundary.
+8. Task 7 records keyboard navigation, 1440px/390px no-overflow layouts, and
+   zero new console errors.
+9. Fresh Task 8 checks establish focused/full pytest, dependency/compilation,
+   both validators, and `git diff --check`; the broad secret regex found only
+   two old `api_key=do-not-store` fixture literals in the P5.1 plan, while the
+   runtime/current-document scoped scan was clean.
+10. `HANDOFF.md`, the test library, phase plan, this design, and the project
+   specification record the P5.2 engineering facts and retain explicit
+   UAT/P5.3-P5.7/M1/M4/M5 non-claims.
+
+This evidence closes only the P5.2 engineering gate. M1 remains blocked by
+candidate scale, formal Gold, compliance, formal agreement, leakage proof and
+Dataset Card evidence; green validators or browser checks do not change that
+fact.

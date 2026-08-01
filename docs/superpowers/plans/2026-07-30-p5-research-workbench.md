@@ -2279,7 +2279,7 @@ an empty commit; record the verification evidence in Task 8 documentation.
 - Produces: reproducible handoff, copyable test/run commands, and explicit
   incomplete team-UAT/P5.3-P5.7/M1/M4/M5 boundaries.
 
-- [ ] **Step 1: Run dependency and compilation checks**
+- [x] **Step 1: Run dependency and compilation checks**
 
 ```powershell
 Set-Location implicit-ad-agent
@@ -2291,7 +2291,7 @@ Set-Location implicit-ad-agent
 Both commands must exit zero; `pip check` must report
 `No broken requirements found.`.
 
-- [ ] **Step 2: Run focused and full pytest gates**
+- [x] **Step 2: Run focused and full pytest gates**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest `
@@ -2302,7 +2302,7 @@ Both commands must exit zero; `pip check` must report
 Record the exact fresh pass/skip/warning counts emitted by these commands.
 Do not copy pre-P5.2 counts into the current-status sections.
 
-- [ ] **Step 3: Run both P1 asset validators**
+- [x] **Step 3: Run both P1 asset validators**
 
 From the repository root:
 
@@ -2315,7 +2315,7 @@ From the repository root:
 
 Both must output `VALIDATION PASSED`.
 
-- [ ] **Step 4: Run security and remote-asset scans**
+- [x] **Step 4: Run security and remote-asset scans**
 
 ```powershell
 $script = Get-Content -Raw -Encoding UTF8 `
@@ -2356,7 +2356,7 @@ if ($LASTEXITCODE -eq 0) {
 git diff --check
 ```
 
-- [ ] **Step 5: Update `HANDOFF.md`**
+- [x] **Step 5: Update `HANDOFF.md`**
 
 Add a dated P5.2 engineering-admission section that records:
 
@@ -2371,7 +2371,7 @@ Add a dated P5.2 engineering-admission section that records:
 Update the current module table, default regression row, next-step order, and
 copyable P5.2 focused command.
 
-- [ ] **Step 6: Update the existing-function test library**
+- [x] **Step 6: Update the existing-function test library**
 
 Add a P5.2 section containing:
 
@@ -2388,7 +2388,7 @@ Add a P5.2 section containing:
 Update stale “current” counts and the FastAPI feature table without rewriting
 historical snapshots.
 
-- [ ] **Step 7: Update phase plan and system specification**
+- [x] **Step 7: Update phase plan and system specification**
 
 In the phase plan:
 
@@ -2402,7 +2402,7 @@ In the project specification:
   no-build/no-storage boundaries;
 - keep real platform adapters and A2A planned.
 
-- [ ] **Step 8: Mark design status and record verification**
+- [x] **Step 8: Mark design status and record verification**
 
 Change the design status to `Implemented and verified on 2026-07-30` and add
 the exact:
@@ -2414,7 +2414,7 @@ the exact:
 - known existing warning;
 - non-claims.
 
-- [ ] **Step 9: Review every acceptance criterion**
+- [x] **Step 9: Review every acceptance criterion**
 
 For each of the ten acceptance criteria in the design, identify direct
 evidence from:
@@ -2428,7 +2428,7 @@ evidence from:
 Fix any criterion whose evidence is missing or indirect. Re-run the affected
 focused check after every fix.
 
-- [ ] **Step 10: Commit factual documentation**
+- [x] **Step 10: Commit factual documentation**
 
 ```powershell
 git add -- `
@@ -2442,7 +2442,7 @@ git diff --cached --check
 git commit -m "docs: record P5 research workbench admission"
 ```
 
-- [ ] **Step 11: Final repository audit**
+- [x] **Step 11: Final repository audit**
 
 ```powershell
 git status --short --branch
