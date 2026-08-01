@@ -308,6 +308,21 @@ def test_agreement_excludes_automated_or_non_independent_pairs() -> None:
                 "label": "非广",
                 "annotation_method": "human",
             },
+            "whitespace_id": {
+                "label": "明广",
+                "annotator_id": "   ",
+                "annotation_method": "human",
+            },
+            "normalized_same": {
+                "label": "非广",
+                "annotator_id": "annotator-a",
+                "annotation_method": "human",
+            },
+            "system_space": {
+                "label": "明广",
+                "annotator_id": "system ",
+                "annotation_method": "human",
+            },
         },
         {
             "auto": {
@@ -329,17 +344,32 @@ def test_agreement_excludes_automated_or_non_independent_pairs() -> None:
                 "annotator_id": "annotator-b",
                 "annotation_method": "human",
             },
+            "whitespace_id": {
+                "label": "明广",
+                "annotator_id": "annotator-b",
+                "annotation_method": "human",
+            },
+            "normalized_same": {
+                "label": "非广",
+                "annotator_id": " annotator-a ",
+                "annotation_method": "human",
+            },
+            "system_space": {
+                "label": "明广",
+                "annotator_id": "annotator-b",
+                "annotation_method": "human",
+            },
         },
         formal_second_round=True,
     )
 
     assert report["valid_pair_count"] == 0
-    assert report["ineligible_pair_count"] == 4
+    assert report["ineligible_pair_count"] == 7
     assert report["excluded_reason_counts"] == {
-        "automated_annotation": 1,
-        "missing_annotator_id": 1,
+        "automated_annotation": 2,
+        "missing_annotator_id": 2,
         "non_human_method": 1,
-        "same_annotator": 1,
+        "same_annotator": 2,
     }
     assert report["kappa"] is None
     assert report["formal_second_round"] is False
@@ -511,6 +541,21 @@ def test_gold_excludes_automated_and_same_annotator_records() -> None:
             "label": "非广",
             "annotation_method": "human",
         },
+        "whitespace_id": {
+            "label": "明广",
+            "annotator_id": "   ",
+            "annotation_method": "human",
+        },
+        "normalized_same": {
+            "label": "非广",
+            "annotator_id": "annotator-a",
+            "annotation_method": "human",
+        },
+        "system_space": {
+            "label": "明广",
+            "annotator_id": "system ",
+            "annotation_method": "human",
+        },
     }
     ann_b = {
         "auto": {
@@ -532,6 +577,21 @@ def test_gold_excludes_automated_and_same_annotator_records() -> None:
             "annotator_id": "annotator-b",
             "annotation_method": "human",
         },
+        "whitespace_id": {
+            "label": "明广",
+            "annotator_id": "annotator-b",
+            "annotation_method": "human",
+        },
+        "normalized_same": {
+            "label": "非广",
+            "annotator_id": " annotator-a ",
+            "annotation_method": "human",
+        },
+        "system_space": {
+            "label": "明广",
+            "annotator_id": "annotator-b",
+            "annotation_method": "human",
+        },
     }
 
     gold, excluded = build_gold_dataset.merge_annotations(ann_a, ann_b, {})
@@ -541,7 +601,10 @@ def test_gold_excludes_automated_and_same_annotator_records() -> None:
         "auto": "automated_annotation",
         "missing_id": "missing_annotator_id",
         "missing_method": "non_human_method",
+        "normalized_same": "same_annotator",
         "same": "same_annotator",
+        "system_space": "automated_annotation",
+        "whitespace_id": "missing_annotator_id",
     }
 
 

@@ -217,7 +217,7 @@
 - 用户ZIP只读检查无路径穿越，解压到`data/run_outputs/merged_20260728`（Git忽略）；原始ZIP未修改，真实正文、媒体、URL和ID映射均未提交。
 - 当前权威JSONL审计：2,901行/2,901唯一帖子、108个创作者、Bilibili 2,182 + WeChat 719、14,174个唯一媒体引用全部可定位、15,066个磁盘媒体文件、0重复帖子。
 - Schema v1.2校验为2,901有效/0无效；这次未启用隐私扫描，不能沿用其他数据批次的PII处置结论。
-- 独立代码审查发现并关闭治理旁路：一致性与Gold工具现在只接受`annotation_method="human"`且标注者ID非空、不同、非`system`的标注对；`auto_accepted`、缺失方法/ID和同一标注者均聚合排除，正式轮次标记会fail closed。两份运行镜像字节一致并有回归保护。
+- 独立代码审查发现并关闭治理旁路：一致性与Gold工具现在只接受`annotation_method="human"`且标注者ID经首尾空白归一化后非空、不同、非`system`的标注对；`auto_accepted`、缺失方法/ID和同一标注者均聚合排除，正式轮次标记会fail closed。两份运行镜像字节一致并有回归保护。
 - `scripts/merge_incremental.py`只升级v1.1或接收v1.2；不再写入`is_content=null`或未定义的LLM字段，每条记录在目标备份、追加或媒体复制前先通过权威v1.2 Schema校验。
 - M1门禁仍为`passed=false`、退出码2：候选差99、Gold为0、正式第二轮κ待复核、条款与隐私审批未完成、无泄漏切分缺失、Dataset Card未审批。
 - 数据集指纹：`adb39f1840df62cbeef52faabde85177536478c1c06d37bbb747a9a2bb59a3a5`。该指纹是后续增量补齐、标注与审批的版本锚点。

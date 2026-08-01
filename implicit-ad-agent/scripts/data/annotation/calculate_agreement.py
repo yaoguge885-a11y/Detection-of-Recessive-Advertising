@@ -59,12 +59,18 @@ def _pair_ineligibility_reason(
     record_b: Mapping[str, Any],
 ) -> Optional[str]:
     methods = (record_a.get("annotation_method"), record_b.get("annotation_method"))
-    annotators = (record_a.get("annotator_id"), record_b.get("annotator_id"))
-    if "auto_accepted" in methods or "system" in annotators:
+    raw_annotators = (record_a.get("annotator_id"), record_b.get("annotator_id"))
+    annotators = tuple(
+        annotator.strip() if isinstance(annotator, str) else ""
+        for annotator in raw_annotators
+    )
+    if "auto_accepted" in methods or any(
+        annotator.casefold() == "system" for annotator in annotators
+    ):
         return "automated_annotation"
     if any(method != "human" for method in methods):
         return "non_human_method"
-    if any(not isinstance(annotator, str) or not annotator for annotator in annotators):
+    if any(not annotator for annotator in annotators):
         return "missing_annotator_id"
     if annotators[0] == annotators[1]:
         return "same_annotator"
