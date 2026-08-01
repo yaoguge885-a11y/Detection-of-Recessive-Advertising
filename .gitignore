@@ -40,6 +40,12 @@ data/reports/m1/private/
 data/run_outputs/
 runs/
 
+# Local collection inputs and annotation trial outputs
+data/*_urls*.txt
+data/*_authors*.txt
+data/annotations/cli_test_*.json
+data/annotations/preannotated/
+
 # Editors and notebooks
 .idea/
 .vscode/
@@ -53,6 +59,10 @@ runs/
 *.tmp
 *.bak
 *.zip
+scripts/*_output.txt
+scripts/validate_result.txt
+temp_*.py
+diagnose_jsonl.py
 data/dataset_full.zip.baiduyun.uploading.cfg
 
 # Operating-system metadata

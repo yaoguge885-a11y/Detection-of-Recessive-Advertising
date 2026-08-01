@@ -1,0 +1,419 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/implicit-ad/data_schema_v1_2.json",
+  "title": "隐性广告识别 P1 数据 Schema v1.2",
+  "description": "在 v1.1 基础上增加：media_item 的 source_url/caption/is_content、provenance 的 llm_* 字段、content_record 的 _collected 审计快照。内容记录不包含最终人工标签。",
+  "$ref": "#/$defs/content_record",
+  "$defs": {
+    "content_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "post_id",
+        "platform",
+        "source_type",
+        "blogger_id",
+        "text",
+        "media",
+        "provenance",
+        "privacy"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "enum": ["1.1", "1.2"],
+          "description": "Schema 版本。v1.2 向后兼容 v1.1 数据。"
+        },
+        "post_id": {
+          "type": "string",
+          "pattern": "^post_[A-Za-z0-9_-]+$",
+          "description": "去标识化且全局唯一的帖子 ID。"
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "wechat_official_account",
+            "weibo",
+            "xiaohongshu",
+            "douyin",
+            "bilibili",
+            "synthetic",
+            "other"
+          ],
+          "description": "内容来源平台。"
+        },
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "public_dataset",
+            "manual_public_collection",
+            "authorized_export",
+            "synthetic"
+          ],
+          "description": "数据取得方式；模拟数据必须填 synthetic。"
+        },
+        "blogger_id": {
+          "type": "string",
+          "pattern": "^blogger_[A-Za-z0-9_-]+$",
+          "description": "经项目私有盐处理的稳定哈希/匿名 ID。"
+        },
+        "published_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "发布时间；未知时为 null。"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "帖子/文章标题，不可获取时为 null。"
+        },
+        "content_group_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "跨平台转载内容组 ID，用于防泄漏划分。无已知转载关系时为 null。"
+        },
+        "text": {
+          "type": "string",
+          "description": "经脱敏后的正文；图像为主的帖子可为空字符串。"
+        },
+        "media": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/media_item"
+          },
+          "description": "媒体元数据，不在 Git 中提交未审查的原始媒体。"
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comment_item"
+          },
+          "description": "可获得时的匿名化评论。"
+        },
+        "blogger_history_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "用于主题漂移判断的去标识化历史帖子引用。"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance",
+          "description": "来源和采集审计信息。"
+        },
+        "privacy": {
+          "$ref": "#/$defs/privacy",
+          "description": "脱敏与敏感信息检查结果。"
+        },
+        "_collected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_ref_hash",
+            "collected_at",
+            "collector",
+            "terms_checked_at",
+            "source_url"
+          ],
+          "properties": {
+            "source_ref_hash": {
+              "type": "string"
+            },
+            "collected_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "collector": {
+              "type": "string"
+            },
+            "terms_checked_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "source_url": {
+              "type": "string",
+              "description": "原始采集 URL（脱敏前）。"
+            },
+            "llm_mode": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "llm_confidence": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "llm_needs_review": {
+              "type": "boolean"
+            },
+            "llm_notes": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "description": "v1.2 新增：采集审计快照（provenance 副本 + source_url），用于追溯。"
+        }
+      }
+    },
+    "media_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "media_id",
+        "type",
+        "ref",
+        "sha256",
+        "phash",
+        "ocr_text"
+      ],
+      "properties": {
+        "media_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video",
+            "audio",
+            "link",
+            "other"
+          ]
+        },
+        "ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "媒体本地逻辑引用；图像补充记录的 media_ref 与此对应。"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "phash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ocr_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "v1.2 新增：图片原始 URL，用于反查与去重。"
+        },
+        "caption": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "v1.2 新增：BS4/LLM 提取的图片标注文字。"
+        },
+        "is_content": {
+          "type": "boolean",
+          "description": "v1.2 新增：true=内容图片，false=平台装饰图（二维码/头像等）。"
+        }
+      }
+    },
+    "comment_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comment_id",
+        "author_id",
+        "text",
+        "like_count",
+        "is_pinned"
+      ],
+      "properties": {
+        "comment_id": {
+          "type": "string"
+        },
+        "author_id": {
+          "type": "string",
+          "description": "匿名评论者 ID。"
+        },
+        "text": {
+          "type": "string"
+        },
+        "like_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "is_pinned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_ref_hash",
+        "collected_at",
+        "collector",
+        "terms_checked_at"
+      ],
+      "properties": {
+        "source_ref_hash": {
+          "type": "string"
+        },
+        "collected_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "collector": {
+          "type": "string"
+        },
+        "terms_checked_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "llm_mode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "v1.2 新增：LLM 调用模式（如 html_direct）。"
+        },
+        "llm_confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "v1.2 新增：LLM 提取置信度 0-1。"
+        },
+        "llm_needs_review": {
+          "type": "boolean",
+          "description": "v1.2 新增：是否需要人工复核。"
+        },
+        "llm_notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "v1.2 新增：LLM 备注信息。"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "anonymized",
+        "contains_sensitive_data"
+      ],
+      "properties": {
+        "anonymized": {
+          "type": "boolean"
+        },
+        "contains_sensitive_data": {
+          "type": "boolean"
+        }
+      }
+    },
+    "annotation_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "post_id",
+        "annotator_id",
+        "guide_version",
+        "label",
+        "confidence",
+        "evidence_codes",
+        "evidence",
+        "uncertain_reason",
+        "annotated_at"
+      ],
+      "properties": {
+        "post_id": {
+          "type": "string",
+          "pattern": "^post_[A-Za-z0-9_-]+$"
+        },
+        "annotator_id": {
+          "type": "string"
+        },
+        "guide_version": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "enum": [
+            "明广",
+            "暗广",
+            "非广",
+            "out_of_scope",
+            "uncertain"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "D", "C", "P", "A", "V", "B", "M"
+            ]
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "自由文本证据描述。"
+        },
+        "uncertain_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "label=uncertain 时的原因。"
+        },
+        "annotated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

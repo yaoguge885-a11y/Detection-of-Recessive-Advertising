@@ -1,17 +1,41 @@
-﻿# P1 数据 Schema v1.0（本次交付说明）
+﻿# P1 数据 Schema（权威运行版本说明）
 
-本次提交包含两个 JSON 文件：
+> **权威运行版本：v1.2**
+> 本文档描述当前仓库中数据 Schema 的版本策略、兼容范围与升级规则。
+> 版本变更历史见 `docs/data_schema_changelog.md`。
 
-- `data/schema/data_schema_v1.json`：标准帖子输入 `content_record`、独立 `annotation_record` 与 `annotation_supplement_record` 的 JSON Schema、字段说明和样例；
-- `data/synthetic/simulated_posts_v1.json`：30 条完全合成的模拟帖子、逐条对应的参考标注、标注补充记录和覆盖矩阵；
-- `docs/annotation_supplement_schema.md`：图像分析、Markdown 备注与边界案例补充记录的字段规范。
+## 当前权威 Schema
 
-## 设计原则
+| 版本 | 文件路径 | 状态 |
+|------|---------|------|
+| **v1.2（权威运行版本）** | `data-tooling/schema/data_schema_v1_2.json` | ✅ 生产使用 |
+| v1.1 | `data-tooling/schema/data_schema_v1_1.json` | 保留（v1.2 向后兼容） |
+| v1.0 | `data/schema/data_schema_v1.json` | 保留（合成资产基线） |
 
-1. **内容、主标注与补充标注分离**：`content_records` 不保存最终标签；`reference_annotations` 保存主标注；`reference_annotation_supplements` 通过 `post_id + annotator_id` 关联图像分析、Markdown 备注和边界讨论。
-2. **隐私最小化**：仅保留 `blogger_id`，不把 `blogger_name` 设为必填字段；所有模拟账号、评论者和来源均为虚构。
-3. **可审计性**：每条内容记录均有 `provenance` 和 `privacy`；真实数据采集时必须替换为实际来源台账信息。
-4. **合成数据边界**：本模拟集用于 Schema 校验、规则试跑和管线冒烟测试，不能替代真实公开数据的双人标注金标集。
+> `data/schema/data_schema_v1_2.json` 与 `data-tooling/schema/data_schema_v1_2.json` 内容相同。
+> 权威文件以 `data-tooling/schema/data_schema_v1_2.json` 为准，`data/schema/` 下为副本。
+
+## 版本兼容范围
+
+| 版本 | `schema_version` 值 | 说明 |
+|------|---------------------|------|
+| v1.0 | `"1.0"` | 初始版本，仅含 wechat_official_account / weibo / xiaohongshu / douyin / synthetic / other |
+| v1.1 | `"1.1"` | 新增 bilibili 平台；可选 `title` 字段；可选 `content_group_id` |
+| v1.2 | `"1.1"` 或 `"1.2"` | 在 v1.1 基础上新增 media 的 `source_url`/`caption`/`is_content`、provenance 的 `llm_*` 字段、`_collected` 审计快照 |
+
+v1.2 向后兼容 v1.1：`schema_version` 为 `"1.1"` 的记录通过 v1.2 校验。
+
+## 小红书与 B 站适配策略
+
+- **B 站**：v1.1 起纳入 `platform` 枚举（`"bilibili"`），完整支持图文、视频、评论结构。
+- **小红书**：预留 `"xiaohongshu"` 枚举值。当前无小红书真实数据批次。首个小批次采集后如需新增字段，通过 v1.3 兼容扩展处理。
+- **`title` 字段**：v1.1 起为可选字段（`string | null`），不可获取时填 `null`。
+
+## 升级规则
+
+1. **向后兼容扩展**（新增可选字段、放宽约束）→ 增加次版本号（如 v1.2 → v1.3），旧数据不经修改即可通过新 Schema。
+2. **不兼容改动**（修改必填字段、收紧类型、删除字段）→ 增加主版本号（如 v1.2 → v2.0），需要迁移脚本。
+3. 不得通过删除 `additionalProperties: false` 让旧数据通过校验。
 
 ## 标签
 
@@ -22,8 +46,25 @@
 
 ## 验证命令
 
+### v1.0 合成资产验证
+
 ```powershell
 python scripts/data/validate_submission_assets.py
 ```
 
-该脚本仅使用 Python 标准库，会检查字段、类型、ID 关联、标签分布、证据码、媒体 `ref` 与图像补充记录的一一对应关系，以及模拟数据隐私标记。
+### v1.2 正式候选验证
+
+```powershell
+python data-tooling/annotation/validate_schema.py ^
+  data\run_outputs\merged_20260728\anonymized_posts.jsonl ^
+  --target-schema 1.2 ^
+  --schema data-tooling\schema\data_schema_v1_2.json ^
+  --report data\reports\m1\schema_report.json
+```
+
+## 设计原则
+
+1. **内容、主标注与补充标注分离**：`content_records` 不保存最终标签。
+2. **隐私最小化**：仅保留 `blogger_id`，不把 `blogger_name` 设为必填字段。
+3. **可审计性**：每条内容记录均有 `provenance` 和 `privacy`。
+4. **合成数据边界**：合成资产用于 Schema 校验和管线冒烟测试，不能替代真实数据的双人标注金标集。

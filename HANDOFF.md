@@ -194,6 +194,23 @@
 - Task 7真实浏览器证据（实施提交`fde1e4a`）：单条run为`run_bf717e85fd934afc81d227edf3720ab6`；混合批量为2成功/1失败/3总计；默认URL禁用；键盘ArrowLeft/Right/Home/End可用；剪贴板复制成功，实际UTF-8 `.md`和`.json`下载已核对；1440px和390px均无横向溢出；GREEN新增console errors为0。截图临时路径为`C:\Users\31729\AppData\Local\Temp\impad-p5-workbench\workbench-desktop.png`和`...\workbench-narrow.png`，不提交。
 - 此节只关闭P5.2工程门：不声称四人团队UAT、真实平台采集、A2A、P5.3～P5.7、M1/M4/M5或分类/法规研究结论已完成。M1仍被候选池、Gold、合规、正式协议、无泄漏切分和Dataset Card证据缺口阻塞。
 
+### 4.12 2026-07-31 分置信度自动判断标注系统（co-pilot-auto-judge）
+
+- 设计文档：`docs/co-pilot-auto-judge-design.md`（v1.1，本地推理 Ollama + `qwen3.5:9b`）。
+- 核心模块：`data-tooling/annotation/auto_judge.py` —— 三级自动判断（≥0.85 自动保存 / 0.55–0.84 建议 / <0.55 纯人工）、Ollama `/api/chat` JSON 推理、关键词失败回退、自动保存记录构建。
+- 服务器管理：`data-tooling/annotation/ollama_server.py` —— 显式启动 `ollama serve`、查询状态（版本/已安装/已加载）、模型预热与常驻（`status` / `serve` / `preload` 子命令）。
+- 配套工具：`batch_pre_annotate.py`（批量预标注，输出 auto/suggest/stats 三文件）、`manual_review_annotate.py`（新增 `--auto-threshold`/`--ollama-backend`/`--ollama-model` 等）、`flet_annotator.py`（新增自动模式开关、阈值滑块、Toast、底部状态栏）。
+- `impad/llm.py` 新增 `get_ollama_llm()` 工厂（OpenAI 兼容端点指向本地 Ollama）。
+- 自动保存审计约定：`annotator_id="system"`、`annotation_method="auto_accepted"`、`_llm_suggestion` 记录模型与是否自动采纳；**自动标注记录不参与双人 κ 计算**。
+- **运行环境约束**：
+  - Ollama 模型目录可能由 `OLLAMA_MODELS` 改到非默认位置；`ollama_server.py` 会尝试从桌面应用日志探测，部署时仍应以 `status` 子命令实测。
+  - **Qwen3.5 默认开启 thinking**；本工具在请求顶层设置 `"think": false`，避免长推理挤占结构化 JSON 输出。实际延迟和显存占用必须在目标机器重新测量。
+  - 预热：`python data-tooling/annotation/ollama_server.py serve --preload`；批量脚本默认预热并使用 `keep_alive=30m`，减少重复冷启动。
+- 单元测试：`data-tooling/annotation/tests/test_auto_judge.py`（21 passed，mock 掉 Ollama，不依赖模型）。
+- 三条样例仅完成 Ollama/CLI/GUI 工程冒烟；它们不证明自动标注准确率、正式双标一致性或 Gold 质量。
+- Windows GBK 控制台兼容：CLI 脚本均强制 `sys.stdout.reconfigure(encoding="utf-8")`。
+- 修复 `flet_annotator.py` 原有 4 处无法解析的延迟导入（`scripts.data.annotation.*`/`data_tooling.annotation.*` → 同目录直接导入）。
+
 ## 5. P1数据资产事实
 
 远端最新P1成果已经合并到本地P2，但“资产合并”不等于M1验收完成。
