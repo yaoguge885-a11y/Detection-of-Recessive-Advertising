@@ -33,12 +33,13 @@ _P1_SOURCE_TYPES = {
     "authorized_export",
     "synthetic",
 }
+_P1_SCHEMA_VERSIONS = {"1.0", "1.1", "1.2"}
 
 
 def normalize_post_record(raw: dict | PostRecord) -> PostRecord:
     if isinstance(raw, PostRecord):
         return raw
-    is_p1 = raw.get("schema_version") == "1.0" or (
+    is_p1 = raw.get("schema_version") in _P1_SCHEMA_VERSIONS or (
         "blogger_id" in raw
         and ("provenance" in raw or "privacy" in raw)
     ) or (

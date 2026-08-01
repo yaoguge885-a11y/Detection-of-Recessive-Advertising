@@ -45,6 +45,41 @@ def test_supervisor_routes_by_capability_plan():
     )
 
 
+def test_supervisor_accepts_schema_v12_content_record():
+    state = supervisor(
+        {
+            "post": {
+                "schema_version": "1.2",
+                "post_id": "post_v12_supervisor_001",
+                "platform": "bilibili",
+                "source_type": "manual_public_collection",
+                "blogger_id": "blogger_v12_supervisor_001",
+                "published_at": "2026-07-28T12:00:00+08:00",
+                "title": "测试视频",
+                "content_group_id": None,
+                "text": "本期视频介绍测试产品",
+                "media": [],
+                "comments": [],
+                "blogger_history_refs": [],
+                "provenance": {
+                    "source_ref_hash": "source-v12-supervisor-001",
+                    "collected_at": "2026-07-28T12:01:00+08:00",
+                    "collector": "A",
+                    "terms_checked_at": "2026-07-28",
+                },
+                "privacy": {
+                    "anonymized": True,
+                    "contains_sensitive_data": False,
+                },
+            }
+        }
+    )
+
+    assert state["post_record"].schema_version == "1.2"
+    assert state["post_record"].platform == "bilibili"
+    assert state["post_record"].creator_id == "blogger_v12_supervisor_001"
+
+
 def test_route_next_falls_back_to_judge():
     assert route_next({"plan": ["vision", "behavior"]}) == "vision"
     assert route_next({"plan": []}) == "judge"

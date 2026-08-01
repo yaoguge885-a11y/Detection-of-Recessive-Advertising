@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
@@ -17,20 +18,38 @@ from ..contracts.post import (
 )
 
 
-_SCHEMA_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "data"
-    / "schema"
-    / "data_schema_v1.json"
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_SCHEMA_PATHS = {
+    "1.0": _REPO_ROOT / "data/schema/data_schema_v1.json",
+    "1.1": _REPO_ROOT / "data/schema/data_schema_v1_2.json",
+    "1.2": _REPO_ROOT / "data/schema/data_schema_v1_2.json",
+}
+_MEDIA_RUNTIME_FIELDS = (
+    "media_id",
+    "type",
+    "ref",
+    "sha256",
+    "phash",
+    "ocr_text",
+)
+_PROVENANCE_RUNTIME_FIELDS = (
+    "source_ref_hash",
+    "collected_at",
+    "collector",
+    "terms_checked_at",
 )
 
 
-def _load_validator() -> Draft202012Validator:
-    schema = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
+@lru_cache(maxsize=len(_SCHEMA_PATHS))
+def _load_validator(schema_version: str) -> Draft202012Validator:
+    try:
+        schema_path = _SCHEMA_PATHS[schema_version]
+    except KeyError as exc:
+        raise ValueError(
+            f"unsupported schema_version: {schema_version}"
+        ) from exc
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
     return Draft202012Validator(schema, format_checker=FormatChecker())
-
-
-_VALIDATOR = _load_validator()
 
 
 def _format_error(error) -> str:
@@ -45,8 +64,13 @@ def _format_error(error) -> str:
 
 
 def _validate_content_record(record: dict) -> None:
+    raw_schema_version = record.get("schema_version")
+    schema_version = (
+        "1.0" if raw_schema_version is None else str(raw_schema_version)
+    )
+    validator = _load_validator(schema_version)
     errors = sorted(
-        _VALIDATOR.iter_errors(record),
+        validator.iter_errors(record),
         key=lambda error: (
             tuple(str(part) for part in error.absolute_path),
             error.message,
@@ -130,7 +154,7 @@ def _capture_status(record: dict) -> CaptureStatus:
 
 
 def post_record_from_content_record(record: dict) -> PostRecord:
-    """Validate and convert one P1 content_record without dropping fields."""
+    """Validate a P1 content record and map its runtime fields."""
 
     _validate_content_record(record)
     return PostRecord(
@@ -141,13 +165,22 @@ def post_record_from_content_record(record: dict) -> PostRecord:
         creator_id=record["blogger_id"],
         published_at=record.get("published_at"),
         text=record["text"],
-        media=[MediaRecord.model_validate(item) for item in record["media"]],
+        media=[
+            MediaRecord.model_validate({
+                field: item.get(field)
+                for field in _MEDIA_RUNTIME_FIELDS
+            })
+            for item in record["media"]
+        ],
         comments=[
             CommentRecord.model_validate(item)
             for item in record.get("comments", [])
         ],
         history_refs=list(record.get("blogger_history_refs", [])),
-        provenance=ProvenanceRecord.model_validate(record["provenance"]),
+        provenance=ProvenanceRecord.model_validate({
+            field: record["provenance"].get(field)
+            for field in _PROVENANCE_RUNTIME_FIELDS
+        }),
         privacy=PrivacyRecord.model_validate(record["privacy"]),
         capture_status=_capture_status(record),
     )
