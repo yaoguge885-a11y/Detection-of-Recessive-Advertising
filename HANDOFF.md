@@ -208,6 +208,8 @@
 - 三条样例仅完成 Ollama/CLI/GUI 工程冒烟；它们不证明自动标注准确率、正式双标一致性或 Gold 质量。
 - Windows GBK 控制台兼容：CLI 脚本均强制 `sys.stdout.reconfigure(encoding="utf-8")`。
 - 修复 `flet_annotator.py` 原有 4 处无法解析的延迟导入（`scripts.data.annotation.*`/`data_tooling.annotation.*` → 同目录直接导入）。
+- **速度优化（2026-08-02 v2，序列批处理 + 异步流水线）**：`batch_pre_annotate.py` 改造为 asyncio 并发窗口（`--num-parallel`，默认 2）+ 图片预取线程池（`--image-workers`）；`ollama_server.py` 新增 `--num-parallel`（启动时设 `OLLAMA_NUM_PARALLEL`，GPU 同时解码多请求）+ `OLLAMA_MAX_QUEUE` 放宽。图片分析 YOLO/OCR 模型改为线程安全全局缓存（不再每条重载）。用法：`ollama_server.py --num-parallel 2 serve --preload` + `batch_pre_annotate.py --num-parallel 2`。并发窗口需与服务器 NUM_PARALLEL 匹配；8GB 显存 + 9B 建议 2-3。已实测 4 条长文帖子并发 2 跑通（乱序完成、0 回退、自动保存正常）。
+- **断点续传（2026-08-02 v2）**：`batch_pre_annotate.py` 新增 `--resume <时间戳>` / `--resume-latest`。每条帖子完成后写入 `progress_<时间戳>.jsonl` 检查点（含 tier/label/confidence/fallback/error），中断后可恢复：跳过已完成帖子、从检查点重建统计、继续追加原 auto/suggest 输出。已实测：3 条批次中断后 `--resume-latest` 恢复，正确显示"已处理 3 条，剩余 0 条"、0 条重复推理。
 
 ### 4.13 2026-07-31 P1→P3本地整合与M1数据复核
 

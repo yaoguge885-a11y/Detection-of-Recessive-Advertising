@@ -82,14 +82,33 @@ python data-tooling/annotation/batch_pre_annotate.py \
   --output-dir data/annotations/preannotated \
   --auto-threshold 0.85 \
   --ollama-model qwen3.5:9b \
+  --num-parallel 2 \
   --limit 100 \
   --no-images          # 跳过图片分析（默认会尝试 YOLO+OCR）
 ```
 
+> **v2（2026-08-02）速度优化**：采用**异步流水线**（asyncio 并发窗口 + 图片预取），
+> 配合 Ollama 服务端 **序列批处理**（`OLLAMA_NUM_PARALLEL=2`）让 GPU 同时解码多个请求。
+> 启动服务器时需带 `--num-parallel 2`：
+> ```powershell
+> python data-tooling/annotation/ollama_server.py --num-parallel 2 serve --preload
+> ```
+> 并发窗口 `--num-parallel` 需与服务器的 `OLLAMA_NUM_PARALLEL` 匹配（8GB 显存 + 9B 建议 2-3）。
+
+> **断点续传**：每条帖子完成后写入 `progress_<时间戳>.jsonl` 检查点，中断/崩溃后可恢复：
+> ```powershell
+> # 恢复最近一个批次（自动检测）
+> python data-tooling/annotation/batch_pre_annotate.py -i <posts.jsonl> --resume-latest
+> # 恢复指定批次
+> python data-tooling/annotation/batch_pre_annotate.py -i <posts.jsonl> --resume 20260802_201911
+> ```
+> 恢复时跳过已完成帖子、重建统计、继续追加到原输出文件（含 manual 无建议帖也能恢复）。
+
 输出三路文件：
 - `auto_<时间戳>.jsonl` —— 🟢 高置信度自动保存的标注记录（`annotation_method: "auto_accepted"`）
 - `suggest_<时间戳>.jsonl` —— 🟡 中置信度建议，供人工确认
-- `stats_<时间戳>.json` —— 📊 统计报告（各区间分布/回退数/耗时）
+- `stats_<时间戳>.json` —— 📊 统计报告（各区间分布/回退数/耗时/吞吐）
+- `progress_<时间戳>.jsonl` —— 📌 进度检查点（断点续传依据）
 
 常用参数：
 | 参数 | 默认 | 说明 |
@@ -99,8 +118,12 @@ python data-tooling/annotation/batch_pre_annotate.py \
 | `--ollama-url` | http://localhost:11434 | 服务器地址 |
 | `--keep-alive` | 30m | 模型常驻时长（-1 永久） |
 | `--no-warmup` | 关 | 跳过预热（默认自动预热） |
+| `--num-parallel` | 2 | 客户端并发窗口（1-4，需与服务器 NUM_PARALLEL 匹配） |
+| `--image-workers` | 2 | 图片分析线程池大小 |
 | `--no-images` | 关 | 跳过图片分析 |
 | `--timeout` | 120 | 单条推理超时（秒） |
+| `--resume <时间戳>` | 无 | 恢复指定批次（跳过已完成帖子） |
+| `--resume-latest` | 关 | 自动恢复最近一个批次 |
 
 ### 4.2 服务器管理工具
 ```powershell
@@ -108,7 +131,8 @@ python data-tooling/annotation/batch_pre_annotate.py \
 python data-tooling/annotation/ollama_server.py status
 
 # 确保服务器运行（未运行则拉起 ollama serve），并预热模型
-python data-tooling/annotation/ollama_server.py serve --preload
+#   --num-parallel N：启用序列批处理（GPU 同时解码 N 个请求，配合批量脚本并发窗口）
+python data-tooling/annotation/ollama_server.py --num-parallel 2 serve --preload
 
 # 仅预热模型（已加载则跳过）
 python data-tooling/annotation/ollama_server.py preload
@@ -205,3 +229,12 @@ python -m pytest data-tooling/annotation/tests/test_auto_judge.py -v
 
 **Q5: 自动标注会不会污染 κ？**
 不会。自动记录 `annotation_method: "auto_accepted"` 且 `annotator_id="system"`，`calculate_agreement.py` 计算 κ 时按此排除。
+
+**Q6: 想更快？多进程有用吗？**
+多进程本身不能更快利用 GPU —— 瓶颈在 Ollama 服务端串行处理。正确做法是**序列批处理**：启动服务器时 `--num-parallel 2`（`OLLAMA_NUM_PARALLEL`），批量脚本用 `--num-parallel 2` 并发窗口提交，让 GPU 同时解码多个请求；图片分析用 `--image-workers` 线程池预取流水线，GPU 与 CPU 同时忙碌。8GB 显存 + 9B 模型建议 2-3，再高会因 KV cache 不足而排队。
+
+**Q7: 批量脚本输出吞吐很慢？**
+`stats` 的吞吐含模型预热时间。长文帖子（3000+ token 提示词）单条约 8-10s 属正常；短帖 2-4s。并发窗口越大、帖子越短，批处理收益越明显。
+
+**Q8: 中断/崩溃后要重新跑全部吗？**
+不用。每条帖子完成后写入 `progress_<时间戳>.jsonl` 检查点，重跑时加 `--resume-latest`（或 `--resume <时间戳>`）即可跳过已完成帖子，从断点继续。`auto_*/suggest_*` 输出会继续追加，统计会重建合并。
