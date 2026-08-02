@@ -1,0 +1,41 @@
+{
+  "benchmark_version": "synthetic-classification-v1",
+  "predictions": [
+    {
+      "sample_id": "1",
+      "true_label": "明广",
+      "predicted_label": "明广",
+      "dark_ad_score": 0.05
+    },
+    {
+      "sample_id": "2",
+      "true_label": "暗广",
+      "predicted_label": "暗广",
+      "dark_ad_score": 0.9
+    },
+    {
+      "sample_id": "3",
+      "true_label": "非广",
+      "predicted_label": "非广",
+      "dark_ad_score": 0.1
+    },
+    {
+      "sample_id": "4",
+      "true_label": "暗广",
+      "predicted_label": "需复核",
+      "dark_ad_score": 0.6
+    },
+    {
+      "sample_id": "5",
+      "true_label": "明广",
+      "predicted_label": "暗广",
+      "dark_ad_score": 0.7
+    },
+    {
+      "sample_id": "6",
+      "true_label": "非广",
+      "predicted_label": "明广",
+      "dark_ad_score": 0.2
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "benchmark_version": "synthetic-classification-v1",
+  "generated_at": "2026-07-28T06:05:02.977259Z",
+  "metrics": {
+    "sample_count": 6,
+    "macro_f1": 0.5555555555555555,
+    "dark_ad_precision": 0.5,
+    "dark_ad_recall": 0.5,
+    "dark_ad_f1": 0.5,
+    "dark_ad_auprc": 0.8333333333333333,
+    "dark_ad_ece": 0.2583333333333333,
+    "dark_ad_brier": 0.11875000000000001,
+    "coverage": 0.8333333333333334,
+    "review_rate": 0.16666666666666666
+  },
+  "multiclass_confusion": {
+    "明广": {
+      "明广": 1,
+      "暗广": 1,
+      "非广": 0,
+      "需复核": 0
+    },
+    "暗广": {
+      "明广": 0,
+      "暗广": 1,
+      "非广": 0,
+      "需复核": 1
+    },
+    "非广": {
+      "明广": 1,
+      "暗广": 0,
+      "非广": 1,
+      "需复核": 0
+    }
+  },
+  "binary_confusion": {
+    "dark_ad": {
+      "dark_ad": 1,
+      "not_dark_ad": 0,
+      "review_required": 1
+    },
+    "not_dark_ad": {
+      "dark_ad": 1,
+      "not_dark_ad": 3,
+      "review_required": 0
+    }
+  },
+  "misclassified_sample_ids": [
+    "4",
+    "5",
+    "6"
+  ],
+  "review_sample_ids": [
+    "4"
+  ],
+  "error_buckets": {
+    "明广->暗广": [
+      "5"
+    ],
+    "暗广->需复核": [
+      "4"
+    ],
+    "非广->明广": [
+      "6"
+    ]
+  }
+}

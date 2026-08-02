@@ -1,0 +1,33 @@
+# =============================================================================
+# 视觉/OCR 可选依赖 (~2-3 GB) — 基于实际 Python import 语句整理（2026-07-25）
+# =============================================================================
+# 不装也能运行核心 Agent 管线: vision_agent 会自动降级为空票。
+# 安装: pip install -r requirements-vision.txt
+#
+# 依赖来源:
+#   impad/tools/vision.py                        → ultralytics, easyocr, cv2, numpy, torch
+#   scripts/data/annotation/auto_image_annotate.py → ultralytics, easyocr, pytesseract, PIL, cv2, numpy, torch
+#   scripts/data/annotation/image_prefilter.py     → PIL, cv2, numpy
+#   scripts/data/annotation/flet_annotator.py      → PIL, cv2, numpy, ultralytics, easyocr
+
+# ---- 目标检测 ----
+ultralytics>=8.3            # YOLO11 物体检测
+                             # 首次运行自动下载权重 (~5 MB)
+
+# ---- OCR 文字识别 ----
+easyocr>=1.7                # 中英文 OCR
+                             # 首次运行自动下载语言模型 (~100 MB)
+
+# ---- 图像处理 ----
+opencv-python>=4.9          # cv2 — 图像读写/色彩转换/预处理
+Pillow>=10.0                # PIL — 图像格式转换、缩略图生成
+numpy>=1.26                 # 多维数组运算 (cv2/torch 的底层依赖)
+
+# ---- 深度学习框架 ----
+# torch/torchvision 作为 ultralytics、easyocr 的依赖会自动安装；
+# 如需 GPU 加速 (CUDA)，请按 https://pytorch.org 指引单独安装对应版本。
+torch>=2.0
+
+# ---- 可选: Tesseract OCR（备选方案）----
+pytesseract>=0.3            # Tesseract 引擎的 Python 封装
+                             # 需额外安装 Tesseract 引擎: https://github.com/tesseract-ocr/tesseract

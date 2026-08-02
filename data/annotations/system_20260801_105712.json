@@ -1,0 +1,1523 @@
+{
+  "post_id": "post_a844971983d0bf7fcfb4e3bf837ef3d6",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确推广单一商业对象：TrollinstallX（安装器）、巨魔商店、IPA文件等第三方工具。",
+    "存在劝服话术与利益诱导：“基本都能成功”、“值得所有人收藏”、“解决痛点”。",
+    "包含明确的转化动作引导：“关注「黑猫科技迷」公众号，回复：巨魔，获取所有你需要的软件。”"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T10:58:06.009627+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确推广单一商业对象：TrollinstallX（安装器）、巨魔商店、IPA文件等第三方工具。",
+      "存在劝服话术与利益诱导：“基本都能成功”、“值得所有人收藏”、“解决痛点”。",
+      "包含明确的转化动作引导：“关注「黑猫科技迷」公众号，回复：巨魔，获取所有你需要的软件。”"
+    ],
+    "reasoning": "该文章虽未出现“广告”字样，但核心内容围绕单一商业对象（TrollinstallX及巨魔工具）展开。文中大量使用劝服话术强调其优越性、解决痛点的能力，并明确引导用户关注公众号回复关键词以获取资源，具备典型的软广特征。博主身份与常规科技资讯略有偏移，更侧重于特定工具的推广教程。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_c165d58fec0f451a89c1bbe8a7d50b0a",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确推广单一商业对象：'巨魔商店'(Troll Store)及其安装器、IPA文件。",
+    "存在劝服/促销话术：使用'保姆级教程'、'最简单语言'、'100%是网络问题'等引导性描述，强调工具的必要性和易用性以促成下载。",
+    "包含转化动作：多次出现'回复『巨魔』即可获取刷巨魔的全套工具'、'所有资源，回复『巨魔』一起获取'，诱导用户进行特定互动行为（评论关键词）以获取非官方应用商店软件。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T10:58:38.402948+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确推广单一商业对象：'巨魔商店'(Troll Store)及其安装器、IPA文件。",
+      "存在劝服/促销话术：使用'保姆级教程'、'最简单语言'、'100%是网络问题'等引导性描述，强调工具的必要性和易用性以促成下载。",
+      "包含转化动作：多次出现'回复『巨魔』即可获取刷巨魔的全套工具'、'所有资源，回复『巨魔』一起获取'，诱导用户进行特定互动行为（评论关键词）以获取非官方应用商店软件。"
+    ],
+    "reasoning": "该内容虽未直接标注“广告”，但核心目的是推广第三方应用安装器及破解版IPA文件。文中通过强调教程的独家性、易用性及资源的稀缺性，配合明确的行动召唤（回复特定关键词），引导用户获取非官方商业软件资源。这种以提供技术教程为名行软广之实的模式符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_db9e3c448ca4888af15ec686251ac7ec",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确推广单一商业对象：iOS系统更新屏蔽服务（描述文件）及配套的红包封面定制。原文引用：“目前 iOS 17 屏蔽更新的方法，同样是靠安装 tvOS 测试版的描述文件实现的”、“我已经用 iCloud 打包好了...点击下方卡片进入「黑猫科技迷」公众号”。",
+    "存在劝服/促销话术：强调痛点（负优化、流畅如新）、制造紧迫感（限时失效、死循环）。原文引用：“保证 iPhone 始终流畅如新，不被苹果‘负优化’”、“欲哭无泪...是时候该考虑怎么停在这个系统养老了”。",
+    "存在转化动作/引导行为：引导用户关注公众号获取资源或领取福利。原文引用：“点击下方卡片进入「黑猫科技迷」公众号，回复：「屏蔽更新」”、“上次发的 6000 个红包封面领完了...大家有需要可以点击下方卡片领取”。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T10:59:12.710209+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确推广单一商业对象：iOS系统更新屏蔽服务（描述文件）及配套的红包封面定制。原文引用：“目前 iOS 17 屏蔽更新的方法，同样是靠安装 tvOS 测试版的描述文件实现的”、“我已经用 iCloud 打包好了...点击下方卡片进入「黑猫科技迷」公众号”。",
+      "存在劝服/促销话术：强调痛点（负优化、流畅如新）、制造紧迫感（限时失效、死循环）。原文引用：“保证 iPhone 始终流畅如新，不被苹果‘负优化’”、“欲哭无泪...是时候该考虑怎么停在这个系统养老了”。",
+      "存在转化动作/引导行为：引导用户关注公众号获取资源或领取福利。原文引用：“点击下方卡片进入「黑猫科技迷」公众号，回复：「屏蔽更新」”、“上次发的 6000 个红包封面领完了...大家有需要可以点击下方卡片领取”。"
+    ],
+    "reasoning": "该文章虽以技术教程形式出现，但核心目的是推广特定的系统描述文件获取渠道（引导关注公众号）及定制服务。文中包含明确的单一商业对象（屏蔽更新方案）、强烈的劝服话术（痛点挖掘、紧迫感营造）以及具体的转化动作（回复关键词、点击卡片）。尽管未直接标注“广告”，但其内容结构完全符合软广特征，旨在将流量转化为私域关注或特定服务用户。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_0ac293aa5fbd4e85ae42d81062cfae9e",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.92,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确推广单一商业对象：PPSSPP模拟器及100+汉化游戏资源（高达70GB）。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T10:59:41.478061+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.92,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确推广单一商业对象：PPSSPP模拟器及100+汉化游戏资源（高达70GB）。"
+    ],
+    "reasoning": "文章核心内容围绕PPSSPP模拟器的安装、使用教程展开，存在明显的劝服话术（如'最终BOSS', '立刻就能体验'），并包含明确的转化动作：引导用户关注公众号回复关键词获取资源及在线安装链接。尽管未出现'广告'标识，但商业推广意图显著且单一，符合暗广特征。\n",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_1ea54543d5278d1d46c8f63cf6cfc732",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.92,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确推广单一商业对象：'iOS巨魔极其强大的6个APP...黑猫科技迷'",
+    "劝服/促销话术：'建议所有人收藏！', '个个解决痛点！', '口碑炸裂', '神器级', '绝版了，资源非常难找'",
+    "转化动作（引导关注）：'关注公众号「黑猫科技迷」，发送关键词：巨魔。'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:00:12.236661+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.92,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确推广单一商业对象：'iOS巨魔极其强大的6个APP...黑猫科技迷'",
+      "劝服/促销话术：'建议所有人收藏！', '个个解决痛点！', '口碑炸裂', '神器级', '绝版了，资源非常难找'",
+      "转化动作（引导关注）：'关注公众号「黑猫科技迷」，发送关键词：巨魔。'"
+    ],
+    "reasoning": "该文章未标注广告标识，但核心内容完全围绕特定第三方工具“巨魔”及其衍生的6款IPA应用展开。文中大量使用“神器”、“解决痛点”、“绝版难找”等强劝服话术制造需求紧迫感，并明确引导用户关注公众号获取资源或安装教程。这种以技术分享为包装、实则推销非官方渠道软件及引流至特定公众号的行为模式符合隐性广告特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_fced21e578be007cb68d2676f3435f34",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：明明性能已经追上PC，为什么苹果电脑不适合玩游戏？"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:00:40.138271+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：明明性能已经追上PC，为什么苹果电脑不适合玩游戏？"
+    ],
+    "reasoning": "文章围绕'Mac是否适合游戏'这一技术话题展开，引用跑分数据、分析生态与硬件原因。文中虽提及M1芯片等品牌产品作为论据（证据C），但旨在科普而非推销特定型号或引导购买，无价格刺激、限时优惠或明确的转化动作。文末的赞赏功能为公众号常规变现手段，非针对本文内容的商业推广意图。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_46e3375a1cef4c7d534dcaac14c68618",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：为什么雷军直接承认，小米新系统基于安卓...",
+    "正文提及对象：华为鸿蒙、小米澎湃OS、MIUI15、骁龙芯片等。",
+    "结尾引导：“点点关注，这只喵会很开心”（常规公众号运营话术）"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:01:09.946016+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：为什么雷军直接承认，小米新系统基于安卓...",
+      "正文提及对象：华为鸿蒙、小米澎湃OS、MIUI15、骁龙芯片等。",
+      "结尾引导：“点点关注，这只喵会很开心”（常规公众号运营话术）"
+    ],
+    "reasoning": "该文章为科技媒体对行业热点事件的分析评论，核心目的是探讨技术路线与商业策略，而非推销单一商品或服务。文中虽提及小米、华为等品牌及具体产品型号作为讨论对象，但属于正常的资讯报道范畴，不存在劝服购买或引导转化的意图。结尾的‘点点关注’是公众号常规运营行为，不构成暗广证据。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_cb6ee37b08447e5c433fb080669bb806",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.92,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "明确商业对象：文章核心围绕‘红米K60’展开，详细对比其配置（16GB+512GB、骁龙8+Gen1）、价格（降至2299元）及竞品小米14。",
+    "劝服话术：使用‘等等党还是赢了’、‘血亏’、‘性价比用户希望的是用最少的钱买到最好的体验’等强烈引导性语言，建议预算吃紧者购买该机型。",
+    "视觉/内容证据：文中多次提及具体参数（2K屏、67W快充）和价格对比，旨在突出红米K60的卖点以促成销售转化。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:01:42.712174+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.92,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "明确商业对象：文章核心围绕‘红米K60’展开，详细对比其配置（16GB+512GB、骁龙8+Gen1）、价格（降至2299元）及竞品小米14。",
+      "劝服话术：使用‘等等党还是赢了’、‘血亏’、‘性价比用户希望的是用最少的钱买到最好的体验’等强烈引导性语言，建议预算吃紧者购买该机型。",
+      "视觉/内容证据：文中多次提及具体参数（2K屏、67W快充）和价格对比，旨在突出红米K60的卖点以促成销售转化。"
+    ],
+    "reasoning": "文章虽未出现‘广告’字样，但全文聚焦单一商业对象（红米K60），通过大量劝服话术强调其性价比优势、降价幅度及配置亮点，并明确建议用户购买替代新机。这种典型的评测种草形式缺乏必要的商业关系标识，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_2ac5034059155b468bc5949a4652ba54",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.92,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "标题：为什么更建议选择小米14标准版，而不是Pro？4大原因很关键（明确单一商业对象及购买建议）",
+    "正文：“家人们，3999元买的不是小米14，而是一颗性能强于iPhone 15 Pro的芯片”（价格刺激与劝服话术）",
+    "PS：关注并回复关键字：SJ1 ，获得小米14、小米14 Pro、小米13的无水印高清参数对比图。（转化动作/导流）"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:02:14.772908+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.92,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "标题：为什么更建议选择小米14标准版，而不是Pro？4大原因很关键（明确单一商业对象及购买建议）",
+      "正文：“家人们，3999元买的不是小米14，而是一颗性能强于iPhone 15 Pro的芯片”（价格刺激与劝服话术）",
+      "PS：关注并回复关键字：SJ1 ，获得小米14、小米14 Pro、小米13的无水印高清参数对比图。（转化动作/导流）"
+    ],
+    "reasoning": "文章标题及正文核心内容均围绕单一品牌（小米手机）展开，通过详细的技术参数对比和“性价比”话术强烈劝服用户购买标准版而非Pro版。文中包含明确的行动召唤（回复关键字获取资料），且全文未出现任何广告或赞助标识。尽管博主试图以评测口吻呈现，但其核心意图是引导消费决策，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_acaf4b9a0e62ae905415e281a2ee22a6",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：下跌34%！Mac电脑开始崩盘，内行人说出4个原因"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:02:43.032826+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：下跌34%！Mac电脑开始崩盘，内行人说出4个原因"
+    ],
+    "reasoning": "文章虽提及苹果、M1/M2芯片等商业对象（代码C），但核心内容为科技行业分析、财报解读及用户痛点探讨。文中无明确劝服购买的话术（如‘限时优惠’）、无引导下单动作，亦无任何广告标识或暗示性推广意图。博主以第三方视角进行客观评论，符合正常资讯分享特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_567910f9c06b4c7bfb7f542e73fca63d",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：7个iPhone实用隐藏技巧，不会等于白买！",
+    "正文提及推荐第三方APP'熊猫吃短信（付费 APP)，或者腾讯管家。'",
+    "文末引导用户分享更多技巧及赞赏功能入口"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:03:12.210665+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：7个iPhone实用隐藏技巧，不会等于白买！",
+      "正文提及推荐第三方APP'熊猫吃短信（付费 APP)，或者腾讯管家。'",
+      "文末引导用户分享更多技巧及赞赏功能入口"
+    ],
+    "reasoning": "该文章主要介绍 iPhone 系统功能与设置技巧，属于正常的科技知识科普。文中虽顺带提及了‘熊猫吃短信’和‘腾讯管家’两个第三方 APP，但语境为提供解决方案的选项推荐（且明确标注前者为付费），并非为了推销特定商品或引导下载而进行的商业植入。文章无明显的劝服话术、价格刺激或转化动作，符合个人/机构分享生活与科技知识的特征，不属于隐性广告。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_99ed6a862597793efdd046b2d3961169",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：原神最不值得培养的4名角色，基本只能用来整活",
+    "正文提及游戏内具体角色（安柏、辛焱、托马、坎蒂丝）及机制分析",
+    "文中出现'648元’等价格仅为对比Steam游戏的消费观念讨论"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:03:41.928367+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：原神最不值得培养的4名角色，基本只能用来整活",
+      "正文提及游戏内具体角色（安柏、辛焱、托马、坎蒂丝）及机制分析",
+      "文中出现'648元’等价格仅为对比Steam游戏的消费观念讨论"
+    ],
+    "reasoning": "该文章为典型的游戏攻略/评测类内容，核心目的是分享游戏角色强度分析与资源分配建议。虽然提及了游戏内充值金额（月卡、648），但属于玩家社区常见的经济体系讨论或价值观表达，并非推销外部商品或服务。文中未出现任何第三方品牌植入、购买链接或诱导消费话术，符合正常个人/专业经验分享特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_6642bc582132449b613850326baa31f2",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确推广单一商业对象：Delta模拟器及NDS游戏资源（'我分享了开源软件Delta模拟器作为替代', '附400+NDS中文游戏资源'）。",
+    "存在劝服/促销话术，强调产品优势以诱导使用（'彻底解锁隐藏功能', '稳定性更好', '简单到了...不需要思考的地步'）。",
+    "包含明确的转化动作和引流指令（'只要在「黑猫科技迷」公众号，发送「GBA」，就能全部获取', '建议收藏！').",
+    "引导用户进行非正常互动以建立私域流量或社群（'附群里群友分享的图', '评论群已开放'）。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:04:14.115882+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确推广单一商业对象：Delta模拟器及NDS游戏资源（'我分享了开源软件Delta模拟器作为替代', '附400+NDS中文游戏资源'）。",
+      "存在劝服/促销话术，强调产品优势以诱导使用（'彻底解锁隐藏功能', '稳定性更好', '简单到了...不需要思考的地步'）。",
+      "包含明确的转化动作和引流指令（'只要在「黑猫科技迷」公众号，发送「GBA」，就能全部获取', '建议收藏！').",
+      "引导用户进行非正常互动以建立私域流量或社群（'附群里群友分享的图', '评论群已开放'）。"
+    ],
+    "reasoning": "该内容虽未直接出现“广告”字样，但核心目的是推广Delta模拟器及游戏资源。文中大量使用劝服话术强调产品优势（如稳定性、简化流程），并明确引导用户关注公众号发送关键词获取资源或加入群聊，具备典型的软广特征：单一商业对象+强转化意图+无合规标识。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_0fe19fe83f0006fca4070c5b37f6634e",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：原神3.5强烈不建议练的3个5星，萌新以为很强，内行人：别被骗了"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:04:42.585939+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：原神3.5强烈不建议练的3个5星，萌新以为很强，内行人：别被骗了"
+    ],
+    "reasoning": "文章核心内容为游戏版本更新后的角色强度分析（赛诺、申鹤、迪希雅），属于典型的玩家社区攻略分享。文中虽提及‘氪佬’等词汇，但旨在讨论数值机制与配队逻辑，无明确商业推广意图或单一品牌推销行为。文末的赞赏功能为公众号常规变现手段，非内容营销核心部分。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_91ee100f43662fec31292760cceeda4f",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [],
+  "evidence": [
+    "标题：当代年轻人为什么不愿换手机了？原因很真实"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:05:09.649548+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [],
+    "evidence": [
+      "标题：当代年轻人为什么不愿换手机了？原因很真实"
+    ],
+    "reasoning": "该帖子为微信公众号文章列表页，内容主要展示科技类视频合集（如麒麟芯片、iPhone SE4等），属于正常的资讯聚合与分享。文中未出现单一特定品牌的深度种草、价格促销或明确的购买引导话术，也未发现明显的商业标识。整体呈现客观的媒体资讯风格，符合非广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_63726f2e978c124d6c91d7601e39f9a8",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.92,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确列出13个具体游戏名称（吞食天地、超级玛丽等）作为核心推广对象。",
+    "使用劝服话术：'建议收藏！...找疯了！！', '超难找系列', '高画质合集'，强调资源稀缺性以刺激获取欲望。",
+    "明确的转化动作与引导：'游戏包的获取方式，放在文章底部'、'回复关键词：「 GBA 」'、'点击下方，关注...'。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:05:40.581317+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.92,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确列出13个具体游戏名称（吞食天地、超级玛丽等）作为核心推广对象。",
+      "使用劝服话术：'建议收藏！...找疯了！！', '超难找系列', '高画质合集'，强调资源稀缺性以刺激获取欲望。",
+      "明确的转化动作与引导：'游戏包的获取方式，放在文章底部'、'回复关键词：「 GBA 」'、'点击下方，关注...'。"
+    ],
+    "reasoning": "该内容虽未出现‘广告’字样，但全文围绕单一商业对象（13款游戏ROM）展开，通过强调资源稀缺和怀旧情怀进行劝服话术包装，并明确引导用户关注公众号及回复关键词以获取下载链接。这种典型的‘软广’模式符合暗广定义：存在明确的商业推广意图且未明示披露。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_9b7d46cf066e87f545fd3c4c4c517045",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：iPhone 16最新曝光消息汇总，还买 iPhone 15 吗？"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:06:10.101253+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：iPhone 16最新曝光消息汇总，还买 iPhone 15 吗？"
+    ],
+    "reasoning": "该文章为科技资讯类内容，核心目的是整理和传播关于即将发布的 iPhone 16 系列的行业爆料信息（如尺寸、屏幕材质、芯片工艺等）。文中虽提及品牌产品作为讨论对象，但属于正常的新闻评论范畴。全文未出现明显的劝服购买话术、价格刺激或明确的转化动作，也未发现博主与品牌的商业合作标识。文末的‘点赞’和‘赞赏’为公众号常规运营行为，不构成暗广证据。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_2e04730ac7844d4cf40eca85974418d7",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确列出单一商业对象：'1，Adblock Plus...2，Tampermonkey油猴...3，OneTab...'等8个具体插件名称。",
+    "存在劝服/促销话术：标题使用'没装就亏了的必备神器'、正文强调'真后悔没早点知道'、'保证对你有所帮助'、'神级Chrome 插件'。",
+    "包含转化动作：文末引导'获取方式：点击下方卡片进入公众号，回复关键词「插件1」，获取本期插件的下载链接'。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:06:42.226413+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确列出单一商业对象：'1，Adblock Plus...2，Tampermonkey油猴...3，OneTab...'等8个具体插件名称。",
+      "存在劝服/促销话术：标题使用'没装就亏了的必备神器'、正文强调'真后悔没早点知道'、'保证对你有所帮助'、'神级Chrome 插件'。",
+      "包含转化动作：文末引导'获取方式：点击下方卡片进入公众号，回复关键词「插件1」，获取本期插件的下载链接'。"
+    ],
+    "reasoning": "该文章虽以个人分享口吻撰写（如'对我来说...'），但核心内容完全围绕单一商业对象（8个特定Chrome插件）展开，缺乏中立性。文中使用了强烈的劝服话术（'神器'、'亏大了'）和明确的转化引导（回复关键词获取下载链接）。尽管未出现'广告'字样，但其推广意图明显且结构完整，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_658165e8f0dc2a3770258fe50aca0444",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "明广",
+  "confidence": 0.9,
+  "evidence_codes": [
+    "D"
+  ],
+  "evidence": [
+    "正文含明广标识（如广告/赞助/推广/合作等）"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:07:43.138468+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "明广",
+    "confidence": 0.9,
+    "evidence_codes": [
+      "D"
+    ],
+    "evidence": [
+      "正文含明广标识（如广告/赞助/推广/合作等）"
+    ],
+    "reasoning": "正文出现明确广告/赞助/合作标识（D 类证据），且无相反证据，判定为明广。",
+    "model": "keyword-fallback",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_4ad2f0c935dfae2d9b1f415abd4b6160",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "明确聚焦单一商业对象：'一加11在销量上的表现...成为了2023年初的最大黑马'",
+    "劝服/促销话术：'大力出奇迹，这其实是一加最为擅长的营销手段'、'消费者更关注那些实实在在的需求'",
+    "视觉/内容证据（文本特写）：反复强调'12GB+256GB立功’、'3999元’、'80%的一加用户选择了16GB版本’等具体参数与价格对比"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:09:14.388599+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "明确聚焦单一商业对象：'一加11在销量上的表现...成为了2023年初的最大黑马'",
+      "劝服/促销话术：'大力出奇迹，这其实是一加最为擅长的营销手段'、'消费者更关注那些实实在在的需求'",
+      "视觉/内容证据（文本特写）：反复强调'12GB+256GB立功’、'3999元’、'80%的一加用户选择了16GB版本’等具体参数与价格对比"
+    ],
+    "reasoning": "该文章虽未出现‘广告’字样，但全文围绕单一品牌（一加）及其新品（一加11）展开深度评测与背书。文中大量使用劝服性话术（如'黑马’、'汗颜’、'管饱’），并详细罗列价格、配置对比以刺激购买欲，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_82b9a66832cba69b6a1b1b6f7facce32",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确聚焦单一商业对象：'针对中国市场改变了教育优惠的规则...变成了必须使用支付宝完成教育身份认证'",
+    "劝服/促销话术：'有需求的朋友可以趁早下手，晚点可就来不及了。你的关注是我们前进的最大动力'",
+    "转化动作（导流）：文末引导'数码爱好者可进群聊天，请加：bcbubc'及多次出现的'微信扫一扫赞赏作者'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:17:11.816707+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确聚焦单一商业对象：'针对中国市场改变了教育优惠的规则...变成了必须使用支付宝完成教育身份认证'",
+      "劝服/促销话术：'有需求的朋友可以趁早下手，晚点可就来不及了。你的关注是我们前进的最大动力'",
+      "转化动作（导流）：文末引导'数码爱好者可进群聊天，请加：bcbubc'及多次出现的'微信扫一扫赞赏作者'"
+    ],
+    "reasoning": "内容虽以科技资讯形式呈现，但核心篇幅用于详细解读苹果教育优惠规则变更对特定平台（支付宝/学信网）的依赖。文中包含强烈的价格对比、购买渠道分析以及‘趁早下手’等劝服话术。最关键的是文末存在明显的社群引流和赞赏功能引导，且未声明商业合作或赞助关系，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_1bf86023a3a896608cb5b4240465a487",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：'原来iPhone 15全系都是钉子户神机？苹果罕见透露！'",
+    "正文核心内容围绕单一产品'Iphone 15'及其电池寿命、官方文档数据、iOS系统功能进行详细解读。",
+    "文中提及具体价格信息:'iPhone 15换一块电池要809元’，并以此作为劝服用户关注该话题的论据。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:17:43.483517+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：'原来iPhone 15全系都是钉子户神机？苹果罕见透露！'",
+      "正文核心内容围绕单一产品'Iphone 15'及其电池寿命、官方文档数据、iOS系统功能进行详细解读。",
+      "文中提及具体价格信息:'iPhone 15换一块电池要809元’，并以此作为劝服用户关注该话题的论据。"
+    ],
+    "reasoning": "内容高度聚焦于单一商业对象（iPhone 15），通过引用官方数据、对比旧机型等方式构建产品优势话术，属于典型的种草/评测类软广特征。文中明确提及电池更换价格以强化痛点营销。尽管文末有'个人观点’声明及赞赏入口，但正文主体完全服务于特定产品的推广意图，且未出现‘广告’或‘赞助’等明示标识，符合暗广定义。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_7c8f3cd94cd90bebc5b09e929b0627a7",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：胡桃、甘雨、魈，曾经辉煌的璃月3C为什么不再是T0主C？"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:18:11.535285+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：胡桃、甘雨、魈，曾经辉煌的璃月3C为什么不再是T0主C？"
+    ],
+    "reasoning": "内容深度分析《原神》游戏机制与角色强度变化，属于典型的垂直领域知识分享。文中提及的角色均为热门游戏 IP（非单一商业推广对象），无价格刺激、购买链接或明显的劝服话术。文末的‘赞赏’功能为平台通用变现手段，不构成隐性广告特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_b612ffc7cae5301f424d1dec17b76a3f",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：原神：第一个退环境的神！为什么四神中唯独温迪被全面针对？"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:18:39.521609+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：原神：第一个退环境的神！为什么四神中唯独温迪被全面针对？"
+    ],
+    "reasoning": "内容围绕《原神》游戏角色温迪的强度变化、机制分析及与其他角色的对比展开，属于典型的游戏攻略/评测类分享。文中虽提及‘黑猫科技迷’（博主名），但无明确商业推广意图或单一商品推销话术。文末出现的赞赏功能为公众号常规变现手段，非特定产品植入，故判定为非广。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_717f49c63440910f3ce3411bd177a521",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：大动作，iOS史诗级巨变！",
+    "正文核心内容：黑猫科技迷发布的关于苹果 iOS 17.4 支持应用侧载的政策解读文章。",
+    "文中提及的单一商业对象为苹果公司及其 App Store 政策（C），属于行业热点资讯分享。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:19:09.712050+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：大动作，iOS史诗级巨变！",
+      "正文核心内容：黑猫科技迷发布的关于苹果 iOS 17.4 支持应用侧载的政策解读文章。",
+      "文中提及的单一商业对象为苹果公司及其 App Store 政策（C），属于行业热点资讯分享。"
+    ],
+    "reasoning": "该内容为博主对苹果最新系统政策的客观报道与个人评论，旨在传递科技资讯而非推销特定第三方商品或服务。虽然文末包含公众号常见的‘赞赏’、‘关注’等转化动作及提及了原神案例作为论据（P），但这属于自媒体运营常规行为或内容佐证，未构成针对单一商业对象的劝服话术。博主身份为科技媒体/个人创作者，主题符合其人设，无明显的品牌植入意图。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_e5a330cb635584b302231b1bf005cd3d",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "明确对比并推荐 MacBook Pro M1 Pro（二手7000元）优于 MacBook Air M3，核心原因是配置和性价比。",
+    "详细列举了购买理由：'首先...第二...第三...'，包含具体的价格数据、跑分数据和功能对比话术。",
+    "文中多次出现具体型号名称及参数细节，如'MacBook Pro 2021', 'MacBook Air M3', 'M1 Pro', '8GB+256GB'等。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:19:41.758640+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "明确对比并推荐 MacBook Pro M1 Pro（二手7000元）优于 MacBook Air M3，核心原因是配置和性价比。",
+      "详细列举了购买理由：'首先...第二...第三...'，包含具体的价格数据、跑分数据和功能对比话术。",
+      "文中多次出现具体型号名称及参数细节，如'MacBook Pro 2021', 'MacBook Air M3', 'M1 Pro', '8GB+256GB'等。"
+    ],
+    "reasoning": "该文章虽以评测对比形式呈现，但存在明显的商业推广意图：1. 明确指向单一核心产品（二手 MacBook Pro）作为购买建议；2. 使用劝服话术引导用户放弃新款 Air M3 选择旧款 Pro；3. 提供具体价格锚点。尽管文末有'个人观点'声明，但未标识与特定商家或品牌的商业合作关系，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_5ae8800b6391a323d89237000c59a89d",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确推广单一商业对象：'iOS 17最新资源！iPhone简单又强大的12个捷径/快捷指令'",
+    "劝服话术与痛点营销：'果粉基本都有续航焦虑症', '太阔怕了（夸张赞美）', '人手一个'",
+    "明确的转化动作引导：'获取方式：发送关键词「捷径5」，到「黑猫科技迷」（也就是这个号）'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:20:13.113403+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确推广单一商业对象：'iOS 17最新资源！iPhone简单又强大的12个捷径/快捷指令'",
+      "劝服话术与痛点营销：'果粉基本都有续航焦虑症', '太阔怕了（夸张赞美）', '人手一个'",
+      "明确的转化动作引导：'获取方式：发送关键词「捷径5」，到「黑猫科技迷」（也就是这个号）'"
+    ],
+    "reasoning": "该文章虽未出现‘广告’字样，但核心内容完全围绕单一商业对象（iOS快捷指令资源包）。文中大量使用痛点营销（续航焦虑）、夸张赞美及行动召唤话术引导用户向特定公众号发送关键词获取。这种将产品作为唯一主角并诱导转化的行为符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_6b5bc8d0839bec55ecc3aff37e59a35a",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P"
+  ],
+  "evidence": [
+    "明确聚焦单一商业对象：'天玑9300确定部署通义千问模型', '联发科宣布了一个重磅消息'",
+    "劝服/促销话术：'手机厂商炒作了这么久的...终于有点用了', 'AI性能是判断手机芯片强弱的核心标准之一', '这是要把苹果干废的节奏啊'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:20:44.309878+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P"
+    ],
+    "evidence": [
+      "明确聚焦单一商业对象：'天玑9300确定部署通义千问模型', '联发科宣布了一个重磅消息'",
+      "劝服/促销话术：'手机厂商炒作了这么久的...终于有点用了', 'AI性能是判断手机芯片强弱的核心标准之一', '这是要把苹果干废的节奏啊'"
+    ],
+    "reasoning": "文章标题及正文高度聚焦于联发科天玑9300与通义千问的合作，属于单一商业对象推广。文中大量使用'重磅消息'、'终于有点用了'、'弯道超车'等劝服性话术来强调该芯片的AI能力优势，试图改变用户对手机芯片的评价标准（从拍照到端侧AI）。尽管文末有免责声明，但缺乏明确的广告标识或赞助声明，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_2aaa445341ec7b22fb73f140634f2154",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：原神：老玩家公认“最废”的命之座，个个都是“零提升”"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:21:12.663933+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：原神：老玩家公认“最废”的命之座，个个都是“零提升”"
+    ],
+    "reasoning": "内容围绕《原神》游戏机制进行深度分析，列举了温迪、钟离等角色的具体技能数值和实战体验。虽然提及了‘氪金’概念作为背景讨论（证据C），但旨在探讨游戏平衡性而非推销特定商品或服务。全文无品牌Logo特写、价格表或明确的购买引导话术，符合正常游戏攻略分享特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_6b13d0e2cbb67f8bdaf10fe0bd29c2c3",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：原神：明明弹弓是3星武器，为什么强度却媲美5星？看完基本懂了"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:21:41.507068+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：原神：明明弹弓是3星武器，为什么强度却媲美5星？看完基本懂了"
+    ],
+    "reasoning": "文章核心围绕《原神》游戏内免费/付费武器的数值分析展开。文中提到的'弹弓'、'冬极白星'等均为游戏官方发行的道具名称（C），属于正常的游戏攻略与玩家经验分享，旨在帮助新手理解武器机制及角色搭配策略。全文未出现任何第三方品牌植入、购买链接或诱导消费话术，无商业推广意图，符合非广定义。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_fe6cd4790cc3caa08f4497962af09239",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "A"
+  ],
+  "evidence": [
+    "明确商业对象：'iOS 神器级 PSP 模拟器', 'PPSSPP 模拟器'",
+    "劝服/促销话术：'一定要开启的 8 个设置', '体验是非常的爽', '口碑炸裂！最经典的 5 大 PSP 神作'",
+    "转化动作：'在黑猫科技迷公众号，私信「PSP」,获取全平台模拟器 + 汉化资源包'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:22:42.592686+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "A"
+    ],
+    "evidence": [
+      "明确商业对象：'iOS 神器级 PSP 模拟器', 'PPSSPP 模拟器'",
+      "劝服/促销话术：'一定要开启的 8 个设置', '体验是非常的爽', '口碑炸裂！最经典的 5 大 PSP 神作'",
+      "转化动作：'在黑猫科技迷公众号，私信「PSP」,获取全平台模拟器 + 汉化资源包'"
+    ],
+    "reasoning": "内容围绕单一商业对象（PPSSPP 模拟器）展开，包含大量劝服话术强调其优越性。结尾明确引导用户通过私信关键词进行转化以获取资源，存在明显的推广意图但未标注广告标识，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_4ae53c9b8c1121ab4cc886accc3e48fa",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P"
+  ],
+  "evidence": [
+    "标题及全文核心围绕'骁龙7+ Gen3'展开，详细对比了该芯片与竞品（如天玑9200、红米K60至尊纪念版等）的性能和价格。",
+    "文中多次出现劝服性话术：例如'个人建议选择骁龙8Gen2机型’、‘不推荐大家选择[骁龙8+]'、‘请毫不犹豫的选择骁龙7+ Gen3机型’、‘综合性价比明显更高’等，旨在引导用户购买特定芯片对应的产品。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:23:15.058994+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P"
+    ],
+    "evidence": [
+      "标题及全文核心围绕'骁龙7+ Gen3'展开，详细对比了该芯片与竞品（如天玑9200、红米K60至尊纪念版等）的性能和价格。",
+      "文中多次出现劝服性话术：例如'个人建议选择骁龙8Gen2机型’、‘不推荐大家选择[骁龙8+]'、‘请毫不犹豫的选择骁龙7+ Gen3机型’、‘综合性价比明显更高’等，旨在引导用户购买特定芯片对应的产品。"
+    ],
+    "reasoning": "该文章虽以评测形式出现，但内容高度聚焦于单一商业对象（高通骁龙7+Gen3），并大量使用劝服话术贬低竞品或抬高主角，具有明显的推广意图。尽管文中提及了具体机型价格作为参考，但未明确标识为广告或赞助，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_1bdc0141017397cddca0cfba3faafa26",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "标题：伊聊 | 骁龙8Elite Gen 6真的很一般，无需过度期待"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:23:42.857050+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "标题：伊聊 | 骁龙8Elite Gen 6真的很一般，无需过度期待"
+    ],
+    "reasoning": "内容属于科技博主对芯片参数的深度解析与评测观点。虽然提及了高通（单一商业对象），但旨在科普命名规则、架构差异及市场预测，无劝服购买话术或行动召唤。文末有‘作者提示：个人观点，仅供参考’的免责声明，符合正常行业评论特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_60a965e5fe6d216a442a25926257f5c1",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P"
+  ],
+  "evidence": [
+    "标题及正文核心内容均为 vivo X300Ultra 的产品参数曝光（窄边框、6600mAh 电池等）",
+    "文中包含引导性话术：'大家觉得，vivo X300Ultra这一代的颜值能给打几分？'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:24:12.631546+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P"
+    ],
+    "evidence": [
+      "标题及正文核心内容均为 vivo X300Ultra 的产品参数曝光（窄边框、6600mAh 电池等）",
+      "文中包含引导性话术：'大家觉得，vivo X300Ultra这一代的颜值能给打几分？'"
+    ],
+    "reasoning": "该内容由科技博主发布，核心内容单一聚焦于 vivo X300Ultra 手机的产品参数与外观曝光。虽然文末有‘个人观点’声明及公众号自带的赞赏入口（非正文主动引导），但文章缺乏明确的商业关系标识（如#广告）。其通过集中展示特定品牌产品细节并发起互动提问的方式，具有明显的软性推广意图和劝服性质，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_951bd9746fdf73323992cc74435e3bd8",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P"
+  ],
+  "evidence": [
+    "明确提及并对比了荣耀、红米、小米、三星、iPhone、华为、OPPO、vivo等多个品牌的具体机型（如'荣耀Win', '红米K90Max', '小米17ProMax', '三星S26系列'等）。",
+    "使用劝服话术：'听我的主要原因还是因为锁容的问题'，'实锤了去年一加13续航尿崩的核心原因'，'今年小米家综合体验最好的机器就是红米K90ProMax'。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:25:12.493776+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P"
+    ],
+    "evidence": [
+      "明确提及并对比了荣耀、红米、小米、三星、iPhone、华为、OPPO、vivo等多个品牌的具体机型（如'荣耀Win', '红米K90Max', '小米17ProMax', '三星S26系列'等）。",
+      "使用劝服话术：'听我的主要原因还是因为锁容的问题'，'实锤了去年一加13续航尿崩的核心原因'，'今年小米家综合体验最好的机器就是红米K90ProMax'。"
+    ],
+    "reasoning": "内容虽以评测汇总为名，但核心目的是通过对比不同品牌机型的电池容量、锁容率及实际表现来引导用户观点（如推崇荣耀/红米，批评三星）。文中大量使用主观评价和结论性语句劝服读者接受特定技术解释或购买建议。尽管未出现'广告'标识且无直接下单链接，但单一商业对象特征明显且有强烈倾向性的话术，符合暗广定义。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_bb87fb25633f6e5f441ddf26361a97ae",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.92,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：三款“几乎完美”的苹果手机，做工好配置强，再用六年不卡顿"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:25:40.484844+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.92,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：三款“几乎完美”的苹果手机，做工好配置强，再用六年不卡顿"
+    ],
+    "reasoning": "内容聚焦单一商业对象（iPhone），使用‘几乎完美’、‘性价比最高’等劝服话术引导购买决策。虽无明确广告标识，但通过深度评测形式进行产品种草，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_6fbb93fe974b60821efc2574d4598b53",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "明确聚焦单一商业对象：'3499元跌到598元！这款智能手表清仓没人要...查看一下该款手表的基础数据——使用了钛合金边框、蓝宝石玻璃盖板...'（原文引用）",
+    "存在劝服/促销话术及价值锚定：'大部分竞争对手还停留在LCD或者亮度不够的OLED上。这块屏幕在600元左右基本没有对手了'，以及'降价+耐用...就是真的好'等对比与推荐逻辑。（原文引用）",
+    "视觉商业证据暗示（虽无图片分析结果，但文本描述极度详尽且带有产品特写性质）：详细罗列配置参数如'1.43英寸AMOLED'、'IP68+5ATM防水’及具体使用场景测试数据。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:26:14.189511+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "明确聚焦单一商业对象：'3499元跌到598元！这款智能手表清仓没人要...查看一下该款手表的基础数据——使用了钛合金边框、蓝宝石玻璃盖板...'（原文引用）",
+      "存在劝服/促销话术及价值锚定：'大部分竞争对手还停留在LCD或者亮度不够的OLED上。这块屏幕在600元左右基本没有对手了'，以及'降价+耐用...就是真的好'等对比与推荐逻辑。（原文引用）",
+      "视觉商业证据暗示（虽无图片分析结果，但文本描述极度详尽且带有产品特写性质）：详细罗列配置参数如'1.43英寸AMOLED'、'IP68+5ATM防水’及具体使用场景测试数据。"
+    ],
+    "reasoning": "该内容未出现‘广告’或‘赞助’标识，但全文围绕单一智能手表展开深度评测与价格分析。文中大量使用对比话术（如配置碾压竞品、性价比极高）来劝服用户购买清仓机，并详细列举产品参数和使用场景以构建价值感。这种将特定商品作为核心内容并进行强力推荐的模式，符合隐性广告特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_fce7620db6d1e180fe168403013587f0",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：'512GB版本降到2600，比小米17更加值得购买的一款小米旗舰！'",
+    "正文核心观点：'花影落叶...在一个月前说这样的话，大多数人会认为是夸大其词。小米15 Pro在小米17发布之后就悄悄地进行了一次价格下调。12G+512G版本的价格稳定在了2600元左右...对于一款拥有骁龙8至尊版、2K LTPO屏幕、徕卡Summilux三摄...'（详细罗列产品参数）",
+    "劝服话术：'配置没有代差’、‘价格减半’、‘做工和质感都很好’、‘香是三重叠加的结果’"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:26:46.961781+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：'512GB版本降到2600，比小米17更加值得购买的一款小米旗舰！'",
+      "正文核心观点：'花影落叶...在一个月前说这样的话，大多数人会认为是夸大其词。小米15 Pro在小米17发布之后就悄悄地进行了一次价格下调。12G+512G版本的价格稳定在了2600元左右...对于一款拥有骁龙8至尊版、2K LTPO屏幕、徕卡Summilux三摄...'（详细罗列产品参数）",
+      "劝服话术：'配置没有代差’、‘价格减半’、‘做工和质感都很好’、‘香是三重叠加的结果’"
+    ],
+    "reasoning": "内容明确聚焦单一商业对象（小米15 Pro），通过对比新款强调其性价比，并大量使用夸赞性劝服话术。虽然未出现'广告'标识或购买链接，但全文旨在引导用户在该价格点下单购买老款旗舰，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_1bde550de12bede1d566cad5330bac2c",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "非广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C"
+  ],
+  "evidence": [
+    "三星最近有报道称卷轴屏手机要量产了，我的第一反应就是：这下子要来了。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:27:15.190491+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "非广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C"
+    ],
+    "evidence": [
+      "三星最近有报道称卷轴屏手机要量产了，我的第一反应就是：这下子要来了。"
+    ],
+    "reasoning": "文章虽提及三星、OPPO等品牌及价格预测（证据代码 C），但核心目的是科普技术形态演变与行业规律分析，而非推销特定在售商品或引导购买。文中明确建议‘不要冲动’、‘不需要成为第一批用户’，缺乏劝服话术和转化动作。博主以普通消费者视角进行理性探讨，符合非广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_30a90a0e30278ee2f3abbecc9405303d",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.92,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：别盲目加钱上顶配：小米 18 三款机型怎么选，才不会花冤枉钱"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:27:44.593768+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.92,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：别盲目加钱上顶配：小米 18 三款机型怎么选，才不会花冤枉钱"
+    ],
+    "reasoning": "内容核心围绕单一品牌（小米）及其具体产品系列展开。文中详细罗列了各机型的参数、价格差异及购买建议，包含明显的劝服话术（如'理性消费'、'节省下来的1500元可以用来买其他东西'）。虽然未出现明确的广告标识或导流链接，但内容具有极强的商业推广意图和导购性质，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_79a906517897fd8c27dae23f0b34f0f6",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：'iPhone不必买太贵，可以闭眼买的3款苹果手机，最后一款性价比最高'",
+    "正文推荐具体型号及价格点：'iPhone 14...价格在四千元左右', '按照性价比来排的话是这样的：14>15Plus>15'",
+    "劝服话术与购买引导：'确定预算、锁定需求、闭眼下单。', '如果每天通勤的时候看剧超过一个小时的话，那么这块屏幕加上电池的组合就很难再有别的更好的选择了。'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:28:17.362095+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：'iPhone不必买太贵，可以闭眼买的3款苹果手机，最后一款性价比最高'",
+      "正文推荐具体型号及价格点：'iPhone 14...价格在四千元左右', '按照性价比来排的话是这样的：14>15Plus>15'",
+      "劝服话术与购买引导：'确定预算、锁定需求、闭眼下单。', '如果每天通勤的时候看剧超过一个小时的话，那么这块屏幕加上电池的组合就很难再有别的更好的选择了。'"
+    ],
+    "reasoning": "内容明确聚焦单一商业对象（苹果iPhone），通过对比三款具体型号的性能与价格进行深度种草。文中大量使用'闭眼买'、'性价比最高'、'很难再有别的更好选择'等强劝服话术，旨在引导用户购买特定旧款机型以节省预算。尽管未出现明显的广告标识或外链跳转（A类证据缺失），但其核心意图是商业推广而非单纯的个人生活记录，符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_0075c43173ca143b99f870e932e8d1db",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：近几年口碑很好的一款华为旗舰，到手价只要3699，性价比已经不输小米！",
+    "正文提及单一核心商品：'华为Mate60...它的口碑很奇怪...在发布将近两年之后仍然有人会主动推荐它'",
+    "劝服话术与对比：'用一台旧旗舰来对抗新的中端机型，有什么理由呢？', '麒麟9000S和鸿蒙系统的搭配就是它的最大护城河。该芯片在今天的环境下已经不能算是太突出的表现了...但是搭配上HarmonyOS之后...', '在同价位段里有很多中低端机型把潜望式长焦给去掉了，但是Mate 60却保留了它'",
+    "视觉/价格证据：'4750mah电池、66w有线、50w无线', '3699元的价格区间内已经很罕见了'"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:28:51.956306+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：近几年口碑很好的一款华为旗舰，到手价只要3699，性价比已经不输小米！",
+      "正文提及单一核心商品：'华为Mate60...它的口碑很奇怪...在发布将近两年之后仍然有人会主动推荐它'",
+      "劝服话术与对比：'用一台旧旗舰来对抗新的中端机型，有什么理由呢？', '麒麟9000S和鸿蒙系统的搭配就是它的最大护城河。该芯片在今天的环境下已经不能算是太突出的表现了...但是搭配上HarmonyOS之后...', '在同价位段里有很多中低端机型把潜望式长焦给去掉了，但是Mate 60却保留了它'",
+      "视觉/价格证据：'4750mah电池、66w有线、50w无线', '3699元的价格区间内已经很罕见了'"
+    ],
+    "reasoning": "内容存在明显的商业推广意图。文章聚焦单一商品（华为Mate60），通过详细罗列参数优势进行劝服，并多次使用对比话术贬低竞品以抬高本品。虽然未出现'广告'标识或购买链接，但标题直接给出价格引导消费，正文深度种草特征明显，符合暗广定义。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_2def6b5458c858ca741706e9019812fe",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：影石luna最大的缺点出现了…（单一品牌/商品）",
+    "正文通篇围绕‘影石Insta360’、'Luna'产品展开，提及‘低光AI算法’、'LightCut编辑’、‘地平线锁定’等具体功能点。（明确商业对象 + 劝服话术：夸赞效果惊艳、上瘾）",
+    "文中多次出现产品特写描述及Logo暗示（如‘影石Insta360的忠实粉丝’），且全文无广告标识，符合暗广特征。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:29:24.462328+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：影石luna最大的缺点出现了…（单一品牌/商品）",
+      "正文通篇围绕‘影石Insta360’、'Luna'产品展开，提及‘低光AI算法’、'LightCut编辑’、‘地平线锁定’等具体功能点。（明确商业对象 + 劝服话术：夸赞效果惊艳、上瘾）",
+      "文中多次出现产品特写描述及Logo暗示（如‘影石Insta360的忠实粉丝’），且全文无广告标识，符合暗广特征。"
+    ],
+    "reasoning": "内容虽以‘缺点’为切入点制造悬念，但实质是深度评测与种草。博主明确提及单一品牌产品（影石Luna）及其多项核心功能，使用大量劝服性话术（如‘太不一样了’、‘令你上瘾’），并引导用户接受其优缺点分析以促进购买决策。尽管缺乏显性的价格或行动召唤代码，但商业推广意图显著且未披露广告关系，符合暗广定义。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_bce1342d776c742f434662c452134560",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.85,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "标题：三款“几乎完美”的苹果手机，做工好配置强，再用六年不卡顿",
+    "正文：“这三种型号各自所处的位置...2013年的iPhone 13..."
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:29:55.024997+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.85,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "标题：三款“几乎完美”的苹果手机，做工好配置强，再用六年不卡顿",
+      "正文：“这三种型号各自所处的位置...2013年的iPhone 13..."
+    ],
+    "reasoning": "文章集中介绍三款特定型号的 iPhone（13, 14 Pro, 15 Pro Max），详细罗列了芯片、屏幕、电池等参数及优缺点，属于单一商业对象推广。文中包含“目前二手市场上...价格已经跌到了2000元左右”、“性价比非常高”等劝服话术和价格刺激信息。全文无广告标识且博主人设偏向数码评测（行为偏移不明显），符合暗广特征。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}
+{
+  "post_id": "post_5c2ff76273b92bb9495eb9a0a1665aa9",
+  "annotator_id": "system",
+  "guide_version": "1.0",
+  "label": "暗广",
+  "confidence": 0.95,
+  "evidence_codes": [
+    "C",
+    "P",
+    "V"
+  ],
+  "evidence": [
+    "明确列出三款OPPO手机（Find X8、Reno13 Pro、K12 Plus）作为核心讨论对象。",
+    "包含大量劝服话术，如'闭眼入'、'性价比很高'、'直接冲'、'续航怪兽'等。",
+    "提供具体价格信息（4500元、3000元、1600元）及适用人群分析，具有明显的导购意图。"
+  ],
+  "uncertain_reason": null,
+  "annotated_at": "2026-08-01T11:30:27.198300+08:00",
+  "annotation_method": "auto_accepted",
+  "_llm_suggestion": {
+    "label": "暗广",
+    "confidence": 0.95,
+    "evidence_codes": [
+      "C",
+      "P",
+      "V"
+    ],
+    "evidence": [
+      "明确列出三款OPPO手机（Find X8、Reno13 Pro、K12 Plus）作为核心讨论对象。",
+      "包含大量劝服话术，如'闭眼入'、'性价比很高'、'直接冲'、'续航怪兽'等。",
+      "提供具体价格信息（4500元、3000元、1600元）及适用人群分析，具有明显的导购意图。"
+    ],
+    "reasoning": "该文章标题带有强烈的主观推荐色彩（“最香”），正文集中介绍单一品牌OPPO的三款具体型号，详细罗列了配置参数和价格优势，并使用了大量引导购买的劝服话术（如'直接冲'、'闭眼入'）。虽然文末有互动邀请，但整体内容结构完全符合产品评测/导购软文特征，且未出现任何“广告”、“赞助”等明示商业关系的标识。",
+    "model": "qwen3.5:9b",
+    "auto_accepted": true
+  }
+}

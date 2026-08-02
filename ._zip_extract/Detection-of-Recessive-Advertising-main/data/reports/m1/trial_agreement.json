@@ -1,0 +1,55 @@
+{
+  "common_pair_count": 36,
+  "valid_pair_count": 22,
+  "excluded_pair_count": 14,
+  "excluded_label_counts": {
+    "a:out_of_scope": 14,
+    "b:out_of_scope": 14
+  },
+  "kappa": 1.0,
+  "kappa_ci_95": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "raw_agreement": 1.0,
+  "labels": [
+    "明广",
+    "暗广",
+    "非广"
+  ],
+  "confusion_matrix": [
+    [
+      2,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      20
+    ]
+  ],
+  "per_class_agreement": {
+    "明广": {
+      "agreed": 2,
+      "annotator_a_total": 2,
+      "rate": 1.0
+    },
+    "暗广": {
+      "agreed": 0,
+      "annotator_a_total": 0,
+      "rate": null
+    },
+    "非广": {
+      "agreed": 20,
+      "annotator_a_total": 20,
+      "rate": 1.0
+    }
+  },
+  "formal_second_round": false
+}

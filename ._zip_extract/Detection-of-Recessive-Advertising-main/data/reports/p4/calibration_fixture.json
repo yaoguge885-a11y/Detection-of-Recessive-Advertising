@@ -1,0 +1,124 @@
+{
+  "benchmark_version": "synthetic-calibration-v1",
+  "generated_at": "2026-07-30T09:41:43.612685Z",
+  "sample_count": 6,
+  "bootstrap_resamples": 500,
+  "bootstrap_seed": 20260730,
+  "confidence_level": 0.95,
+  "metrics": {
+    "sample_count": 6,
+    "macro_f1": 0.5222222222222223,
+    "dark_ad_precision": 0.3333333333333333,
+    "dark_ad_recall": 0.5,
+    "dark_ad_f1": 0.4,
+    "dark_ad_auprc": 0.75,
+    "dark_ad_ece": 0.3583333333333333,
+    "dark_ad_brier": 0.20541666666666666,
+    "coverage": 1.0,
+    "review_rate": 0.0
+  },
+  "metric_intervals": {
+    "macro_f1": {
+      "estimate": 0.5222222222222223,
+      "lower": 0.09523809523809525,
+      "upper": 0.8412698412698413
+    },
+    "dark_ad_f1": {
+      "estimate": 0.4,
+      "lower": 0.0,
+      "upper": 0.8571428571428571
+    },
+    "dark_ad_auprc": {
+      "estimate": 0.75,
+      "lower": 0.0,
+      "upper": 1.0
+    },
+    "dark_ad_ece": {
+      "estimate": 0.3583333333333333,
+      "lower": 0.15833333333333333,
+      "upper": 0.5666666666666665
+    },
+    "dark_ad_brier": {
+      "estimate": 0.20541666666666666,
+      "lower": 0.06458333333333334,
+      "upper": 0.3666666666666666
+    }
+  },
+  "risk_coverage": [
+    {
+      "retained_count": 1,
+      "retained_sample_ids": [
+        "s1"
+      ],
+      "coverage": 0.16666666666666666,
+      "risk": 0.0,
+      "error_count": 0,
+      "confidence_threshold": 0.95
+    },
+    {
+      "retained_count": 2,
+      "retained_sample_ids": [
+        "s1",
+        "s2"
+      ],
+      "coverage": 0.3333333333333333,
+      "risk": 0.0,
+      "error_count": 0,
+      "confidence_threshold": 0.9
+    },
+    {
+      "retained_count": 3,
+      "retained_sample_ids": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "coverage": 0.5,
+      "risk": 0.0,
+      "error_count": 0,
+      "confidence_threshold": 0.85
+    },
+    {
+      "retained_count": 4,
+      "retained_sample_ids": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "coverage": 0.6666666666666666,
+      "risk": 0.25,
+      "error_count": 1,
+      "confidence_threshold": 0.6
+    },
+    {
+      "retained_count": 5,
+      "retained_sample_ids": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5"
+      ],
+      "coverage": 0.8333333333333334,
+      "risk": 0.4,
+      "error_count": 2,
+      "confidence_threshold": 0.55
+    },
+    {
+      "retained_count": 6,
+      "retained_sample_ids": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6"
+      ],
+      "coverage": 1.0,
+      "risk": 0.5,
+      "error_count": 3,
+      "confidence_threshold": 0.3
+    }
+  ]
+}

@@ -1,0 +1,267 @@
+{
+  "retriever_name": "chroma_lexical_rrf",
+  "retriever_version": "hybrid_rrf_v1",
+  "corpus_version": "cn-official-v1-2026-07-27",
+  "benchmark_version": "official-smoke-v1-2026-07-27",
+  "question_count": 15,
+  "indexed_sections": 7,
+  "indexing_time_ms": 118.07470000348985,
+  "evaluation_time_ms": 23.356500023510307,
+  "generated_at": "2026-07-28T06:05:03.535440Z",
+  "deterministic_config": {
+    "top_k": 5,
+    "minimum_score": 0.34,
+    "rrf_k": 60,
+    "vector_candidates": 10,
+    "external_embedding": false
+  },
+  "metrics": {
+    "total_questions": 15,
+    "answerable_questions": 10,
+    "abstention_questions": 5,
+    "recall_at_1": 0.85,
+    "recall_at_3": 1.0,
+    "recall_at_5": 1.0,
+    "mrr_at_5": 1.0,
+    "citation_precision_at_5": 0.265,
+    "direct_recall_at_5": 1.0,
+    "cross_document_recall_at_5": 1.0,
+    "false_citation_rate": 0.0,
+    "answerable_coverage": 1.0,
+    "p95_latency_ms": 4.318500054068863,
+    "results": [
+      {
+        "question_id": "official_01",
+        "category": "direct",
+        "expected_keys": [
+          "samr_internet_ad_measures_2023#第二条"
+        ],
+        "retrieved_keys": [
+          "samr_internet_ad_measures_2023#第二条",
+          "samr_advertising_law_2021#第二条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_advertising_law_2021#第十九条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 4.318500054068863
+      },
+      {
+        "question_id": "official_02",
+        "category": "direct",
+        "expected_keys": [
+          "samr_internet_ad_measures_2023#第八条"
+        ],
+        "retrieved_keys": [
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_advertising_law_2021#第十九条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_advertising_law_2021#第十四条",
+          "samr_advertising_law_2021#第二条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.7837000195868313
+      },
+      {
+        "question_id": "official_03",
+        "category": "direct",
+        "expected_keys": [
+          "samr_internet_ad_measures_2023#第九条"
+        ],
+        "retrieved_keys": [
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_advertising_law_2021#第十四条",
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_internet_ad_measures_2023#第二条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.368400000501424
+      },
+      {
+        "question_id": "official_04",
+        "category": "direct",
+        "expected_keys": [
+          "samr_internet_ad_measures_2023#第二十五条"
+        ],
+        "retrieved_keys": [
+          "samr_internet_ad_measures_2023#第二十五条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_advertising_law_2021#第十四条",
+          "samr_advertising_law_2021#第十九条",
+          "samr_internet_ad_measures_2023#第二条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.2769000022672117
+      },
+      {
+        "question_id": "official_05",
+        "category": "direct",
+        "expected_keys": [
+          "samr_advertising_law_2021#第二条"
+        ],
+        "retrieved_keys": [
+          "samr_advertising_law_2021#第二条",
+          "samr_internet_ad_measures_2023#第二条",
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_advertising_law_2021#第十九条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.4004000113345683
+      },
+      {
+        "question_id": "official_06",
+        "category": "direct",
+        "expected_keys": [
+          "samr_advertising_law_2021#第十四条"
+        ],
+        "retrieved_keys": [
+          "samr_advertising_law_2021#第十四条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_internet_ad_measures_2023#第二十五条",
+          "samr_internet_ad_measures_2023#第二条",
+          "samr_advertising_law_2021#第十九条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.7442000098526478
+      },
+      {
+        "question_id": "official_07",
+        "category": "direct",
+        "expected_keys": [
+          "samr_advertising_law_2021#第十九条"
+        ],
+        "retrieved_keys": [
+          "samr_advertising_law_2021#第十九条",
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_internet_ad_measures_2023#第二十五条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_advertising_law_2021#第十四条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.6760000144131482
+      },
+      {
+        "question_id": "official_08",
+        "category": "cross_document",
+        "expected_keys": [
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_advertising_law_2021#第十四条"
+        ],
+        "retrieved_keys": [
+          "samr_advertising_law_2021#第十四条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_internet_ad_measures_2023#第二十五条",
+          "samr_advertising_law_2021#第十九条",
+          "samr_internet_ad_measures_2023#第八条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.545800012536347
+      },
+      {
+        "question_id": "official_09",
+        "category": "cross_document",
+        "expected_keys": [
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_advertising_law_2021#第十九条"
+        ],
+        "retrieved_keys": [
+          "samr_advertising_law_2021#第十九条",
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_internet_ad_measures_2023#第二十五条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_advertising_law_2021#第十四条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.0589000303298235
+      },
+      {
+        "question_id": "official_10",
+        "category": "cross_document",
+        "expected_keys": [
+          "samr_internet_ad_measures_2023#第二条",
+          "samr_advertising_law_2021#第二条"
+        ],
+        "retrieved_keys": [
+          "samr_advertising_law_2021#第二条",
+          "samr_internet_ad_measures_2023#第二条",
+          "samr_internet_ad_measures_2023#第九条",
+          "samr_internet_ad_measures_2023#第八条",
+          "samr_internet_ad_measures_2023#第二十五条"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.5387999592348933
+      },
+      {
+        "question_id": "official_11",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.0331000084988773
+      },
+      {
+        "question_id": "official_12",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.3587999856099486
+      },
+      {
+        "question_id": "official_13",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.0719000129029155
+      },
+      {
+        "question_id": "official_14",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 0.9683000389486551
+      },
+      {
+        "question_id": "official_15",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 0.9351999615319073
+      }
+    ]
+  }
+}

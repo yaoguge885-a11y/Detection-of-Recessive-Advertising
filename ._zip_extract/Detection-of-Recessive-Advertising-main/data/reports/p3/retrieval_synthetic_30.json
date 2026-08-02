@@ -1,0 +1,472 @@
+{
+  "retriever_name": "chroma_lexical_rrf",
+  "retriever_version": "hybrid_rrf_v1",
+  "corpus_version": "synthetic-legal-v1",
+  "benchmark_version": "synthetic-30-v1",
+  "question_count": 30,
+  "indexed_sections": 10,
+  "indexing_time_ms": 111.23580002458766,
+  "evaluation_time_ms": 55.43700000271201,
+  "generated_at": "2026-07-28T06:05:03.693082Z",
+  "deterministic_config": {
+    "top_k": 5,
+    "minimum_score": 0.34,
+    "rrf_k": 60,
+    "vector_candidates": 10,
+    "external_embedding": false
+  },
+  "metrics": {
+    "total_questions": 30,
+    "answerable_questions": 20,
+    "abstention_questions": 10,
+    "recall_at_1": 0.75,
+    "recall_at_3": 1.0,
+    "recall_at_5": 1.0,
+    "mrr_at_5": 1.0,
+    "citation_precision_at_5": 0.4933333333333333,
+    "direct_recall_at_5": 1.0,
+    "cross_document_recall_at_5": 1.0,
+    "false_citation_rate": 0.0,
+    "answerable_coverage": 1.0,
+    "p95_latency_ms": 2.6221000007353723,
+    "results": [
+      {
+        "question_id": "direct_01",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_disclosure#D1"
+        ],
+        "retrieved_keys": [
+          "fixture_disclosure#D1",
+          "fixture_platform#P1",
+          "fixture_links#L1",
+          "fixture_platform#P2"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 4.931800009217113
+      },
+      {
+        "question_id": "direct_02",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_disclosure#D2"
+        ],
+        "retrieved_keys": [
+          "fixture_disclosure#D2",
+          "fixture_links#L2",
+          "fixture_capture#C1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 2.2542999940924346
+      },
+      {
+        "question_id": "direct_03",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_links#L1"
+        ],
+        "retrieved_keys": [
+          "fixture_links#L1",
+          "fixture_reports#R1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 2.097999968100339
+      },
+      {
+        "question_id": "direct_04",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_links#L2"
+        ],
+        "retrieved_keys": [
+          "fixture_links#L2"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.7389000277034938
+      },
+      {
+        "question_id": "direct_05",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_platform#P1"
+        ],
+        "retrieved_keys": [
+          "fixture_platform#P1",
+          "fixture_platform#P2",
+          "fixture_disclosure#D1",
+          "fixture_links#L1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.3698000111617148
+      },
+      {
+        "question_id": "direct_06",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_platform#P2"
+        ],
+        "retrieved_keys": [
+          "fixture_platform#P2",
+          "fixture_platform#P1",
+          "fixture_capture#C2",
+          "fixture_disclosure#D1",
+          "fixture_links#L1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.4121000422164798
+      },
+      {
+        "question_id": "direct_07",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_capture#C1"
+        ],
+        "retrieved_keys": [
+          "fixture_capture#C1",
+          "fixture_disclosure#D2",
+          "fixture_reports#R2",
+          "fixture_capture#C2"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 2.6221000007353723
+      },
+      {
+        "question_id": "direct_08",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_capture#C2"
+        ],
+        "retrieved_keys": [
+          "fixture_capture#C2",
+          "fixture_capture#C1",
+          "fixture_platform#P2"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 2.042100008111447
+      },
+      {
+        "question_id": "direct_09",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_reports#R1"
+        ],
+        "retrieved_keys": [
+          "fixture_reports#R1",
+          "fixture_reports#R2",
+          "fixture_disclosure#D2",
+          "fixture_links#L1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.5931000234559178
+      },
+      {
+        "question_id": "direct_10",
+        "category": "direct",
+        "expected_keys": [
+          "fixture_reports#R2"
+        ],
+        "retrieved_keys": [
+          "fixture_reports#R2",
+          "fixture_disclosure#D2",
+          "fixture_capture#C1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 2.1177000016905367
+      },
+      {
+        "question_id": "cross_01",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_disclosure#D1",
+          "fixture_links#L1"
+        ],
+        "retrieved_keys": [
+          "fixture_disclosure#D1",
+          "fixture_links#L1",
+          "fixture_capture#C1",
+          "fixture_disclosure#D2"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.9714999943971634
+      },
+      {
+        "question_id": "cross_02",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_disclosure#D2",
+          "fixture_links#L2"
+        ],
+        "retrieved_keys": [
+          "fixture_links#L2",
+          "fixture_disclosure#D2",
+          "fixture_capture#C1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.5715999761596322
+      },
+      {
+        "question_id": "cross_03",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_platform#P2",
+          "fixture_capture#C1"
+        ],
+        "retrieved_keys": [
+          "fixture_platform#P2",
+          "fixture_capture#C1",
+          "fixture_capture#C2",
+          "fixture_platform#P1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 2.0756999729201198
+      },
+      {
+        "question_id": "cross_04",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_capture#C2",
+          "fixture_reports#R1"
+        ],
+        "retrieved_keys": [
+          "fixture_reports#R1",
+          "fixture_capture#C2",
+          "fixture_reports#R2",
+          "fixture_capture#C1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.5471000224351883
+      },
+      {
+        "question_id": "cross_05",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_capture#C1",
+          "fixture_reports#R2"
+        ],
+        "retrieved_keys": [
+          "fixture_reports#R2",
+          "fixture_capture#C1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.2718000216409564
+      },
+      {
+        "question_id": "cross_06",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_platform#P1",
+          "fixture_links#L1"
+        ],
+        "retrieved_keys": [
+          "fixture_links#L1",
+          "fixture_platform#P1",
+          "fixture_platform#P2",
+          "fixture_disclosure#D1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.3824999914504588
+      },
+      {
+        "question_id": "cross_07",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_disclosure#D2",
+          "fixture_disclosure#D1"
+        ],
+        "retrieved_keys": [
+          "fixture_disclosure#D1",
+          "fixture_disclosure#D2",
+          "fixture_capture#C1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 2.007199975196272
+      },
+      {
+        "question_id": "cross_08",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_links#L2",
+          "fixture_reports#R1"
+        ],
+        "retrieved_keys": [
+          "fixture_links#L2",
+          "fixture_reports#R2",
+          "fixture_reports#R1",
+          "fixture_disclosure#D1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.4903999981470406
+      },
+      {
+        "question_id": "cross_09",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_platform#P2",
+          "fixture_capture#C2"
+        ],
+        "retrieved_keys": [
+          "fixture_platform#P2",
+          "fixture_capture#C2",
+          "fixture_platform#P1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.0745999752543867
+      },
+      {
+        "question_id": "cross_10",
+        "category": "cross_document",
+        "expected_keys": [
+          "fixture_links#L1",
+          "fixture_reports#R2"
+        ],
+        "retrieved_keys": [
+          "fixture_reports#R2",
+          "fixture_links#L1",
+          "fixture_capture#C1"
+        ],
+        "recall": 1.0,
+        "reciprocal_rank": 1.0,
+        "false_citation": false,
+        "latency_ms": 1.3767000054940581
+      },
+      {
+        "question_id": "abstain_01",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.4662999892607331
+      },
+      {
+        "question_id": "abstain_02",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 2.0064000273123384
+      },
+      {
+        "question_id": "abstain_03",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 2.0927999867126346
+      },
+      {
+        "question_id": "abstain_04",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.6122999950312078
+      },
+      {
+        "question_id": "abstain_05",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.8763999687507749
+      },
+      {
+        "question_id": "abstain_06",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.735700003337115
+      },
+      {
+        "question_id": "abstain_07",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.4601000002585351
+      },
+      {
+        "question_id": "abstain_08",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 2.0006000413559377
+      },
+      {
+        "question_id": "abstain_09",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.6554000321775675
+      },
+      {
+        "question_id": "abstain_10",
+        "category": "abstention",
+        "expected_keys": [],
+        "retrieved_keys": [],
+        "recall": 0.0,
+        "reciprocal_rank": 0.0,
+        "false_citation": false,
+        "latency_ms": 1.0535999899730086
+      }
+    ]
+  }
+}

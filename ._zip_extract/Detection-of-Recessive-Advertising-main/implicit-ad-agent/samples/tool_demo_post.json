@@ -1,0 +1,24 @@
+{
+  "post_id": "demo-post-001",
+  "text": "亲测这款面霜太好用，限时优惠，链接在评论区",
+  "published_at": "2026-07-04T10:10:00+08:00",
+  "media": [
+    {
+      "media_id": "demo-image-001",
+      "type": "image",
+      "uri": "demo-product.jpg"
+    }
+  ],
+  "comments": [
+    {"comment_id": "c0", "text": "太好用了，已下单", "created_at": "2026-07-04T10:00:00+08:00"},
+    {"comment_id": "c1", "text": "太好用了，已下单", "created_at": "2026-07-04T10:01:00+08:00"},
+    {"comment_id": "c2", "text": "太好用了，已下单", "created_at": "2026-07-04T10:02:00+08:00"},
+    {"comment_id": "c3", "text": "太好用了，已下单", "created_at": "2026-07-04T10:03:00+08:00"},
+    {"comment_id": "c4", "text": "太好用了，已下单", "created_at": "2026-07-04T10:04:00+08:00"}
+  ],
+  "blogger_history_refs": [
+    {"post_id": "h1", "text": "今天学习 Python 编程", "published_at": "2026-07-01T09:00:00+08:00"},
+    {"post_id": "h2", "text": "分享代码练习心得", "published_at": "2026-07-02T09:00:00+08:00"},
+    {"post_id": "h3", "text": "整理 Python 学习笔记", "published_at": "2026-07-03T09:00:00+08:00"}
+  ]
+}

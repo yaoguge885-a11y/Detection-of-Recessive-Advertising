@@ -1,0 +1,196 @@
+{
+  "benchmark_version": "synthetic-creator-shift-v1",
+  "feature_version": "keyword_weights_v1",
+  "runtime_version": "creator_shift_runtime_v1",
+  "fixture_sha256": "f3cacdec27df6b5e03986a31865c42b76759aae248d61e09fe47aea047f81317",
+  "generated_at": "2026-07-30T09:41:43.550907Z",
+  "minimum_history": 3,
+  "ema_alpha": 0.5,
+  "methods": [
+    "mean",
+    "max",
+    "ema"
+  ],
+  "case_count": 4,
+  "status_counts": {
+    "sufficient": 6,
+    "insufficient": 3,
+    "unavailable": 3
+  },
+  "cases": [
+    {
+      "case_id": "shift_high",
+      "method": "mean",
+      "status": "sufficient",
+      "history_count": 3,
+      "shift_score": 0.545,
+      "top_features": [
+        "action_words",
+        "urgency_expressions",
+        "natural_expression",
+        "price_mentions",
+        "promotion_words",
+        "brand_mentions"
+      ],
+      "limitations": [
+        "Simple history pooling baseline; shift is not a calibrated advertising probability."
+      ]
+    },
+    {
+      "case_id": "shift_high",
+      "method": "max",
+      "status": "sufficient",
+      "history_count": 3,
+      "shift_score": 0.545,
+      "top_features": [
+        "action_words",
+        "urgency_expressions",
+        "natural_expression",
+        "price_mentions",
+        "promotion_words",
+        "brand_mentions"
+      ],
+      "limitations": [
+        "Simple history pooling baseline; shift is not a calibrated advertising probability."
+      ]
+    },
+    {
+      "case_id": "shift_high",
+      "method": "ema",
+      "status": "sufficient",
+      "history_count": 3,
+      "shift_score": 0.545,
+      "top_features": [
+        "action_words",
+        "urgency_expressions",
+        "natural_expression",
+        "price_mentions",
+        "promotion_words",
+        "brand_mentions"
+      ],
+      "limitations": [
+        "Simple history pooling baseline; shift is not a calibrated advertising probability."
+      ]
+    },
+    {
+      "case_id": "shift_low",
+      "method": "mean",
+      "status": "sufficient",
+      "history_count": 3,
+      "shift_score": 0.0,
+      "top_features": [
+        "action_words",
+        "brand_mentions",
+        "natural_expression",
+        "price_mentions",
+        "promotion_words",
+        "urgency_expressions"
+      ],
+      "limitations": [
+        "Simple history pooling baseline; shift is not a calibrated advertising probability."
+      ]
+    },
+    {
+      "case_id": "shift_low",
+      "method": "max",
+      "status": "sufficient",
+      "history_count": 3,
+      "shift_score": 0.0,
+      "top_features": [
+        "action_words",
+        "brand_mentions",
+        "natural_expression",
+        "price_mentions",
+        "promotion_words",
+        "urgency_expressions"
+      ],
+      "limitations": [
+        "Simple history pooling baseline; shift is not a calibrated advertising probability."
+      ]
+    },
+    {
+      "case_id": "shift_low",
+      "method": "ema",
+      "status": "sufficient",
+      "history_count": 3,
+      "shift_score": 0.0,
+      "top_features": [
+        "action_words",
+        "brand_mentions",
+        "natural_expression",
+        "price_mentions",
+        "promotion_words",
+        "urgency_expressions"
+      ],
+      "limitations": [
+        "Simple history pooling baseline; shift is not a calibrated advertising probability."
+      ]
+    },
+    {
+      "case_id": "shift_insufficient",
+      "method": "mean",
+      "status": "insufficient",
+      "history_count": 1,
+      "shift_score": null,
+      "top_features": [],
+      "limitations": [
+        "Valid history is below the configured minimum."
+      ]
+    },
+    {
+      "case_id": "shift_insufficient",
+      "method": "max",
+      "status": "insufficient",
+      "history_count": 1,
+      "shift_score": null,
+      "top_features": [],
+      "limitations": [
+        "Valid history is below the configured minimum."
+      ]
+    },
+    {
+      "case_id": "shift_insufficient",
+      "method": "ema",
+      "status": "insufficient",
+      "history_count": 1,
+      "shift_score": null,
+      "top_features": [],
+      "limitations": [
+        "Valid history is below the configured minimum."
+      ]
+    },
+    {
+      "case_id": "shift_unavailable",
+      "method": "mean",
+      "status": "unavailable",
+      "history_count": 3,
+      "shift_score": null,
+      "top_features": [],
+      "limitations": [
+        "target_timestamp_unavailable"
+      ]
+    },
+    {
+      "case_id": "shift_unavailable",
+      "method": "max",
+      "status": "unavailable",
+      "history_count": 3,
+      "shift_score": null,
+      "top_features": [],
+      "limitations": [
+        "target_timestamp_unavailable"
+      ]
+    },
+    {
+      "case_id": "shift_unavailable",
+      "method": "ema",
+      "status": "unavailable",
+      "history_count": 3,
+      "shift_score": null,
+      "top_features": [],
+      "limitations": [
+        "target_timestamp_unavailable"
+      ]
+    }
+  ]
+}
