@@ -1,8 +1,8 @@
 {
-  "validated_at": "2026-07-31T23:45:30.688908",
+  "validated_at": "2026-08-03T01:54:43.703450",
   "schema_version": "1.2",
-  "total_records": 2901,
-  "valid_records": 2901,
+  "total_records": 2277,
+  "valid_records": 2277,
   "invalid_records": 0,
   "validator_counts": {},
   "privacy_findings": "disabled"
