@@ -1,0 +1,3 @@
+fixture_train_explicit
+fixture_train_dark
+fixture_train_natural
