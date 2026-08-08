@@ -60,6 +60,7 @@ class InputBundle:
 
 
 _SPLITS: tuple[SplitName, ...] = ("train", "dev", "test")
+_SYNTHETIC_FIXTURE_VERSION = "merged-history-synthetic-v1"
 _LEAKAGE_FIELDS: tuple[str, ...] = (
     "post_leakage_count",
     "creator_leakage_count",
@@ -124,9 +125,12 @@ def load_input_bundle(
                 "synthetic mode requires fixture metadata"
             )
         metadata = _read_json_object(fixture_metadata_path, "fixture metadata")
-        if metadata.get("dataset_kind") != "synthetic_fixture":
+        if (
+            metadata.get("dataset_kind") != "synthetic_fixture"
+            or metadata.get("fixture_version") != _SYNTHETIC_FIXTURE_VERSION
+        ):
             raise BaselineInputError(
-                "synthetic mode requires dataset_kind synthetic_fixture"
+                "synthetic mode requires dataset_kind and fixture_version metadata"
             )
 
     paths: dict[str, Path | str | None] = {

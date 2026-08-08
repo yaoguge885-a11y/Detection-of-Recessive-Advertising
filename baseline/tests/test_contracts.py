@@ -138,6 +138,27 @@ def test_synthetic_mode_accepts_explicit_fixture(tmp_path: Path):
     assert bundle.input_hashes["fixture_metadata"]
 
 
+def test_synthetic_mode_rejects_wrong_fixture_version(tmp_path: Path):
+    paths = _write_fixture(tmp_path)
+    metadata = tmp_path / "fixture_metadata.json"
+    metadata.write_text(
+        json.dumps(
+            {
+                "fixture_version": "wrong-version",
+                "dataset_kind": "synthetic_fixture",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(BaselineInputError, match="fixture_version"):
+        load_input_bundle(
+            mode="synthetic",
+            fixture_metadata_path=metadata,
+            **paths,
+        )
+
+
 def test_formal_mode_accepts_unlabeled_history_content(tmp_path: Path):
     paths = _write_fixture(tmp_path)
     content_rows = [
