@@ -70,7 +70,7 @@
 | 法规RAG基础 | 小规模官方法规语料、Chroma/hash向量召回、确定性词法召回、RRF重排分数、引用守卫和版本绑定离线报告 |
 | 知识与报告 | Knowledge MCP、Judge后LawEvidence、Markdown报告和JSON run持久化已接入 |
 | CreatorShift工程准入 | 同creator且严格早于目标时间的HistoryView；mean/max/EMA；复用6维关键词特征的独立图节点；充分历史生成中性证据，不足/缺时间保留非数值状态 |
-| 独立合并历史论文基线 | `baseline/`已实现单帖与单帖+mean/max/EMA历史池化的固定Logistic Regression、M1/split fail-closed门、共同cohort、版本/哈希和隐私安全聚合报告；合成fixture专项`48 passed` |
+| 独立合并历史论文基线 | `baseline/`已实现单帖与单帖+mean/max/EMA历史池化的固定Logistic Regression、M1/split fail-closed门、共同cohort、版本/哈希和隐私安全聚合报告；合成fixture专项`54 passed` |
 | 统一分析服务 | `AnalysisService`统一主图、Judge后法规检索、报告和run持久化；API与CLI共用；批量逐条复用同一`analyze()`并隔离失败 |
 | API与run查询 | `/api/v1/analyze`、`/api/v1/analyze/batch`、URL预览/确认、`/api/v1/runs/{run_id}`、`/api/v1/capabilities`及兼容`/analyze`共用服务 |
 | URL服务边界 | HTTPS/authority/port/本地地址校验、显式PlatformAdapter注册、无网络预览、可审计修正和一次性确认已实现；默认注册表为空，不声称支持真实平台 |
@@ -99,7 +99,7 @@
 
 - **M1数据关口仍未通过**：用户提供ZIP已完成本地审计，权威JSONL有2,901个唯一候选、108个创作者，距3,000还差99；无正式Gold、第二轮盲标、无泄漏切分、条款完成证明、隐私人工审批或Dataset Card审批。M1工具与P3接口可运行，但不能把这写成“M1已验收”或“P3研究实验已就绪”。
 - **P3非数据依赖工程范围已完成，但正式M3仍受M1事实证据约束**：统一服务、API/CLI、MCP超时回落、Knowledge MCP、混合检索、版本绑定报告、run查询、追踪和分类错误分析已通过离线测试；远程MCP可达性、法规覆盖质量和真实数据效果尚未证明。
-- **P4研究门仍未通过**：独立`baseline/`历史融合分类工程包已完成并以合成fixture专项`48 passed`验证；真实纵向特征/学习模型、Judge验证集校准、阈值选择、消融、置信区间和增益结论仍等待M1 Gold与无泄漏split。正式Gold=0且M1未通过，暂无真实训练/test指标、CreatorShift增益或M4验收。
+- **P4研究门仍未通过**：独立`baseline/`历史融合分类工程包已完成并以合成fixture专项`54 passed`验证；真实纵向特征/学习模型、Judge验证集校准、阈值选择、消融、置信区间和增益结论仍等待M1 Gold与无泄漏split。正式Gold=0且M1未通过，暂无真实训练/test指标、CreatorShift增益或M4验收。
 - **P5.2仅完成工程门，不是P5/M5完成**：批量分析、URL安全边界、显式适配器注册、预览/确认和修正审计，以及同源无构建研究工作台均已实现；四人团队UAT、真实小红书/B站适配、A2A远程专家、local/A2A对照、P5.3～P5.7和完整P5安全验收均未完成，M5未通过。
 
 ### 4.4 2026-07-26合并与独立模块验收
