@@ -238,6 +238,40 @@ def test_method_results_expose_aggregate_metrics_only(cohort, bundle):
             result["dark_scores"]
 
 
+def test_run_baselines_remaps_reordered_classifier_classes(
+    cohort, bundle, monkeypatch: pytest.MonkeyPatch
+):
+    class FakeClassifier:
+        classes_ = ("暗广", "非广", "明广")
+
+    class FakePipeline:
+        named_steps = {"classifier": FakeClassifier()}
+
+        def fit(self, features, labels):
+            assert len(features) == len(labels) == 3
+            return self
+
+        def predict(self, features):
+            return ("明广", "暗广", "非广")
+
+        def predict_proba(self, features):
+            # Columns follow FakeClassifier.classes_, not public LABELS order.
+            return (
+                (0.1, 0.8, 0.1),  # 明广: dark score is column 0 = 0.1
+                (0.8, 0.1, 0.1),  # 暗广: dark score is column 0 = 0.8
+                (0.1, 0.8, 0.1),  # 非广: dark score is column 0 = 0.1
+            )
+
+    monkeypatch.setattr(runner_module, "_new_pipeline", FakePipeline)
+    results = run_baselines(bundle, cohort)
+
+    for result in results.values():
+        assert result.dark_ad_brier == pytest.approx(0.02)
+        assert result.dark_ad_auprc == pytest.approx(1.0)
+        assert result.confusion_counts["暗广"]["暗广"] == 1
+        assert "dark_ad_scores" not in vars(result)
+
+
 def test_public_run_path_rejects_classifier_override(cohort, bundle):
     with pytest.raises(TypeError):
         run_baselines(bundle, cohort, config=ClassifierConfig(C=0.25))
