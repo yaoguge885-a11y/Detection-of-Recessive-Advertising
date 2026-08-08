@@ -138,6 +138,34 @@ def test_synthetic_mode_accepts_explicit_fixture(tmp_path: Path):
     assert bundle.input_hashes["fixture_metadata"]
 
 
+def test_formal_mode_accepts_unlabeled_history_content(tmp_path: Path):
+    paths = _write_fixture(tmp_path)
+    content_rows = [
+        json.loads(line)
+        for line in paths["content_path"].read_text(encoding="utf-8").splitlines()
+    ]
+    content_rows[0]["blogger_history_refs"] = ["fixture_history_only"]
+    content_rows.append(
+        {
+            "post_id": "fixture_history_only",
+            "blogger_id": content_rows[0]["blogger_id"],
+            "published_at": "2023-12-31T12:00:00+00:00",
+            "text": "fixture history",
+            "blogger_history_refs": [],
+            "content_group_id": None,
+        }
+    )
+    paths["content_path"].write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in content_rows),
+        encoding="utf-8",
+    )
+
+    bundle = load_input_bundle(mode="formal", **paths)
+
+    assert "fixture_history_only" in bundle.posts
+    assert "fixture_history_only" not in bundle.gold
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [

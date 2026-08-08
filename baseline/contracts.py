@@ -300,7 +300,10 @@ def _validate_join_and_splits(
 ) -> None:
     post_ids = set(posts)
     gold_ids = set(gold)
-    if post_ids != gold_ids:
+    # Gold is defined only for target posts.  Content may additionally carry
+    # anonymous history-only rows referenced by those targets; every Gold ID
+    # must still resolve to content.
+    if not gold_ids.issubset(post_ids):
         raise BaselineInputError("Gold/content coverage mismatch")
 
     split_names = ("train", "dev", "test")
