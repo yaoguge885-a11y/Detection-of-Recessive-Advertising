@@ -6,7 +6,7 @@
 
 **Architecture:** A root `baseline/` package loads versioned content, formal Gold, audited split artifacts, and an M1 gate before constructing one shared complete cohort. Four independently fitted scikit-learn Logistic Regression pipelines differ only in their input vector; synthetic mode exercises the full pipeline while forcing `research_claims_allowed=false`, and formal mode fails before training until every governance and leakage gate passes.
 
-**Tech Stack:** Python 3.10+, standard library dataclasses/JSON/hashlib, scikit-learn `>=1.5,<2`, pytest `>=8,<9`.
+**Tech Stack:** Python 3.10+, standard library dataclasses/JSON/hashlib, scikit-learn `>=1.5,<2`, pytest `>=8,<9`, jsonschema `>=4.22,<5`.
 
 > **完成审计纠正（2026-08-08）：** 最终 `baseline/requirements.txt` 另含 `jsonschema`，用于权威 formal Schema v1.2 校验；`MethodResult` 仅保留 aggregate-only 字段，named-class 映射由聚合 Brier/AUPRC 测试验证。此说明覆盖早期示例与最终实现的发现性偏差。
 
@@ -32,7 +32,7 @@
 ## File Structure
 
 - `baseline/README.md`: setup, formal/synthetic commands, report interpretation, and research-boundary warnings.
-- `baseline/requirements.txt`: isolated scikit-learn and pytest dependencies.
+- `baseline/requirements.txt`: isolated scikit-learn, pytest, and jsonschema dependencies.
 - `baseline/__init__.py`: public constants and exception exports.
 - `baseline/contracts.py`: dataclasses, JSON/JSONL/ID loading, Gold/content join, split and gate validation, and input hashes.
 - `baseline/features.py`: pinned keyword features, history integrity validation, shared cohort creation, and mean/max/EMA vector construction.
@@ -72,6 +72,7 @@ Create `baseline/requirements.txt` with exactly:
 ```text
 scikit-learn>=1.5,<2
 pytest>=8,<9
+jsonschema>=4.22,<5
 ```
 
 Create tests that prove formal gate rejection happens before model import and that synthetic mode can use an explicitly synthetic passed fixture:
@@ -398,7 +399,27 @@ def test_dark_ad_probability_uses_named_class_mapping(cohort, bundle):
     results = run_baselines(bundle, cohort)
     for result in results.values():
         assert result.class_order == ("明广", "暗广", "非广")
-        assert all(0.0 <= score <= 1.0 for score in result.dark_ad_scores)
+        assert 0.0 <= result.dark_ad_brier <= 1.0
+        assert 0.0 <= result.dark_ad_auprc <= 1.0
+
+
+def test_method_results_expose_aggregate_metrics_only(cohort, bundle):
+    results = run_baselines(bundle, cohort)
+    for result in results.values():
+        public_fields = vars(result)
+        assert "predictions" not in public_fields
+        assert not any(field.endswith("_id") for field in public_fields)
+        assert set(public_fields) == {
+            "method", "class_order", "train_count", "evaluation_count",
+            "macro_f1", "dark_ad_precision", "dark_ad_recall", "dark_ad_f1",
+            "dark_ad_auprc", "dark_ad_brier", "ece", "confusion_counts",
+            "delta_vs_single_post",
+        }
+
+
+# `test_evaluate_predictions_maps_named_probability_column` additionally
+# asserts aggregate Brier=0.02 and AUPRC=1.0; no per-sample scores, predictions,
+# or IDs are exposed through MethodResult.
 ```
 
 - [x] **Step 3: Run runner tests and verify RED**
@@ -636,7 +657,7 @@ git commit -m "docs: record merged history baseline gate"
 ### Task 6: Completion audit and full regression
 
 **Files:**
-- Modify: `docs/superpowers/plans/2026-08-08-merged-history-baseline.md` checkboxes only after each command succeeds.
+- Modify: `docs/superpowers/plans/2026-08-08-merged-history-baseline.md` checkboxes and completion-audit corrections after evidence succeeds.
 
 **Interfaces:**
 - Consumes: all Task 1-5 artifacts.
