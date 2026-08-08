@@ -25,6 +25,8 @@ from .features import (
     method_vector,
     pool_history,
 )
+from .runner import METHODS, ClassifierConfig, MethodResult, evaluate_predictions, run_baselines
+from .reporting import build_report, serialize_report
 
 __all__ = [
     "LABELS",
@@ -48,4 +50,11 @@ __all__ = [
     "pool_history",
     "build_common_cohort",
     "method_vector",
+    "METHODS",
+    "ClassifierConfig",
+    "MethodResult",
+    "evaluate_predictions",
+    "run_baselines",
+    "build_report",
+    "serialize_report",
 ]
