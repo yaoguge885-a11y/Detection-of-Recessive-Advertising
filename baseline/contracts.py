@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -137,6 +138,18 @@ def load_input_bundle(
                 "synthetic mode requires dataset_kind and fixture_version metadata"
             )
 
+    if mode == "synthetic":
+        _validate_canonical_synthetic_fixture_paths(
+            content_path=content_path,
+            gold_path=gold_path,
+            train_ids_path=train_ids_path,
+            dev_ids_path=dev_ids_path,
+            test_ids_path=test_ids_path,
+            split_report_path=split_report_path,
+            m1_gate_path=m1_gate_path,
+            fixture_metadata_path=fixture_metadata_path,
+        )
+
     paths: dict[str, Path | str | None] = {
         "content": content_path,
         "Gold": gold_path,
@@ -163,7 +176,7 @@ def load_input_bundle(
     posts = _load_content_jsonl(
         content_path, schema_validator=formal_schema_validator
     )
-    gold = _load_gold_jsonl(gold_path)
+    gold = _load_gold_jsonl(gold_path, formal=mode == "formal")
     split_values = {
         "train": _load_split_ids(train_ids_path, "train"),
         "dev": _load_split_ids(dev_ids_path, "dev"),
@@ -216,6 +229,43 @@ def _read_json_object(path: Path | str, context: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise BaselineInputError(f"{context} must be a JSON object")
     return value
+
+
+def _canonical_synthetic_fixture_paths() -> dict[str, Path]:
+    fixture_dir = (
+        Path(__file__).resolve().parents[1] / "baseline" / "tests" / "fixtures"
+    )
+    return {
+        "content_path": fixture_dir / "synthetic_content.jsonl",
+        "gold_path": fixture_dir / "synthetic_gold.jsonl",
+        "train_ids_path": fixture_dir / "train_ids.txt",
+        "dev_ids_path": fixture_dir / "dev_ids.txt",
+        "test_ids_path": fixture_dir / "test_ids.txt",
+        "split_report_path": fixture_dir / "synthetic_split_report.json",
+        "m1_gate_path": fixture_dir / "synthetic_gate.json",
+        "fixture_metadata_path": fixture_dir / "fixture_metadata.json",
+    }
+
+
+def _validate_canonical_synthetic_fixture_paths(**paths: Path | str | None) -> None:
+    expected = _canonical_synthetic_fixture_paths()
+    if set(paths) != set(expected):
+        raise BaselineInputError(
+            "synthetic mode requires canonical versioned fixture paths"
+        )
+    try:
+        for name, expected_path in expected.items():
+            actual = paths[name]
+            if actual is None or os.path.normcase(str(Path(actual).resolve())) != os.path.normcase(
+                str(expected_path.resolve())
+            ):
+                raise BaselineInputError(
+                    "synthetic mode requires canonical versioned fixture paths"
+                )
+    except (OSError, TypeError, ValueError) as exc:
+        raise BaselineInputError(
+            "synthetic mode requires canonical versioned fixture paths"
+        ) from exc
 
 
 def _load_formal_content_schema_validator() -> Any:
@@ -314,7 +364,9 @@ def _load_content_jsonl(
     return posts
 
 
-def _load_gold_jsonl(path: Path | str) -> dict[str, GoldRecord]:
+def _load_gold_jsonl(
+    path: Path | str, *, formal: bool = False
+) -> dict[str, GoldRecord]:
     rows = _read_jsonl(path, "Gold")
     gold: dict[str, GoldRecord] = {}
     for row in rows:
@@ -324,8 +376,81 @@ def _load_gold_jsonl(path: Path | str) -> dict[str, GoldRecord]:
         label = row.get("label")
         if not isinstance(label, str) or label not in LABELS:
             raise BaselineInputError("invalid formal Gold label")
+        if formal:
+            _validate_formal_gold_record(row, label)
         gold[post_id] = GoldRecord(post_id=post_id, label=label)
     return gold
+
+
+def _formal_gold_provenance_failure() -> None:
+    raise BaselineInputError("formal Gold provenance validation failed")
+
+
+def _validate_formal_gold_record(row: dict[str, Any], final_label: str) -> None:
+    if not isinstance(row.get("adjudicated"), bool):
+        _formal_gold_provenance_failure()
+    if not isinstance(row.get("low_confidence"), bool):
+        _formal_gold_provenance_failure()
+
+    annotators: list[dict[str, Any]] = []
+    for name in ("annotator_a", "annotator_b"):
+        value = row.get(name)
+        if not isinstance(value, dict):
+            _formal_gold_provenance_failure()
+        required = ("id", "label", "confidence", "evidence_codes", "evidence")
+        if any(field not in value for field in required):
+            _formal_gold_provenance_failure()
+        annotator_id = value["id"]
+        if (
+            not isinstance(annotator_id, str)
+            or not annotator_id.strip()
+            or annotator_id.strip().casefold() == "system"
+        ):
+            _formal_gold_provenance_failure()
+        if value["label"] not in LABELS:
+            _formal_gold_provenance_failure()
+        if "annotation_method" in value and value["annotation_method"] != "human":
+            _formal_gold_provenance_failure()
+        confidence = value["confidence"]
+        if confidence is not None and (
+            isinstance(confidence, bool)
+            or not isinstance(confidence, (int, float))
+            or not 0 <= confidence <= 1
+        ):
+            _formal_gold_provenance_failure()
+        if not isinstance(value["evidence_codes"], list) or not all(
+            isinstance(item, str) for item in value["evidence_codes"]
+        ):
+            _formal_gold_provenance_failure()
+        if not isinstance(value["evidence"], list) or not all(
+            isinstance(item, str) for item in value["evidence"]
+        ):
+            _formal_gold_provenance_failure()
+        annotators.append(value)
+
+    annotator_a_id = annotators[0]["id"].strip()
+    annotator_b_id = annotators[1]["id"].strip()
+    if annotator_a_id == annotator_b_id:
+        _formal_gold_provenance_failure()
+
+    if row["adjudicated"] is False:
+        if "adjudication" in row:
+            _formal_gold_provenance_failure()
+        if any(value["label"] != final_label for value in annotators):
+            _formal_gold_provenance_failure()
+        return
+
+    adjudication = row.get("adjudication")
+    if not isinstance(adjudication, dict):
+        _formal_gold_provenance_failure()
+    for field in ("label", "conflict_reason", "arbiter", "arbiter_note"):
+        if not isinstance(adjudication.get(field), str):
+            _formal_gold_provenance_failure()
+    if adjudication["label"] != final_label:
+        _formal_gold_provenance_failure()
+    arbiter = adjudication["arbiter"].strip()
+    if not arbiter or arbiter.casefold() == "system":
+        _formal_gold_provenance_failure()
 
 
 def _load_split_ids(path: Path | str, split: SplitName) -> set[str]:

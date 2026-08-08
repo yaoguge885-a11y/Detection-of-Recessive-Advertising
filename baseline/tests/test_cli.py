@@ -134,7 +134,28 @@ def _write_formal_fixture(directory: Path) -> Path:
                         [],
                     )
                 )
-            gold_rows.append({"post_id": target_id, "label": label})
+            gold_rows.append(
+                {
+                    "post_id": target_id,
+                    "label": label,
+                    "annotator_a": {
+                        "id": "fixture_human_a",
+                        "label": label,
+                        "confidence": 1.0,
+                        "evidence_codes": [],
+                        "evidence": [],
+                    },
+                    "annotator_b": {
+                        "id": "fixture_human_b",
+                        "label": label,
+                        "confidence": 1.0,
+                        "evidence_codes": [],
+                        "evidence": [],
+                    },
+                    "adjudicated": False,
+                    "low_confidence": False,
+                }
+            )
             split_ids[split].append(target_id)
 
     (directory / "synthetic_content.jsonl").write_text(

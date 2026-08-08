@@ -2,6 +2,7 @@
 
 import builtins
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ from baseline.contracts import BaselineInputError, load_input_bundle
 
 
 LABELS = ("明广", "暗广", "非广")
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def test_formal_mode_rejects_current_failed_m1_gate(tmp_path: Path):
@@ -84,6 +86,85 @@ def test_formal_mode_rejects_content_schema_violations(
         load_input_bundle(mode="formal", **paths)
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        "system_annotation_method",
+        "same_annotator",
+        "missing_annotator_evidence",
+        "malformed_adjudication",
+    ),
+)
+def test_formal_mode_rejects_ineligible_gold_provenance(
+    tmp_path: Path, mutation: str
+):
+    paths = _write_fixture(tmp_path)
+    gold_rows = [
+        json.loads(line)
+        for line in paths["gold_path"].read_text(encoding="utf-8").splitlines()
+    ]
+    first = gold_rows[0]
+    first["annotator_a"] = {
+        "id": "fixture_human_a",
+        "label": first["label"],
+        "confidence": 1.0,
+        "evidence_codes": [],
+        "evidence": [],
+    }
+    first["annotator_b"] = {
+        "id": "fixture_human_b",
+        "label": first["label"],
+        "confidence": 1.0,
+        "evidence_codes": [],
+        "evidence": [],
+    }
+    first["adjudicated"] = False
+    first["low_confidence"] = False
+    if mutation == "system_annotation_method":
+        first["annotator_a"]["annotation_method"] = "auto_accepted"
+    elif mutation == "same_annotator":
+        first["annotator_b"]["id"] = "fixture_human_a"
+    elif mutation == "missing_annotator_evidence":
+        first["annotator_a"].pop("evidence", None)
+    else:
+        first["adjudicated"] = True
+
+    paths["gold_path"].write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in gold_rows),
+        encoding="utf-8",
+    )
+    with pytest.raises(
+        BaselineInputError, match="formal Gold provenance validation failed"
+    ):
+        load_input_bundle(mode="formal", **paths)
+
+
+def _fixture_paths(directory: Path) -> dict[str, Path]:
+    return {
+        "content_path": directory / "synthetic_content.jsonl",
+        "gold_path": directory / "synthetic_gold.jsonl",
+        "train_ids_path": directory / "train_ids.txt",
+        "dev_ids_path": directory / "dev_ids.txt",
+        "test_ids_path": directory / "test_ids.txt",
+        "split_report_path": directory / "synthetic_split_report.json",
+        "m1_gate_path": directory / "synthetic_gate.json",
+        "fixture_metadata_path": directory / "fixture_metadata.json",
+    }
+
+
+def test_synthetic_mode_rejects_copied_fixture_paths(tmp_path: Path):
+    copied = tmp_path / "fixtures"
+    copied.mkdir()
+    for source in FIXTURES.iterdir():
+        shutil.copy2(source, copied / source.name)
+
+    with pytest.raises(
+        BaselineInputError,
+        match="synthetic mode requires canonical versioned fixture paths",
+    ):
+        load_input_bundle(mode="synthetic", **_fixture_paths(copied))
+
+
 def _write_fixture(tmp_path: Path) -> dict[str, Path]:
     rows = []
     gold = []
@@ -117,7 +198,28 @@ def _write_fixture(tmp_path: Path) -> dict[str, Path]:
                     },
                 }
             )
-            gold.append({"post_id": post_id, "label": label})
+            gold.append(
+                {
+                    "post_id": post_id,
+                    "label": label,
+                    "annotator_a": {
+                        "id": "fixture_human_a",
+                        "label": label,
+                        "confidence": 1.0,
+                        "evidence_codes": [],
+                        "evidence": [],
+                    },
+                    "annotator_b": {
+                        "id": "fixture_human_b",
+                        "label": label,
+                        "confidence": 1.0,
+                        "evidence_codes": [],
+                        "evidence": [],
+                    },
+                    "adjudicated": False,
+                    "low_confidence": False,
+                }
+            )
             ids[split].append(post_id)
     content_path = tmp_path / "content.jsonl"
     content_path.write_text(
@@ -158,32 +260,16 @@ def _write_fixture(tmp_path: Path) -> dict[str, Path]:
 
 
 def test_synthetic_mode_accepts_explicit_fixture(tmp_path: Path):
-    paths = _write_fixture(tmp_path)
-    metadata = tmp_path / "fixture_metadata.json"
-    metadata.write_text(
-        json.dumps(
-            {
-                "fixture_version": "merged-history-synthetic-v1",
-                "dataset_kind": "synthetic_fixture",
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    bundle = load_input_bundle(
-        mode="synthetic",
-        fixture_metadata_path=metadata,
-        **paths,
-    )
+    bundle = load_input_bundle(mode="synthetic", **_fixture_paths(FIXTURES))
 
     assert bundle.mode == "synthetic"
-    assert len(bundle.posts) == 9
+    assert len(bundle.posts) == 36
     assert len(bundle.gold) == 9
     assert bundle.input_hashes["fixture_metadata"]
 
 
 def test_synthetic_mode_rejects_wrong_fixture_version(tmp_path: Path):
-    paths = _write_fixture(tmp_path)
+    paths = _fixture_paths(FIXTURES)
     metadata = tmp_path / "fixture_metadata.json"
     metadata.write_text(
         json.dumps(
@@ -195,12 +281,9 @@ def test_synthetic_mode_rejects_wrong_fixture_version(tmp_path: Path):
         encoding="utf-8",
     )
 
+    paths["fixture_metadata_path"] = metadata
     with pytest.raises(BaselineInputError, match="fixture_version"):
-        load_input_bundle(
-            mode="synthetic",
-            fixture_metadata_path=metadata,
-            **paths,
-        )
+        load_input_bundle(mode="synthetic", **paths)
 
 
 def test_formal_mode_accepts_unlabeled_history_content(tmp_path: Path):
@@ -319,6 +402,8 @@ def test_input_contracts_fail_closed(tmp_path: Path, mutation: str, message: str
         path = paths["gold_path"]
         rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
         rows[0]["label"] = rows[1]["label"]
+        rows[0]["annotator_a"]["label"] = rows[0]["label"]
+        rows[0]["annotator_b"]["label"] = rows[0]["label"]
         path.write_text(
             "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
             encoding="utf-8",
