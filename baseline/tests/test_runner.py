@@ -122,8 +122,8 @@ def test_dark_ad_probability_uses_named_class_mapping(cohort, bundle):
 
     for result in results.values():
         assert result.class_order == LABELS
-        assert len(result.dark_ad_scores) == result.evaluation_count
-        assert all(0.0 <= score <= 1.0 for score in result.dark_ad_scores)
+        assert 0.0 <= result.dark_ad_brier <= 1.0
+        assert 0.0 <= result.dark_ad_auprc <= 1.0
 
 
 def test_report_metrics_include_fixed_confusion_and_history_deltas(cohort, bundle):
@@ -222,7 +222,20 @@ def test_evaluate_predictions_maps_named_probability_column():
         ),
     )
 
-    assert result.dark_ad_scores == pytest.approx((0.1, 0.8, 0.1))
+    assert result.dark_ad_brier == pytest.approx(0.02)
+    assert result.dark_ad_auprc == pytest.approx(1.0)
+
+
+def test_method_results_expose_aggregate_metrics_only(cohort, bundle):
+    results = run_baselines(bundle, cohort)
+    for result in results.values():
+        public_fields = vars(result)
+        assert "dark_ad_scores" not in public_fields
+        assert "predictions" not in public_fields
+        assert not any(field.endswith("_id") for field in public_fields)
+        assert "dark_ad_scores" not in result.as_dict()
+        with pytest.raises(KeyError):
+            result["dark_scores"]
 
 
 def test_public_run_path_rejects_classifier_override(cohort, bundle):

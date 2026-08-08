@@ -42,12 +42,7 @@ FIXED_CLASSIFIER_CONFIG = ClassifierConfig()
 
 @dataclass(frozen=True)
 class MethodResult:
-    """Aggregate evaluation for one fixed-feature baseline.
-
-    ``dark_ad_scores`` is retained in memory for callers that need to inspect
-    probability mapping.  Reporting intentionally omits it and all other
-    row-level values.
-    """
+    """Aggregate evaluation for one fixed-feature baseline."""
 
     method: str
     class_order: tuple[str, ...]
@@ -62,7 +57,6 @@ class MethodResult:
     ece: float
     confusion_counts: dict[str, dict[str, int]]
     delta_vs_single_post: dict[str, float]
-    dark_ad_scores: tuple[float, ...]
 
     def as_dict(self) -> dict[str, Any]:
         """Return aggregate fields in the same shape used by reports."""
@@ -87,8 +81,6 @@ class MethodResult:
     def __getitem__(self, key: str) -> Any:
         """Allow metric consumers to use either attribute or mapping syntax."""
 
-        if key == "dark_scores":
-            return self.dark_ad_scores
         return self.as_dict()[key]
 
     @property
@@ -317,7 +309,6 @@ def evaluate_predictions(
             "dark_ad_f1": 0.0,
             "dark_ad_auprc": 0.0,
         },
-        dark_ad_scores=scores,
     )
     return result
 
