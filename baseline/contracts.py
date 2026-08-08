@@ -119,6 +119,10 @@ def load_input_bundle(
     if evaluation_split == "test" and confirm_test_evaluation is not True:
         raise BaselineInputError("test evaluation requires explicit confirmation")
 
+    formal_schema_validator = (
+        _load_formal_content_schema_validator() if mode == "formal" else None
+    )
+
     if mode == "synthetic":
         if fixture_metadata_path is None:
             raise BaselineInputError(
@@ -156,7 +160,9 @@ def load_input_bundle(
     assert test_ids_path is not None
     assert split_report_path is not None
 
-    posts = _load_content_jsonl(content_path)
+    posts = _load_content_jsonl(
+        content_path, schema_validator=formal_schema_validator
+    )
     gold = _load_gold_jsonl(gold_path)
     split_values = {
         "train": _load_split_ids(train_ids_path, "train"),
@@ -212,6 +218,35 @@ def _read_json_object(path: Path | str, context: str) -> dict[str, Any]:
     return value
 
 
+def _load_formal_content_schema_validator() -> Any:
+    """Load the authoritative Draft 2020-12 content validator lazily."""
+
+    try:
+        from jsonschema import Draft202012Validator, FormatChecker
+    except ImportError as exc:
+        raise BaselineInputError(
+            "formal content Schema v1.2 validation failed"
+        ) from exc
+
+    schema_path = (
+        Path(__file__).resolve().parents[1]
+        / "data"
+        / "schema"
+        / "data_schema_v1_2.json"
+    )
+    try:
+        schema_text = schema_path.read_text(encoding="utf-8-sig")
+        schema = json.loads(schema_text)
+        Draft202012Validator.check_schema(schema)
+        return Draft202012Validator(schema, format_checker=FormatChecker())
+    except Exception as exc:
+        # Do not expose the schema path or validator details in a user-facing
+        # error; the caller only needs the aggregate governance reason.
+        raise BaselineInputError(
+            "formal content Schema v1.2 validation failed"
+        ) from exc
+
+
 def _read_jsonl(path: Path | str, context: str) -> list[dict[str, Any]]:
     try:
         text = Path(path).read_text(encoding="utf-8-sig")
@@ -232,10 +267,23 @@ def _read_jsonl(path: Path | str, context: str) -> list[dict[str, Any]]:
     return rows
 
 
-def _load_content_jsonl(path: Path | str) -> dict[str, ContentPost]:
+def _load_content_jsonl(
+    path: Path | str, *, schema_validator: Any | None = None
+) -> dict[str, ContentPost]:
     rows = _read_jsonl(path, "content")
     posts: dict[str, ContentPost] = {}
     for row in rows:
+        if schema_validator is not None:
+            try:
+                valid = schema_validator.is_valid(row)
+            except Exception as exc:
+                raise BaselineInputError(
+                    "formal content Schema v1.2 validation failed"
+                ) from exc
+            if not valid:
+                raise BaselineInputError(
+                    "formal content Schema v1.2 validation failed"
+                )
         post_id = _required_text(row, "post_id", "content")
         if post_id in posts:
             raise BaselineInputError("duplicate content post_id")

@@ -24,12 +24,12 @@ def test_failed_formal_gate_precedes_test_confirmation_and_model_import(
 ):
     gate = tmp_path / "gate.json"
     gate.write_text(json.dumps({"gate": "M1", "passed": False}), encoding="utf-8")
-    sklearn_imports: list[str] = []
+    blocked_imports: list[str] = []
     original_import = builtins.__import__
 
     def guarded_import(name: str, *args: object, **kwargs: object):
-        if name == "sklearn" or name.startswith("sklearn."):
-            sklearn_imports.append(name)
+        if name.split(".", 1)[0] in {"sklearn", "jsonschema"}:
+            blocked_imports.append(name)
         return original_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", guarded_import)
@@ -40,7 +40,7 @@ def test_failed_formal_gate_precedes_test_confirmation_and_model_import(
             evaluation_split="test",
             confirm_test_evaluation=False,
         )
-    assert sklearn_imports == []
+    assert blocked_imports == []
 
 
 def test_formal_test_requires_explicit_confirmation(tmp_path: Path):
@@ -55,22 +55,66 @@ def test_formal_test_requires_explicit_confirmation(tmp_path: Path):
         )
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    ("missing_schema_version", "unsupported_schema_version", "invalid_schema_field"),
+)
+def test_formal_mode_rejects_content_schema_violations(
+    tmp_path: Path, mutation: str
+):
+    paths = _write_fixture(tmp_path)
+    content_rows = [
+        json.loads(line)
+        for line in paths["content_path"].read_text(encoding="utf-8").splitlines()
+    ]
+    if mutation == "missing_schema_version":
+        content_rows[0].pop("schema_version", None)
+    elif mutation == "unsupported_schema_version":
+        content_rows[0]["schema_version"] = "9.9"
+    else:
+        content_rows[0]["media"] = "not-an-array"
+    paths["content_path"].write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in content_rows),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        BaselineInputError, match="formal content Schema v1.2 validation failed"
+    ):
+        load_input_bundle(mode="formal", **paths)
+
+
 def _write_fixture(tmp_path: Path) -> dict[str, Path]:
     rows = []
     gold = []
     ids: dict[str, list[str]] = {"train": [], "dev": [], "test": []}
     for split_index, split in enumerate(ids):
         for label_index, label in enumerate(LABELS):
-            post_id = f"fixture_{split}_{label_index}"
-            creator_id = f"fixture_creator_{split}_{label_index}"
+            post_id = f"post_fixture_{split}_{label_index}"
+            creator_id = f"blogger_fixture_creator_{split}_{label_index}"
             rows.append(
                 {
+                    "schema_version": "1.2",
                     "post_id": post_id,
+                    "platform": "synthetic",
+                    "source_type": "synthetic",
                     "blogger_id": creator_id,
                     "published_at": f"2024-01-{split_index + 1:02d}T12:00:00+00:00",
                     "text": "fixture text",
+                    "media": [],
+                    "comments": [],
                     "blogger_history_refs": [],
                     "content_group_id": None,
+                    "provenance": {
+                        "source_ref_hash": "fixture",
+                        "collected_at": "2024-01-01T00:00:00+00:00",
+                        "collector": "fixture",
+                        "terms_checked_at": None,
+                    },
+                    "privacy": {
+                        "anonymized": True,
+                        "contains_sensitive_data": False,
+                    },
                 }
             )
             gold.append({"post_id": post_id, "label": label})
@@ -165,15 +209,27 @@ def test_formal_mode_accepts_unlabeled_history_content(tmp_path: Path):
         json.loads(line)
         for line in paths["content_path"].read_text(encoding="utf-8").splitlines()
     ]
-    content_rows[0]["blogger_history_refs"] = ["fixture_history_only"]
+    content_rows[0]["blogger_history_refs"] = ["post_fixture_history_only"]
     content_rows.append(
         {
-            "post_id": "fixture_history_only",
+            "schema_version": "1.2",
+            "post_id": "post_fixture_history_only",
+            "platform": "synthetic",
+            "source_type": "synthetic",
             "blogger_id": content_rows[0]["blogger_id"],
             "published_at": "2023-12-31T12:00:00+00:00",
             "text": "fixture history",
+            "media": [],
+            "comments": [],
             "blogger_history_refs": [],
             "content_group_id": None,
+            "provenance": {
+                "source_ref_hash": "fixture",
+                "collected_at": "2024-01-01T00:00:00+00:00",
+                "collector": "fixture",
+                "terms_checked_at": None,
+            },
+            "privacy": {"anonymized": True, "contains_sensitive_data": False},
         }
     )
     paths["content_path"].write_text(
@@ -183,8 +239,8 @@ def test_formal_mode_accepts_unlabeled_history_content(tmp_path: Path):
 
     bundle = load_input_bundle(mode="formal", **paths)
 
-    assert "fixture_history_only" in bundle.posts
-    assert "fixture_history_only" not in bundle.gold
+    assert "post_fixture_history_only" in bundle.posts
+    assert "post_fixture_history_only" not in bundle.gold
 
 
 @pytest.mark.parametrize(
@@ -207,19 +263,36 @@ def test_input_contracts_fail_closed(tmp_path: Path, mutation: str, message: str
             handle.write(
                 json.dumps(
                     {
-                        "post_id": "fixture_train_0",
-                        "blogger_id": "fixture_creator_train_0",
+                        "schema_version": "1.2",
+                        "post_id": "post_fixture_train_0",
+                        "platform": "synthetic",
+                        "source_type": "synthetic",
+                        "blogger_id": "blogger_fixture_creator_train_0",
                         "published_at": "2024-01-01T12:00:00+00:00",
                         "text": "fixture text",
+                        "media": [],
+                        "comments": [],
                         "blogger_history_refs": [],
                         "content_group_id": None,
+                        "provenance": {
+                            "source_ref_hash": "fixture",
+                            "collected_at": "2024-01-01T00:00:00+00:00",
+                            "collector": "fixture",
+                            "terms_checked_at": None,
+                        },
+                        "privacy": {
+                            "anonymized": True,
+                            "contains_sensitive_data": False,
+                        },
                     }
                 )
                 + "\n"
             )
     elif mutation == "invalid_gold_label":
         lines = paths["gold_path"].read_text(encoding="utf-8").splitlines()
-        lines[0] = json.dumps({"post_id": "fixture_train_0", "label": "uncertain"})
+        lines[0] = json.dumps(
+            {"post_id": "post_fixture_train_0", "label": "uncertain"}
+        )
         paths["gold_path"].write_text("\n".join(lines) + "\n", encoding="utf-8")
     elif mutation == "missing_gold_content":
         lines = paths["content_path"].read_text(encoding="utf-8").splitlines()
@@ -227,7 +300,8 @@ def test_input_contracts_fail_closed(tmp_path: Path, mutation: str, message: str
     elif mutation == "overlapping_splits":
         path = paths["dev_ids_path"]
         path.write_text(
-            path.read_text(encoding="utf-8") + "fixture_train_0\n", encoding="utf-8"
+            path.read_text(encoding="utf-8") + "post_fixture_train_0\n",
+            encoding="utf-8",
         )
     elif mutation == "missing_split_id":
         path = paths["test_ids_path"]
