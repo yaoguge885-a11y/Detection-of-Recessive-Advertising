@@ -37,6 +37,9 @@ class ClassifierConfig:
         }
 
 
+FIXED_CLASSIFIER_CONFIG = ClassifierConfig()
+
+
 @dataclass(frozen=True)
 class MethodResult:
     """Aggregate evaluation for one fixed-feature baseline.
@@ -121,10 +124,10 @@ class MethodResult:
         return self.delta_vs_single_post
 
 
-def _new_pipeline(config: ClassifierConfig | None = None) -> Any:
+def _new_pipeline() -> Any:
     """Build one fresh sklearn pipeline, importing sklearn lazily."""
 
-    selected = config or ClassifierConfig()
+    selected = FIXED_CLASSIFIER_CONFIG
     try:
         from sklearn.linear_model import LogisticRegression
         from sklearn.pipeline import Pipeline
@@ -329,8 +332,6 @@ def _samples_for_split(cohort: Cohort, split: str) -> list[Any]:
 def run_baselines(
     bundle: InputBundle,
     cohort: Cohort,
-    *,
-    config: ClassifierConfig | None = None,
 ) -> dict[str, MethodResult]:
     """Fit and evaluate all four fixed methods on one shared cohort."""
 
@@ -340,7 +341,12 @@ def run_baselines(
         raise BaselineInputError("baseline cohort is invalid")
     if bundle.evaluation_split not in {"train", "dev", "test"}:
         raise BaselineInputError("evaluation split is invalid")
-    selected_config = config or ClassifierConfig()
+    if (
+        bundle.mode == "formal"
+        and bundle.evaluation_split == "test"
+        and bundle.confirm_test_evaluation is not True
+    ):
+        raise BaselineInputError("test evaluation requires explicit confirmation")
 
     train_samples = _samples_for_split(cohort, "train")
     evaluation_samples = _samples_for_split(cohort, bundle.evaluation_split)
@@ -361,7 +367,7 @@ def run_baselines(
         except (TypeError, ValueError) as exc:
             raise BaselineInputError("baseline feature vectors are invalid") from exc
 
-        pipeline = _new_pipeline(selected_config)
+        pipeline = _new_pipeline()
         try:
             pipeline.fit(train_features, y_train)
             y_pred = tuple(pipeline.predict(evaluation_features))
@@ -415,6 +421,7 @@ def run_baselines(
 __all__ = [
     "METHODS",
     "ClassifierConfig",
+    "FIXED_CLASSIFIER_CONFIG",
     "MethodResult",
     "evaluate_predictions",
     "run_baselines",

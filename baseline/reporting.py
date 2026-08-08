@@ -12,7 +12,7 @@ from typing import Any
 
 from .contracts import BaselineInputError, InputBundle
 from .features import Cohort, FEATURE_VERSION
-from .runner import METHODS, ClassifierConfig, MethodResult
+from .runner import FIXED_CLASSIFIER_CONFIG, METHODS, MethodResult
 
 
 REPORT_VERSION = "merged-history-baseline-report-v1"
@@ -73,8 +73,6 @@ def build_report(
     bundle: InputBundle,
     cohort: Cohort,
     results: Mapping[str, MethodResult] | Sequence[MethodResult],
-    *,
-    config: ClassifierConfig | None = None,
 ) -> dict[str, Any]:
     """Build an aggregate-only report with one intentionally variable timestamp."""
 
@@ -83,7 +81,7 @@ def build_report(
     if not isinstance(cohort, Cohort):
         raise BaselineInputError("baseline cohort is invalid")
     normalized = _coerce_results(results)
-    selected_config = config or ClassifierConfig()
+    selected_config = FIXED_CLASSIFIER_CONFIG
     config_payload = json.dumps(
         selected_config.as_dict(),
         ensure_ascii=False,

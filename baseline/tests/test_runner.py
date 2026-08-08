@@ -3,15 +3,28 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pytest
 
-from baseline.contracts import ContentPost, GoldRecord, InputBundle, SplitAssignments
+from baseline.contracts import (
+    BaselineInputError,
+    ContentPost,
+    GoldRecord,
+    InputBundle,
+    SplitAssignments,
+)
 from baseline.features import build_common_cohort
 from baseline.reporting import build_report, serialize_report
-from baseline.runner import METHODS, evaluate_predictions, run_baselines
+from baseline.runner import (
+    METHODS,
+    ClassifierConfig,
+    evaluate_predictions,
+    run_baselines,
+)
+from baseline import runner as runner_module
 
 
 LABELS = ("明广", "暗广", "非广")
@@ -210,3 +223,46 @@ def test_evaluate_predictions_maps_named_probability_column():
     )
 
     assert result.dark_ad_scores == pytest.approx((0.1, 0.8, 0.1))
+
+
+def test_public_run_path_rejects_classifier_override(cohort, bundle):
+    with pytest.raises(TypeError):
+        run_baselines(bundle, cohort, config=ClassifierConfig(C=0.25))
+
+
+def test_report_uses_fixed_classifier_parameters_without_override(cohort, bundle):
+    results = run_baselines(bundle, cohort)
+    report = build_report(bundle, cohort, results)
+
+    assert report["parameters"]["classifier"] == {
+        "scaler": "standard_scaler",
+        "classifier": "logistic_regression",
+        "solver": "lbfgs",
+        "C": 1.0,
+        "max_iter": 1000,
+        "random_state": 0,
+        "class_weight": None,
+    }
+    with pytest.raises(TypeError):
+        build_report(bundle, cohort, results, config=ClassifierConfig(C=0.25))
+
+
+def test_formal_test_bundle_requires_confirmation_before_any_fit(
+    cohort, bundle, monkeypatch: pytest.MonkeyPatch
+):
+    formal_test_bundle = replace(
+        bundle,
+        mode="formal",
+        evaluation_split="test",
+        confirm_test_evaluation=False,
+    )
+    fit_calls: list[str] = []
+
+    def forbidden_pipeline():
+        fit_calls.append("called")
+        raise AssertionError("classifier construction must be gated")
+
+    monkeypatch.setattr(runner_module, "_new_pipeline", forbidden_pipeline)
+    with pytest.raises(BaselineInputError, match="test evaluation requires"):
+        run_baselines(formal_test_bundle, cohort)
+    assert fit_calls == []
