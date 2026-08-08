@@ -8,6 +8,8 @@
 
 **Tech Stack:** Python 3.10+, standard library dataclasses/JSON/hashlib, scikit-learn `>=1.5,<2`, pytest `>=8,<9`.
 
+> **完成审计纠正（2026-08-08）：** 最终 `baseline/requirements.txt` 另含 `jsonschema`，用于权威 formal Schema v1.2 校验；`MethodResult` 仅保留 aggregate-only 字段，named-class 映射由聚合 Brier/AUPRC 测试验证。此说明覆盖早期示例与最终实现的发现性偏差。
+
 ## Global Constraints
 
 - Do not modify `implicit-ad-agent` runtime code, LangGraph, Judge, APIs, or existing CreatorShift behavior.
@@ -63,7 +65,7 @@
 - Consumes: content JSONL, Gold JSONL, three UTF-8 ID files, split report JSON, M1 gate JSON, and `mode: Literal["formal", "synthetic"]`.
 - Produces: `BaselineInputError`, `ContentPost`, `GoldRecord`, `SplitAssignments`, `InputBundle`, `load_input_bundle(...)`, and `sha256_file(path)`.
 
-- [ ] **Step 1: Add isolated dependencies and write failing gate tests**
+- [x] **Step 1: Add isolated dependencies and write failing gate tests**
 
 Create `baseline/requirements.txt` with exactly:
 
@@ -102,7 +104,7 @@ def test_formal_test_requires_explicit_confirmation(tmp_path: Path):
         )
 ```
 
-- [ ] **Step 2: Run the focused tests and verify RED**
+- [x] **Step 2: Run the focused tests and verify RED**
 
 Run:
 
@@ -112,7 +114,7 @@ Run:
 
 Expected: collection fails because `baseline.contracts` does not exist.
 
-- [ ] **Step 3: Implement dataclasses, loaders, hashes, and preflight validation**
+- [x] **Step 3: Implement dataclasses, loaders, hashes, and preflight validation**
 
 Use these exact public shapes:
 
@@ -167,7 +169,7 @@ class InputBundle:
 
 `load_input_bundle` must validate the M1/test guard first, then require the remaining paths. In formal mode reject `passed != True`; in synthetic mode require fixture metadata `dataset_kind == "synthetic_fixture"`. JSONL loading must reject non-object rows, duplicate `post_id`, invalid labels, duplicate split IDs, split overlap, missing/extra Gold coverage, missing leakage fields, nonzero leakage, and a split without all three labels. Error strings may include field names and aggregate counts but not values of text, URLs, creator IDs, annotators, or post ID lists.
 
-- [ ] **Step 4: Add join, split, and label failure tests**
+- [x] **Step 4: Add join, split, and label failure tests**
 
 Add parametrized tests covering:
 
@@ -193,7 +195,7 @@ def test_input_contracts_fail_closed(fixture_paths, mutation, message):
 
 Implement `fixture_paths` as a local test helper that writes only synthetic, anonymous records to `tmp_path`.
 
-- [ ] **Step 5: Run contracts tests and verify GREEN**
+- [x] **Step 5: Run contracts tests and verify GREEN**
 
 Run:
 
@@ -203,7 +205,7 @@ Run:
 
 Expected: all contract tests pass without importing sklearn.
 
-- [ ] **Step 6: Commit Task 1**
+- [x] **Step 6: Commit Task 1**
 
 ```powershell
 git add baseline\requirements.txt baseline\__init__.py baseline\contracts.py baseline\tests\__init__.py baseline\tests\test_contracts.py
@@ -224,7 +226,7 @@ git commit -m "feat: add history baseline input gate"
 - Consumes: `InputBundle`, `ContentPost`, fixed `minimum_history=3`, and fixed `ema_alpha=0.5`.
 - Produces: `FEATURE_VERSION`, `WEIGHT_DIMENSIONS`, `FeatureRow`, `Cohort`, `compute_keyword_weights(text)`, `pool_history(rows, method, alpha)`, `build_common_cohort(bundle)`, and `method_vector(sample, method)`.
 
-- [ ] **Step 1: Write failing exact-value feature and pooling tests**
+- [x] **Step 1: Write failing exact-value feature and pooling tests**
 
 Use a three-history fixture with vectors `(0.1, 0.2)`, `(0.3, 0.4)`, `(0.5, 0.8)` and assert:
 
@@ -238,7 +240,7 @@ def test_pooling_exact_values():
 
 Add keyword parity assertions for the text `"品牌赞助，限时优惠，点击链接购买，今天分享体验"` against `implicit-ad-agent/impad/tools/keywords.py` expected values and fixed dimension order.
 
-- [ ] **Step 2: Write failing leakage and shared-cohort tests**
+- [x] **Step 2: Write failing leakage and shared-cohort tests**
 
 Cover each invariant separately:
 
@@ -263,7 +265,7 @@ def test_history_integrity_aborts_entire_run(bundle, mutation, message):
 
 Also assert that a missing target timestamp and one/two valid history rows produce `target_timestamp_unavailable` and `history_insufficient` exclusion counts, while every method receives identical train/evaluation target IDs.
 
-- [ ] **Step 3: Run focused feature tests and verify RED**
+- [x] **Step 3: Run focused feature tests and verify RED**
 
 Run:
 
@@ -273,7 +275,7 @@ Run:
 
 Expected: collection fails because `baseline.features` does not exist.
 
-- [ ] **Step 4: Implement pinned keyword features and pooling**
+- [x] **Step 4: Implement pinned keyword features and pooling**
 
 Define:
 
@@ -302,7 +304,7 @@ def compute_keyword_weights(text: str) -> tuple[float, ...]:
 
 Copy `CATEGORY_WORDS` and `SATURATION` verbatim from `implicit-ad-agent/impad/tools/keywords.py` so the parity test locks the approved version. `pool_history` sorts rows by aware timestamp, validates identical finite vector lengths, computes arithmetic mean or per-feature max, and initializes EMA from the earliest row before applying `alpha * current + (1 - alpha) * previous`.
 
-- [ ] **Step 5: Implement integrity validation and shared cohort**
+- [x] **Step 5: Implement integrity validation and shared cohort**
 
 Use these stable shapes:
 
@@ -337,7 +339,7 @@ Validate every referenced history item before deciding sufficiency. Any missing/
 
 After exclusions, verify train, dev, and test cohort subsets each still contain all three formal labels. Raise `BaselineInputError("each cohort split must contain all three labels")` before returning the cohort if any label is absent.
 
-- [ ] **Step 6: Run feature tests and verify GREEN**
+- [x] **Step 6: Run feature tests and verify GREEN**
 
 Run:
 
@@ -347,7 +349,7 @@ Run:
 
 Expected: exact pooling, leakage rejection, exclusion, parity, and shared-cohort tests pass.
 
-- [ ] **Step 7: Commit Task 2**
+- [x] **Step 7: Commit Task 2**
 
 ```powershell
 git add baseline\features.py baseline\contracts.py baseline\__init__.py baseline\tests\test_features.py
@@ -368,7 +370,7 @@ git commit -m "feat: build leakage-safe history cohort"
 - Consumes: `Cohort`, `InputBundle`, `method_vector(sample, method)`, and input hashes.
 - Produces: `METHODS`, `ClassifierConfig`, `MethodResult`, `run_baselines(bundle, cohort)`, `evaluate_predictions(...)`, `build_report(...)`, and `serialize_report(report)`.
 
-- [ ] **Step 1: Install isolated baseline dependencies**
+- [x] **Step 1: Install isolated baseline dependencies**
 
 Run:
 
@@ -378,7 +380,7 @@ Run:
 
 Expected: scikit-learn and its dependencies install into the existing project venv without changing `implicit-ad-agent/pyproject.toml` or `implicit-ad-agent/requirements.txt`.
 
-- [ ] **Step 2: Write failing deterministic training and probability tests**
+- [x] **Step 2: Write failing deterministic training and probability tests**
 
 Create a synthetic `Cohort` with all three labels in train/dev and assert:
 
@@ -399,7 +401,7 @@ def test_dark_ad_probability_uses_named_class_mapping(cohort, bundle):
         assert all(0.0 <= score <= 1.0 for score in result.dark_ad_scores)
 ```
 
-- [ ] **Step 3: Run runner tests and verify RED**
+- [x] **Step 3: Run runner tests and verify RED**
 
 Run:
 
@@ -409,7 +411,7 @@ Run:
 
 Expected: collection fails because `baseline.runner` and `baseline.reporting` do not exist.
 
-- [ ] **Step 4: Implement fixed sklearn pipelines**
+- [x] **Step 4: Implement fixed sklearn pipelines**
 
 Use lazy imports inside `run_baselines` and convert import failures to a privacy-safe `BaselineInputError`:
 
@@ -440,7 +442,7 @@ def _new_pipeline():
 
 For each method, build train/evaluation arrays from the same cohort IDs, fit a fresh pipeline, obtain `predict` and `predict_proba`, and reorder probability columns by the fixed public label tuple instead of relying on sklearn lexical order. Keep predictions only in memory; `MethodResult` exposes aggregate metrics and counts, not IDs or row predictions.
 
-- [ ] **Step 5: Implement exact metrics and deltas**
+- [x] **Step 5: Implement exact metrics and deltas**
 
 Compute with sklearn:
 
@@ -457,11 +459,11 @@ dark_brier = brier_score_loss(dark_true, dark_scores)
 
 Implement ten-bin ECE using `[lower, upper)` intervals and include 1.0 in the last bin. Build a fixed 3x3 confusion mapping in public label order. For each history method subtract the `single_post` point estimate for Macro-F1 and dark-ad F1/AUPRC; do not calculate p-values or intervals.
 
-- [ ] **Step 6: Write report privacy and determinism tests**
+- [x] **Step 6: Write report privacy and determinism tests**
 
 Assert the serialized JSON contains required versions/hashes/parameters/aggregate metrics, differs only in `generated_at` across runs, and contains none of the fixture raw text, URLs, post IDs, creator IDs, annotator IDs, or in-memory prediction arrays.
 
-- [ ] **Step 7: Run runner/report tests and verify GREEN**
+- [x] **Step 7: Run runner/report tests and verify GREEN**
 
 Run:
 
@@ -471,7 +473,7 @@ Run:
 
 Expected: deterministic model, named-class mapping, metric, delta, privacy, and serialization tests pass.
 
-- [ ] **Step 8: Commit Task 3**
+- [x] **Step 8: Commit Task 3**
 
 ```powershell
 git add baseline\runner.py baseline\reporting.py baseline\__init__.py baseline\tests\test_runner.py
@@ -499,11 +501,11 @@ git commit -m "feat: evaluate merged history baselines"
 - Consumes: CLI argv and the Task 1-3 public interfaces.
 - Produces: `python -m baseline.cli synthetic ...`, `python -m baseline.cli formal ...`, atomic UTF-8 JSON report files, exit code 0 on success, and exit code 2 on expected input/gate failure.
 
-- [ ] **Step 1: Create versioned anonymous synthetic fixtures**
+- [x] **Step 1: Create versioned anonymous synthetic fixtures**
 
 Create nine labeled target posts: one `明广`, one `暗广`, and one `非广` in each of train/dev/test. Give every target a unique fixture creator and exactly three earlier same-creator history posts. Use IDs with `fixture_` prefixes, aware UTC timestamps, no URL/media/identity fields, and synthetic texts that exercise promotion, price, urgency, brand, action, and natural dimensions. Gold rows contain only `post_id`, `label`, two distinct human fixture annotators, and `adjudicated` metadata. The split report contains all four leakage counts as integer zero plus `near_duplicate_check_status="passed"`; the gate contains `{"gate":"M1","passed":true,"dataset_kind":"synthetic_fixture"}`; metadata contains `{"fixture_version":"merged-history-synthetic-v1","dataset_kind":"synthetic_fixture"}`.
 
-- [ ] **Step 2: Write failing CLI tests**
+- [x] **Step 2: Write failing CLI tests**
 
 Add subprocess-level tests:
 
@@ -529,7 +531,7 @@ def test_formal_cli_rejects_current_repository_gate_before_training(tmp_path):
 
 Add a formal-test test that fails without `--confirm-test-evaluation` and passes the guard when the flag is present with synthetic copies of otherwise formal-valid fixtures.
 
-- [ ] **Step 3: Run CLI tests and verify RED**
+- [x] **Step 3: Run CLI tests and verify RED**
 
 Run:
 
@@ -539,11 +541,11 @@ Run:
 
 Expected: subprocess import fails because `baseline.cli` does not exist.
 
-- [ ] **Step 4: Implement CLI and atomic report write**
+- [x] **Step 4: Implement CLI and atomic report write**
 
 Use subcommands with identical input arguments except synthetic metadata and formal gate semantics. Parse paths with `Path`, call `load_input_bundle`, `build_common_cohort`, `run_baselines`, and `build_report`, write to `output.with_suffix(output.suffix + ".tmp")`, then replace the final output only after successful UTF-8 serialization. Catch `BaselineInputError`, print `baseline blocked: <aggregate reason>` to stderr, remove no existing output, and return 2. Unexpected exceptions remain uncaught for a test-visible traceback.
 
-- [ ] **Step 5: Write baseline README with exact commands and boundaries**
+- [x] **Step 5: Write baseline README with exact commands and boundaries**
 
 Document these commands:
 
@@ -555,11 +557,11 @@ Document these commands:
 
 State that the generated file is an engineering artifact, is ignored or manually removed after inspection, and cannot support paper claims. Include a formal command template using named paths only after M1 passes; do not include current private data paths.
 
-- [ ] **Step 6: Run the CLI end to end and inspect aggregate-only output**
+- [x] **Step 6: Run the CLI end to end and inspect aggregate-only output**
 
 Run the synthetic command above, parse it with PowerShell `ConvertFrom-Json`, assert four methods and `research_claims_allowed -eq $false`, then check that fixture raw text and `fixture_creator_` do not appear in the report.
 
-- [ ] **Step 7: Run all baseline tests and verify GREEN**
+- [x] **Step 7: Run all baseline tests and verify GREEN**
 
 Run:
 
@@ -569,7 +571,7 @@ Run:
 
 Expected: all contracts, features, runner, reporting, and CLI tests pass.
 
-- [ ] **Step 8: Commit Task 4**
+- [x] **Step 8: Commit Task 4**
 
 ```powershell
 git add baseline\README.md baseline\cli.py baseline\tests\fixtures baseline\tests\test_cli.py
@@ -591,7 +593,7 @@ git commit -m "feat: add history baseline CLI fixture"
 - Consumes: verified Task 4 commands and exact observed test counts.
 - Produces: one consistent statement: merged-history classification baseline engineering is implemented and synthetic-verified; M1, formal training/test metrics, CreatorShift gain, and M4 remain incomplete.
 
-- [ ] **Step 1: Record stale statements before editing**
+- [x] **Step 1: Record stale statements before editing**
 
 Run:
 
@@ -601,7 +603,7 @@ rg -n "论文基线|baseline/|简单历史|历史池化|CreatorShift|M4" README.
 
 Save the matching line numbers in the task notes; do not edit historical specs/plans other than checking off this implementation plan as tasks complete.
 
-- [ ] **Step 2: Update only current-state sections**
+- [x] **Step 2: Update only current-state sections**
 
 Use wording equivalent to:
 
@@ -611,7 +613,7 @@ Use wording equivalent to:
 
 In the test runbook add the exact dependency, baseline test, synthetic CLI, report checks, and current formal rejection commands verified in Task 4. Preserve old dated baseline counts inside historical specs/plans.
 
-- [ ] **Step 3: Validate documentation consistency**
+- [x] **Step 3: Validate documentation consistency**
 
 Run:
 
@@ -622,7 +624,7 @@ git diff --check
 
 Expected: no current-state document calls the entire root baseline absent; all formal-research limitations remain explicit; historical plan/spec snapshots remain unchanged.
 
-- [ ] **Step 4: Commit Task 5**
+- [x] **Step 4: Commit Task 5**
 
 ```powershell
 git add README.md HANDOFF.md docs\隐性广告识别项目_说明书.md docs\隐性广告识别项目_分阶段计划表.md docs\已有功能测试指令库.md
@@ -640,7 +642,7 @@ git commit -m "docs: record merged history baseline gate"
 - Consumes: all Task 1-5 artifacts.
 - Produces: fresh completion evidence for every design acceptance item without changing user-owned deletions.
 
-- [ ] **Step 1: Run baseline package verification**
+- [x] **Step 1: Run baseline package verification**
 
 ```powershell
 .\implicit-ad-agent\.venv\Scripts\python.exe -m pytest baseline\tests -q
@@ -649,7 +651,7 @@ git commit -m "docs: record merged history baseline gate"
 
 Expected: all baseline tests pass and compileall exits 0.
 
-- [ ] **Step 2: Re-run existing CreatorShift and default regressions**
+- [x] **Step 2: Re-run existing CreatorShift and default regressions**
 
 ```powershell
 Set-Location implicit-ad-agent
@@ -661,15 +663,15 @@ Set-Location ..
 
 Expected: CreatorShift focused and full default suites pass with their freshly observed counts; do not replace observed results with historic counts.
 
-- [ ] **Step 3: Verify current M1 formal rejection and synthetic report boundary**
+- [x] **Step 3: Verify current M1 formal rejection and synthetic report boundary**
 
 Run formal CLI with `data\reports\m1\m1_gate_report.json` and safe fixture paths for the remaining arguments. Expected: exit 2 with `M1 gate has not passed`, no output file, and no sklearn fitting warning. Run synthetic CLI and verify `research_claims_allowed=false`, four methods, aggregate counts, input hashes, fixed parameters, and absence of raw text/identity values.
 
-- [ ] **Step 4: Audit every explicit design acceptance criterion**
+- [x] **Step 4: Audit every explicit design acceptance criterion**
 
 Create a temporary checklist mapping design Section 12 items 1-10 to a test name or command output. Treat a missing mapping as incomplete and add the narrowest missing test before proceeding.
 
-- [ ] **Step 5: Check diff scope and preserve user changes**
+- [x] **Step 5: Check diff scope and preserve user changes**
 
 ```powershell
 git status --short
@@ -679,11 +681,11 @@ git diff --stat HEAD~5..HEAD
 
 Expected: task files are limited to `baseline/`, approved current-state docs, this plan/spec, and intentional commits. The four pre-existing deleted files remain deleted and unstaged/uncommitted by this task.
 
-- [ ] **Step 6: Run an independent Luna completion review**
+- [x] **Step 6: Run an independent Luna completion review**
 
 Ask `luna_worker` to compare the approved design, this plan, current diff, test output, and reports requirement-by-requirement. Fix every verified gap using a failing test first, then rerun the affected focused and full checks.
 
-- [ ] **Step 7: Commit the checked plan and final corrections**
+- [x] **Step 7: Commit the checked plan and final corrections**
 
 ```powershell
 git add docs\superpowers\plans\2026-08-08-merged-history-baseline.md
