@@ -18,6 +18,7 @@ from baseline.features import (
     FEATURE_VERSION,
     WEIGHT_DIMENSIONS,
     FeatureRow,
+    PreparedSample,
     build_common_cohort,
     compute_keyword_weights,
     method_vector,
@@ -221,3 +222,27 @@ def test_method_vectors_pool_target_and_history():
     assert method_vector(sample, "history_mean")[6:] == pytest.approx(
         pool_history(sample.history_rows, method="mean")
     )
+
+
+def test_method_vector_rejects_non_six_dimensional_target():
+    sample = PreparedSample(
+        post_id="target",
+        split="train",
+        label="明广",
+        target_values=(0.1,) * 5,
+        history_rows=_rows((0.1,) * 6, (0.2,) * 6, (0.3,) * 6),
+    )
+    with pytest.raises(BaselineInputError, match="feature dimensions"):
+        method_vector(sample, "single_post")
+
+
+def test_method_vector_rejects_history_dimension_mismatch():
+    sample = PreparedSample(
+        post_id="target",
+        split="train",
+        label="明广",
+        target_values=(0.1,) * 6,
+        history_rows=_rows((0.1,) * 5, (0.2,) * 5, (0.3,) * 5),
+    )
+    with pytest.raises(BaselineInputError, match="feature dimensions"):
+        method_vector(sample, "history_mean")

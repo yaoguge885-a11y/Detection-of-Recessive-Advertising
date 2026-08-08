@@ -340,7 +340,7 @@ def method_vector(sample: PreparedSample, method: str) -> tuple[float, ...]:
 
     if not isinstance(sample, PreparedSample):
         raise BaselineInputError("prepared sample is invalid")
-    target_values = _finite_values(sample.target_values)
+    target_values = _fixed_feature_values(sample.target_values)
     if method == "single_post":
         return target_values
     pooling_method: str
@@ -352,11 +352,14 @@ def method_vector(sample: PreparedSample, method: str) -> tuple[float, ...]:
         pooling_method = "ema"
     else:
         raise BaselineInputError("feature method is invalid")
-    return target_values + pool_history(
+    pooled_values = pool_history(
         sample.history_rows,
         method=pooling_method,
         alpha=DEFAULT_EMA_ALPHA,
     )
+    if len(pooled_values) != len(target_values):
+        raise BaselineInputError("feature dimensions are inconsistent")
+    return target_values + pooled_values
 
 
 def _target_split_map(
@@ -431,6 +434,13 @@ def _finite_values(values: Sequence[float] | Iterable[float]) -> tuple[float, ..
             raise BaselineInputError("feature vector contains non-finite values")
         checked.append(numeric)
     return tuple(checked)
+
+
+def _fixed_feature_values(values: Sequence[float] | Iterable[float]) -> tuple[float, ...]:
+    checked = _finite_values(values)
+    if len(checked) != len(WEIGHT_DIMENSIONS):
+        raise BaselineInputError("feature dimensions are invalid")
+    return checked
 
 
 def _is_aware(value: object) -> bool:
