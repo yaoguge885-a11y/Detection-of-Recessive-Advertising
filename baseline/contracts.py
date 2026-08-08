@@ -107,8 +107,6 @@ def load_input_bundle(
         raise BaselineInputError("mode must be formal or synthetic")
     if evaluation_split not in _SPLITS:
         raise BaselineInputError("evaluation split must be train, dev, or test")
-    if evaluation_split == "test" and confirm_test_evaluation is not True:
-        raise BaselineInputError("test evaluation requires explicit confirmation")
 
     if m1_gate_path is None:
         raise BaselineInputError("M1 gate path is required")
@@ -117,6 +115,8 @@ def load_input_bundle(
         gate.get("gate") != "M1" or gate.get("passed") is not True
     ):
         raise BaselineInputError("M1 gate has not passed")
+    if evaluation_split == "test" and confirm_test_evaluation is not True:
+        raise BaselineInputError("test evaluation requires explicit confirmation")
 
     if mode == "synthetic":
         if fixture_metadata_path is None:

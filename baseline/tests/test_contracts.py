@@ -1,5 +1,6 @@
 """Focused tests for the isolated baseline input contract."""
 
+import builtins
 import json
 from pathlib import Path
 
@@ -16,6 +17,30 @@ def test_formal_mode_rejects_current_failed_m1_gate(tmp_path: Path):
     gate.write_text(json.dumps({"gate": "M1", "passed": False}), encoding="utf-8")
     with pytest.raises(BaselineInputError, match="M1 gate has not passed"):
         load_input_bundle(mode="formal", m1_gate_path=gate)
+
+
+def test_failed_formal_gate_precedes_test_confirmation_and_model_import(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    gate = tmp_path / "gate.json"
+    gate.write_text(json.dumps({"gate": "M1", "passed": False}), encoding="utf-8")
+    sklearn_imports: list[str] = []
+    original_import = builtins.__import__
+
+    def guarded_import(name: str, *args: object, **kwargs: object):
+        if name == "sklearn" or name.startswith("sklearn."):
+            sklearn_imports.append(name)
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    with pytest.raises(BaselineInputError, match="M1 gate has not passed"):
+        load_input_bundle(
+            mode="formal",
+            m1_gate_path=gate,
+            evaluation_split="test",
+            confirm_test_evaluation=False,
+        )
+    assert sklearn_imports == []
 
 
 def test_formal_test_requires_explicit_confirmation(tmp_path: Path):
@@ -86,6 +111,31 @@ def _write_fixture(tmp_path: Path) -> dict[str, Path]:
     gate.write_text(json.dumps({"gate": "M1", "passed": True}), encoding="utf-8")
     paths["m1_gate_path"] = gate
     return paths
+
+
+def test_synthetic_mode_accepts_explicit_fixture(tmp_path: Path):
+    paths = _write_fixture(tmp_path)
+    metadata = tmp_path / "fixture_metadata.json"
+    metadata.write_text(
+        json.dumps(
+            {
+                "fixture_version": "merged-history-synthetic-v1",
+                "dataset_kind": "synthetic_fixture",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    bundle = load_input_bundle(
+        mode="synthetic",
+        fixture_metadata_path=metadata,
+        **paths,
+    )
+
+    assert bundle.mode == "synthetic"
+    assert len(bundle.posts) == 9
+    assert len(bundle.gold) == 9
+    assert bundle.input_hashes["fixture_metadata"]
 
 
 @pytest.mark.parametrize(
