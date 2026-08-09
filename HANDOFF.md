@@ -76,6 +76,7 @@
 | URL服务边界 | HTTPS/authority/port/本地地址校验、显式PlatformAdapter注册、无网络预览、可审计修正和一次性确认已实现；默认注册表为空，不声称支持真实平台 |
 | P5.2开发者研究工作台 | 同源、无构建的`/workbench`已接入既有API：单条、混合有效/无效批量、能力门控URL预览/确认、完整run九区渲染、复制/UTF-8下载；默认URL适配器为空且fail closed |
 | P5.7安全工程门 | 重定向逐跳复核、DNS私网/变化阻断与IP固定、URL/输出脱敏、提示注入隔离、媒体路径边界、MCP/假A2A权限与超时、生成物扫描均已通过离线验收；未请求真实平台 |
+| P5.3/P5.4 synthetic fixture适配器 | 2026-08-09工程范围已实现：小红书normal/video与B站video/opus/article五个结构仿真案例，确定性解析、统一PostRecord/CaptureStatus、四目标模态与披露修正回归；默认应用不注册、不请求真实平台 |
 | 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、混淆/错误桶；P4新增固定种子bootstrap区间、显式拒答前预测和risk-coverage工程报告 |
 | 默认回归 | 2026-08-09 P5.7收口全量`495 passed, 2 skipped, 1 warning`；P5.7聚焦`144 passed`；warning仍为既有Starlette/httpx弃用提示 |
 | 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
@@ -233,6 +234,41 @@
 - 生产扫描器仅输出路径、规则、行号、匹配字节长度和SHA-256；对干净验收run退出0，对不安全合成fixture退出1且不回显秘密。
 - 本验收完全离线，没有请求真实平台URL。假A2A只证明供未来P5.5复用的共享策略；P5.3/P5.4真实适配器、P5.5真实A2A、P5.6对照、四人UAT、M1、M4和M5仍未完成。
 
+### 4.15 2026-08-09 P5.3/P5.4 synthetic fixture工程验收
+
+- 工程范围仅包含小红书 `normal`/`video` 与 B站 `video`/`opus`/`article` 五个结构仿真案例；每案固定 `source.html`、`source_state.json`、`manifest.json`、`expected_post.json`，通过确定性解析两次字节等价检查。
+- 五案统一输出 `PostRecord/CaptureStatus`，显式覆盖 `text`、`image`、`comment`、`disclosure` 四目标模态；披露人工修正进入确认run并写入 `user_corrections` 审计列表。所有 manifest 声明 synthetic、无真实用户数据、无需网络、未验证真实平台兼容且未完成条款审批；默认 capabilities 的平台列表保持空。
+- fresh focused Python（`implicit-ad-agent`目录）：
+
+  ```powershell
+  & '.venv/Scripts/python.exe' -m pytest tests/contracts/test_post_record.py tests/adapters/platforms tests/orchestration/test_evidence_adapters.py tests/orchestration/test_adequacy.py tests/api/test_routes.py tests/web/test_workbench.py tests/security/test_artifact_scan.py -q
+  ```
+
+  结果：`185 passed, 1 warning in 3.68s`；warning为既有Starlette/httpx `TestClient`弃用提示。
+- Node工作台行为回归：
+
+  ```powershell
+  node --test tests/web/workbench_behavior.test.cjs
+  ```
+
+  结果：`tests 1`、`pass 1`、`fail 0`、`skipped 0`。
+- 依赖/编译检查：
+
+  ```powershell
+  & '.venv/Scripts/python.exe' -m pip check
+  & '.venv/Scripts/python.exe' -m compileall -q impad tests
+  ```
+
+  结果：`No broken requirements found.`；`compileall`退出码0。
+- fresh full Python：
+
+  ```powershell
+  & '.venv/Scripts/python.exe' -m pytest -q
+  ```
+
+  结果：`542 passed, 2 skipped, 1 warning in 12.64s`；两个skip为默认视觉路径，warning同上。
+- 以上只证明 synthetic fixture 工程契约、离线解析、统一输出、披露修正与回归测试；不证明真实页面兼容、真实平台请求、来源条款/隐私/安全审批、M5、P5.5/P5.6、M1/M4或研究有效性。该节不替代四人真人UAT（当前仍为0/4），也不将 fixture 结果写成真实平台验收。
+
 ## 5. P1数据资产事实
 
 远端最新P1成果已经合并到本地P3整合分支，但“资产合并”不等于M1验收完成。
@@ -307,7 +343,7 @@ Owner负责交付，Reviewer必须来自另一方向。共享契约由L维护，
 2. 并行完成M1外部事实工作：≥3000唯一合规候选、来源条款与人工隐私审批、第二轮盲标、仲裁、≥1500 Gold和零泄漏切分。
 3. 决定`data-tooling/`与`implicit-ad-agent/scripts/data/`的唯一维护来源；在决定前每次修改都必须同步镜像并运行字节一致性测试。
 4. 保持已完成的P4工程准入回归；M1通过后替换为真实纵向特征/学习模型，并在验证集完成Judge校准、阈值、消融和risk-coverage实验。
-5. 保持P5.1/P5.2/P5.7回归；先完成四人团队UAT，再依次做P5.3小红书缓存fixture/适配器、P5.4 B站适配器、P5.5真实A2A和P5.6运行模式对照。LightRAG保持非阻塞A/B候选。
+5. 保持P5.1/P5.2/P5.7与P5.3/P5.4 synthetic fixture回归；先完成四人团队UAT，再做真实小红书/B站平台适配与合规验收、P5.5真实A2A和P5.6运行模式对照。synthetic fixture结果不替代真实平台兼容、条款/隐私/安全审批、M5、M1/M4。LightRAG保持非阻塞A/B候选。
 
 ## 9. 常用验证命令
 
