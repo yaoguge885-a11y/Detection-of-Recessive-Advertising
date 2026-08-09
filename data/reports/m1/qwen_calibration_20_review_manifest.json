@@ -1,0 +1,130 @@
+{
+    "status":  "pending_independent_human_review",
+    "created_at":  "2026-08-07",
+    "dataset_fingerprint_sha256":  "e9ccada23f8a09ad85dc7d99e097e717c2a9d12ab3ad0a228493460d3f79009c",
+    "calibration_stats":  "data/run_outputs/m1_calibration_50/stats_20260806_235155.json",
+    "sampling_rule":  "13 auto + 6 suggest + 1 manual; within tiers ascending SHA-256 of m1-qwen-calibration-review-2026-08-07-v1|post_id",
+    "sample_count":  20,
+    "items":  [
+                  {
+                      "post_id":  "post_79a906517897fd8c27dae23f0b34f0f6",
+                      "tier":  "suggest",
+                      "model_label":  "暗广",
+                      "confidence":  0.85
+                  },
+                  {
+                      "post_id":  "post_bb87fb25633f6e5f441ddf26361a97ae",
+                      "tier":  "suggest",
+                      "model_label":  "暗广",
+                      "confidence":  0.75
+                  },
+                  {
+                      "post_id":  "post_2def6b5458c858ca741706e9019812fe",
+                      "tier":  "suggest",
+                      "model_label":  "暗广",
+                      "confidence":  0.85
+                  },
+                  {
+                      "post_id":  "post_951bd9746fdf73323992cc74435e3bd8",
+                      "tier":  "auto",
+                      "model_label":  "明广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_46e3375a1cef4c7d534dcaac14c68618",
+                      "tier":  "auto",
+                      "model_label":  "非广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_6b13d0e2cbb67f8bdaf10fe0bd29c2c3",
+                      "tier":  "auto",
+                      "model_label":  "非广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_1ea54543d5278d1d46c8f63cf6cfc732",
+                      "tier":  "auto",
+                      "model_label":  "明广",
+                      "confidence":  1
+                  },
+                  {
+                      "post_id":  "post_30a90a0e30278ee2f3abbecc9405303d",
+                      "tier":  "suggest",
+                      "model_label":  "暗广",
+                      "confidence":  0.75
+                  },
+                  {
+                      "post_id":  "post_1bde550de12bede1d566cad5330bac2c",
+                      "tier":  "auto",
+                      "model_label":  "非广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_fce7620db6d1e180fe168403013587f0",
+                      "tier":  "manual",
+                      "model_label":  "无建议",
+                      "confidence":  null
+                  },
+                  {
+                      "post_id":  "post_6642bc582132449b613850326baa31f2",
+                      "tier":  "auto",
+                      "model_label":  "明广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_1bf86023a3a896608cb5b4240465a487",
+                      "tier":  "suggest",
+                      "model_label":  "暗广",
+                      "confidence":  0.85
+                  },
+                  {
+                      "post_id":  "post_cb6ee37b08447e5c433fb080669bb806",
+                      "tier":  "auto",
+                      "model_label":  "明广",
+                      "confidence":  1
+                  },
+                  {
+                      "post_id":  "post_0fe19fe83f0006fca4070c5b37f6634e",
+                      "tier":  "auto",
+                      "model_label":  "非广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_3ff754d6b731864915dbf1faf5ad3b67",
+                      "tier":  "suggest",
+                      "model_label":  "明广",
+                      "confidence":  0.85
+                  },
+                  {
+                      "post_id":  "post_9b7d46cf066e87f545fd3c4c4c517045",
+                      "tier":  "auto",
+                      "model_label":  "明广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_1bdc0141017397cddca0cfba3faafa26",
+                      "tier":  "auto",
+                      "model_label":  "非广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_fced21e578be007cb68d2676f3435f34",
+                      "tier":  "auto",
+                      "model_label":  "非广",
+                      "confidence":  0.95
+                  },
+                  {
+                      "post_id":  "post_63726f2e978c124d6c91d7601e39f9a8",
+                      "tier":  "auto",
+                      "model_label":  "明广",
+                      "confidence":  1
+                  },
+                  {
+                      "post_id":  "post_5ae8800b6391a323d89237000c59a89d",
+                      "tier":  "auto",
+                      "model_label":  "明广",
+                      "confidence":  0.95
+                  }
+              ]
+}
