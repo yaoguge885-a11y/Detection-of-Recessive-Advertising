@@ -1,0 +1,79 @@
+{
+  "report_type": "history_availability_audit",
+  "generated_at": "2026-08-09T03:27:50.979823+00:00",
+  "source_fingerprint_sha256": "4b14527f5266286f506130eb84e7ff162e07c33f41af60523f6148409a6f5b97",
+  "minimum_history_threshold": 3,
+  "privacy_threshold": 5,
+  "hash_analysis": {
+    "post_id_has_prefix": true,
+    "dominant_pid_hash_length": 32,
+    "dominant_ref_hash_length": 37,
+    "hash_schemes_match": false,
+    "pid_hash_lengths": {
+      "32": 3312
+    },
+    "ref_hash_lengths": {
+      "37": 83406,
+      "24": 180
+    }
+  },
+  "summary": {
+    "total_posts": 3312,
+    "unique_post_ids": 3312,
+    "duplicate_ids": 0,
+    "unique_creators": 117,
+    "total_pass": 2558
+  },
+  "platform_pipeline": {
+    "bilibili": {
+      "total": 2503,
+      "published_available": 2390,
+      "has_history_refs": 2334,
+      "all_refs_resolvable": 2105,
+      "valid_history_ge3": 2012
+    },
+    "wechat_official_account": {
+      "total": 809,
+      "published_available": 802,
+      "has_history_refs": 744,
+      "all_refs_resolvable": 637,
+      "valid_history_ge3": 546
+    }
+  },
+  "exclusions": {
+    "target_timestamp_unavailable": 120,
+    "no_history_refs": 114,
+    "incomplete_refs": 336,
+    "history_insufficient": 184
+  },
+  "valid_history_buckets": {
+    "3-5": 249,
+    "6-10": 365,
+    "11-20": 557,
+    "21+": 1387
+  },
+  "platform_bucket_cross": {
+    "bilibili": {
+      "21+": 1272,
+      "11-20": 386,
+      "6-10": 217,
+      "3-5": 137
+    },
+    "wechat_official_account": {
+      "21+": 115,
+      "11-20": 171,
+      "6-10": 148,
+      "3-5": 112
+    }
+  },
+  "creator_summary": {
+    "pass_count": 89,
+    "fail_count": 28,
+    "buckets": {
+      "3-5": 22,
+      "6-10": 16,
+      "11-20": 10,
+      "21+": 41
+    }
+  }
+}
