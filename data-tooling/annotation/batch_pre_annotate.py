@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import sys
 import time
 from datetime import datetime, timezone, timedelta
@@ -219,11 +220,15 @@ def main() -> None:
     # ── 模型预热：先加载并驻留模型，避免每条帖子冷启动加载 6.6GB ──
     if not args.no_warmup:
         print(f"\n⏳ 预热模型 {args.ollama_model}（首次加载可能需要 1~2 分钟）...")
+        warmup_started = time.perf_counter()
         ok = warm_up_model(
             model=args.ollama_model,
             url=args.ollama_url,
             timeout=OLLAMA_WARMUP_TIMEOUT,
             keep_alive=keep_alive,
+        )
+        stats["warmup_duration_sec"] = round(
+            time.perf_counter() - warmup_started, 3
         )
         if ok:
             print(f"  ✅ 模型已就绪（常驻 {keep_alive}，后续推理直接命中已加载模型）")
@@ -237,6 +242,7 @@ def main() -> None:
 
     auto_records: List[Dict[str, Any]] = []
     suggest_records: List[Dict[str, Any]] = []
+    latencies_sec: List[float] = []
     media_base = Path(args.media_base)
 
     start = time.time()
@@ -258,6 +264,7 @@ def main() -> None:
             keyword_weights = compute_keyword_weights_for_post(text)
 
             # 自动判断管线
+            inference_started = time.perf_counter()
             result = run_auto_judge(
                 post,
                 image_analyses=image_analyses,
@@ -268,6 +275,9 @@ def main() -> None:
                 auto_threshold=args.auto_threshold,
                 keep_alive=keep_alive,
             )
+            item_latency = round(time.perf_counter() - inference_started, 3)
+            latencies_sec.append(item_latency)
+            print(f"  ⏱ 推理耗时: {item_latency:.3f}s")
 
             tier = result["tier"]
             stats["tiers"][tier] = stats["tiers"].get(tier, 0) + 1
@@ -312,6 +322,20 @@ def main() -> None:
         print("\n⚠️ 用户中断，保存已处理结果...")
 
     stats["duration_sec"] = round(time.time() - start, 2)
+    stats["latency_sec"] = latencies_sec
+    if latencies_sec:
+        stats["first_inference_sec"] = latencies_sec[0]
+        stats["cold_start_total_sec"] = round(
+            float(stats.get("warmup_duration_sec", 0.0)) + latencies_sec[0], 3
+        )
+    subsequent = latencies_sec[1:]
+    if subsequent:
+        stats["subsequent_median_sec"] = round(statistics.median(subsequent), 3)
+        stats["subsequent_p90_sec"] = (
+            round(statistics.quantiles(subsequent, n=10, method="inclusive")[8], 3)
+            if len(subsequent) >= 2
+            else subsequent[0]
+        )
     stats["finished_at"] = datetime.now(CST).isoformat()
     stats["auto_saved"] = len(auto_records)
     stats["suggested"] = len(suggest_records)
