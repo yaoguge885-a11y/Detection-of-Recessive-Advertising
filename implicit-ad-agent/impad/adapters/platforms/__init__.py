@@ -22,6 +22,7 @@ from .safe_fetch import (
 )
 from .url_import import InMemoryURLPreviewStore, URLImportService
 from .url_safety import validate_public_https_url
+from .bilibili import BilibiliAdapter, parse_bilibili_state
 from .xiaohongshu import XiaohongshuAdapter, parse_xiaohongshu_state
 
 __all__ = [
@@ -43,6 +44,8 @@ __all__ = [
     "SafeURLFetcher",
     "SocketDNSResolver",
     "ValidatedSourceURL",
+    "BilibiliAdapter",
+    "parse_bilibili_state",
     "XiaohongshuAdapter",
     "parse_xiaohongshu_state",
     "validate_public_https_url",

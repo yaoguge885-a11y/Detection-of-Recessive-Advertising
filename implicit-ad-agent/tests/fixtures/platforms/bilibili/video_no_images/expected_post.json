@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "post_id": "BV_SYNTHETIC_001",
+  "platform": "bilibili",
+  "source_type": "platform_fixture",
+  "creator_id": "bili_creator_001",
+  "published_at": "2026-08-08T17:00:00+08:00",
+  "text": "Synthetic Bilibili video\nSynthetic description #\u8d5e\u52a9",
+  "media": [],
+  "comments": [],
+  "disclosures": [
+    {
+      "kind": "platform_badge",
+      "text": "\u8d5e\u52a9",
+      "source": "platform_metadata"
+    }
+  ],
+  "history_refs": [],
+  "history": [],
+  "provenance": {
+    "source_ref_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "collected_at": "2026-08-08T09:00:00+08:00",
+    "collector": "synthetic_fixture",
+    "terms_checked_at": null
+  },
+  "privacy": {
+    "anonymized": true,
+    "contains_sensitive_data": false
+  },
+  "capture_status": {
+    "source": "fixture:bilibili",
+    "modalities": {
+      "text": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "image": {
+        "status": "unsupported",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "comment": {
+        "status": "unsupported",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "disclosure": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      }
+    },
+    "can_assess_disclosure": true,
+    "adapter_version": "bilibili-fixture-v1",
+    "captured_at": "2026-08-08T09:00:00+08:00",
+    "user_corrections": []
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "post_id": "bili_article_001",
+  "platform": "bilibili",
+  "source_type": "platform_fixture",
+  "creator_id": "bili_creator_003",
+  "published_at": "2026-08-08T17:20:00+08:00",
+  "text": "Synthetic Bilibili article\nSynthetic article fixture body\n<\u56fe\u72471>",
+  "media": [
+    {
+      "media_id": "bilibili_article_image_0",
+      "type": "image",
+      "ref": "https://media.example.test/bilibili/article-1.jpg",
+      "sha256": null,
+      "phash": null,
+      "ocr_text": null
+    }
+  ],
+  "comments": [],
+  "disclosures": [],
+  "history_refs": [],
+  "history": [],
+  "provenance": {
+    "source_ref_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "collected_at": "2026-08-08T09:20:00+08:00",
+    "collector": "synthetic_fixture",
+    "terms_checked_at": null
+  },
+  "privacy": {
+    "anonymized": true,
+    "contains_sensitive_data": false
+  },
+  "capture_status": {
+    "source": "fixture:bilibili",
+    "modalities": {
+      "text": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "image": {
+        "status": "partial",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "comment": {
+        "status": "unsupported",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "disclosure": {
+        "status": "missing",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      }
+    },
+    "can_assess_disclosure": false,
+    "adapter_version": "bilibili-fixture-v1",
+    "captured_at": "2026-08-08T09:20:00+08:00",
+    "user_corrections": []
+  }
+}
