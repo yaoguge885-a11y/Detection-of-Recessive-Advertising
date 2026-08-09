@@ -1,0 +1,1 @@
+{"fixture_version":"platform-fixture-v1","synthetic":true,"contains_real_user_data":false,"network_required":false,"platform":"xiaohongshu","content_type":"normal","expected_modalities":{"text":"complete","image":"partial","comment":"complete","disclosure":"complete"},"real_platform_compatibility_verified":false,"terms_approved":false}

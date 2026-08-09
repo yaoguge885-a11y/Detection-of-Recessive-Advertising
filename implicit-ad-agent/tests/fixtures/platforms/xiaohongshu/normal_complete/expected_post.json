@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "post_id": "xhs_note_normal_001",
+  "platform": "xiaohongshu",
+  "source_type": "platform_fixture",
+  "creator_id": "xhs_creator_001",
+  "published_at": "2026-08-08T16:00:00+08:00",
+  "text": "Synthetic morning routine\nSynthetic fixture body #\u54c1\u724c\u5408\u4f5c\n<\u56fe\u72471>",
+  "media": [
+    {
+      "media_id": "xiaohongshu_image_0",
+      "type": "image",
+      "ref": "https://media.example.test/xhs/image-1.jpg",
+      "sha256": null,
+      "phash": null,
+      "ocr_text": null
+    }
+  ],
+  "comments": [
+    {
+      "comment_id": "xhs_comment_001",
+      "author_id": "xhs_commenter_001",
+      "text": "Synthetic comment",
+      "like_count": 2,
+      "is_pinned": false,
+      "created_at": null
+    }
+  ],
+  "disclosures": [
+    {
+      "kind": "platform_badge",
+      "text": "\u54c1\u724c\u5408\u4f5c",
+      "source": "platform_metadata"
+    },
+    {
+      "kind": "hashtag",
+      "text": "#\u54c1\u724c\u5408\u4f5c",
+      "source": "post_text"
+    }
+  ],
+  "history_refs": [],
+  "history": [],
+  "provenance": {
+    "source_ref_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "collected_at": "2026-08-08T08:00:00+08:00",
+    "collector": "synthetic_fixture",
+    "terms_checked_at": null
+  },
+  "privacy": {
+    "anonymized": true,
+    "contains_sensitive_data": false
+  },
+  "capture_status": {
+    "source": "fixture:xiaohongshu",
+    "modalities": {
+      "text": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "image": {
+        "status": "partial",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "comment": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "disclosure": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      }
+    },
+    "can_assess_disclosure": false,
+    "adapter_version": "xiaohongshu-fixture-v1",
+    "captured_at": "2026-08-08T08:00:00+08:00",
+    "user_corrections": []
+  }
+}

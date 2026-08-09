@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "post_id": "xhs_note_video_001",
+  "platform": "xiaohongshu",
+  "source_type": "platform_fixture",
+  "creator_id": "xhs_creator_002",
+  "published_at": "2026-08-08T16:10:00+08:00",
+  "text": "Synthetic video note\nSynthetic video fixture body",
+  "media": [
+    {
+      "media_id": "xiaohongshu_video_0",
+      "type": "video",
+      "ref": null,
+      "sha256": null,
+      "phash": null,
+      "ocr_text": null
+    }
+  ],
+  "comments": [],
+  "disclosures": [],
+  "history_refs": [],
+  "history": [],
+  "provenance": {
+    "source_ref_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "collected_at": "2026-08-08T08:10:00+08:00",
+    "collector": "synthetic_fixture",
+    "terms_checked_at": null
+  },
+  "privacy": {
+    "anonymized": true,
+    "contains_sensitive_data": false
+  },
+  "capture_status": {
+    "source": "fixture:xiaohongshu",
+    "modalities": {
+      "text": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "image": {
+        "status": "unsupported",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "comment": {
+        "status": "missing",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      },
+      "disclosure": {
+        "status": "complete",
+        "captured_fields": [],
+        "missing_fields": [],
+        "issues": []
+      }
+    },
+    "can_assess_disclosure": false,
+    "adapter_version": "xiaohongshu-fixture-v1",
+    "captured_at": "2026-08-08T08:10:00+08:00",
+    "user_corrections": []
+  }
+}
