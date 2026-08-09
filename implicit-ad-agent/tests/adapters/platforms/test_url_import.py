@@ -7,13 +7,18 @@ import pytest
 
 from impad.adapters import post_record_from_manual
 from impad.adapters.platforms import (
+    BilibiliAdapter,
     DisabledURLFetcher,
     PlatformAdapterRegistry,
+    ResolvedTarget,
+    SafeFetchResult,
+    XiaohongshuAdapter,
     URLImportCorrections,
     URLImportError,
     URLImportService,
+    validate_public_https_url,
 )
-from impad.contracts import DisclosureRecord, MediaRecord
+from impad.contracts import DisclosureRecord, MediaRecord, PostRecord
 from impad.services import AnalysisService, JsonRunStore
 
 
@@ -85,6 +90,37 @@ class UnsafeMediaAdapter(StaticAdapter):
         })
 
 
+FIXTURE_ROOT = Path(__file__).parents[2] / "fixtures" / "platforms"
+
+
+class DeterministicFixtureFetcher:
+    """Offline fetcher that only reads one checked-in fixture HTML file."""
+
+    def __init__(self, path: Path):
+        self.path = path
+        self.fetch_calls: list[str] = []
+        self.validate_calls: list[str] = []
+
+    def validate_target(self, url: str) -> ResolvedTarget:
+        self.validate_calls.append(url)
+        source = validate_public_https_url(url)
+        return ResolvedTarget(
+            source=source,
+            addresses=("203.0.113.1",),
+            connect_ip="203.0.113.1",
+        )
+
+    def fetch(self, url: str) -> SafeFetchResult:
+        self.fetch_calls.append(url)
+        source = validate_public_https_url(url)
+        return SafeFetchResult(
+            body=self.path.read_bytes(),
+            content_type="text/html",
+            display_url=source.display_url,
+            source_ref_hash=source.source_ref_hash,
+        )
+
+
 class BlockingAnalysisService(AnalysisService):
     def __init__(self, *, started, release, **kwargs):
         super().__init__(**kwargs)
@@ -117,6 +153,102 @@ def _url_service(tmp_path: Path):
         registry=PlatformAdapterRegistry([adapter]),
     )
     return service, adapter
+
+
+@pytest.mark.parametrize(
+    ("platform", "case", "url", "expected_media_refs"),
+    [
+        (
+            "xiaohongshu",
+            "normal_complete",
+            "https://www.xiaohongshu.com/explore/xhs_note_normal_001",
+            ["https://media.example.test/xhs/image-1.jpg"],
+        ),
+        (
+            "xiaohongshu",
+            "video_missing_comments",
+            "https://www.xiaohongshu.com/explore/xhs_note_video_001",
+            [None],
+        ),
+        (
+            "bilibili",
+            "video_no_images",
+            "https://www.bilibili.com/video/BV_SYNTHETIC_001",
+            [],
+        ),
+        (
+            "bilibili",
+            "opus_partial_images",
+            "https://www.bilibili.com/opus/bili_opus_001",
+            ["https://media.example.test/bilibili/opus-1.jpg"],
+        ),
+        (
+            "bilibili",
+            "article_missing_disclosure_surface",
+            "https://www.bilibili.com/read/cv123456",
+            ["https://media.example.test/bilibili/article-1.jpg"],
+        ),
+    ],
+)
+def test_url_import_runs_all_platform_fixtures_offline(
+    tmp_path,
+    platform,
+    case,
+    url,
+    expected_media_refs,
+):
+    fixture = FIXTURE_ROOT / platform / case
+    expected = PostRecord.model_validate_json(
+        (fixture / "expected_post.json").read_text("utf-8")
+    )
+    fetcher = DeterministicFixtureFetcher(fixture / "source.html")
+    registry = PlatformAdapterRegistry([
+        XiaohongshuAdapter(),
+        BilibiliAdapter(),
+    ])
+    service = URLImportService(
+        analysis_service=_analysis_service(tmp_path),
+        registry=registry,
+        fetcher=fetcher,
+        media_cache_root=tmp_path / "media-cache",
+    )
+
+    source = validate_public_https_url(url)
+    adapter = next(
+        item for item in registry.adapters if item.platform == platform
+    )
+    expected_payload = expected.model_dump(mode="python")
+    expected_payload["provenance"]["source_ref_hash"] = (
+        source.source_ref_hash
+    )
+    expected_payload["capture_status"]["source"] = f"url:{platform}"
+    expected_payload["capture_status"]["adapter_version"] = adapter.version
+    expected = PostRecord.model_validate(expected_payload)
+
+    preview = service.preview(url)
+
+    assert preview.post == expected
+    assert preview.platform == platform
+    assert preview.post.post_id == expected.post_id
+    assert preview.source_ref_hash == source.source_ref_hash
+    assert preview.post.provenance.source_ref_hash == source.source_ref_hash
+    assert preview.post.capture_status.source == f"url:{platform}"
+    assert preview.post.capture_status.adapter_version == adapter.version
+    assert [item.ref for item in preview.post.media] == expected_media_refs
+    assert fetcher.fetch_calls == [source.fetch_url]
+    assert fetcher.validate_calls == [
+        ref for ref in expected_media_refs if ref is not None
+    ]
+
+    result = service.confirm(preview.preview_id, URLImportCorrections())
+
+    assert result.post == expected
+    assert result.post.platform == platform
+    assert result.post.post_id == expected.post_id
+    assert result.run_metadata.run_id
+    assert service.analysis_service.get_run(
+        result.run_metadata.run_id
+    ) is not None
 
 
 def test_preview_normalizes_source_without_running_analysis(tmp_path):
