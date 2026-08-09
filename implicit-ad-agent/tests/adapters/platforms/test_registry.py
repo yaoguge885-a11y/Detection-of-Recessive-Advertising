@@ -3,8 +3,10 @@ from __future__ import annotations
 import pytest
 
 from impad.adapters.platforms import (
+    BilibiliAdapter,
     PlatformAdapterRegistry,
     URLImportError,
+    XiaohongshuAdapter,
     validate_public_https_url,
 )
 
@@ -53,3 +55,17 @@ def test_empty_registry_reports_no_adapters():
     registry = PlatformAdapterRegistry()
 
     assert registry.adapters == ()
+
+
+def test_fixture_adapters_resolve_only_when_explicitly_registered():
+    registry = PlatformAdapterRegistry([
+        XiaohongshuAdapter(),
+        BilibiliAdapter(),
+    ])
+
+    assert registry.resolve(validate_public_https_url(
+        "https://www.xiaohongshu.com/explore/x"
+    )).platform == "xiaohongshu"
+    assert registry.resolve(validate_public_https_url(
+        "https://www.bilibili.com/video/x"
+    )).platform == "bilibili"

@@ -364,7 +364,7 @@ def test_capabilities_report_batch_and_registered_url_adapters(tmp_path):
     }]
 
 
-def test_default_capabilities_do_not_claim_live_platform_adapters():
+def test_default_capabilities_still_claim_no_live_platforms():
     payload = TestClient(create_app()).get(
         "/api/v1/capabilities"
     ).json()
