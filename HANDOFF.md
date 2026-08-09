@@ -244,7 +244,7 @@
   & '.venv/Scripts/python.exe' -m pytest tests/contracts/test_post_record.py tests/adapters/platforms tests/orchestration/test_evidence_adapters.py tests/orchestration/test_adequacy.py tests/api/test_routes.py tests/web/test_workbench.py tests/security/test_artifact_scan.py -q
   ```
 
-  结果：`185 passed, 1 warning in 3.68s`；warning为既有Starlette/httpx `TestClient`弃用提示。
+  结果：`219 passed, 1 warning in 4.35s`；warning为既有Starlette/httpx `TestClient`弃用提示。
 - Node工作台行为回归：
 
   ```powershell
@@ -266,7 +266,7 @@
   & '.venv/Scripts/python.exe' -m pytest -q
   ```
 
-  结果：`542 passed, 2 skipped, 1 warning in 12.64s`；两个skip为默认视觉路径，warning同上。
+  结果：`576 passed, 2 skipped, 1 warning in 13.44s`；两个skip为默认视觉路径，warning同上。
 - 以上只证明 synthetic fixture 工程契约、离线解析、统一输出、披露修正与回归测试；不证明真实页面兼容、真实平台请求、来源条款/隐私/安全审批、M5、P5.5/P5.6、M1/M4或研究有效性。该节不替代四人真人UAT（当前仍为0/4），也不将 fixture 结果写成真实平台验收。
 
 ## 5. P1数据资产事实
