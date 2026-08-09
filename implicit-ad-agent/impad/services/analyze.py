@@ -31,7 +31,12 @@ from ..orchestration import (
 )
 from ..rag import LegalRetriever, build_default_legal_retriever
 from .reporting import legal_query, render_readable_report
-from .run_store import JsonRunStore, RunRecord, RunStore
+from .run_store import (
+    JsonRunStore,
+    RunRecord,
+    RunStore,
+    sanitize_run_record,
+)
 
 
 RuntimeMode = Literal["local", "mcp"]
@@ -242,20 +247,25 @@ class AnalysisService:
             run_events=events,
             readable_report=readable,
         )
+        record = sanitize_run_record(record)
         self.run_store.put(record)
         persisted_event = _event(
             metadata.run_id,
             "run_persisted",
             "run_store",
         )
-        events.append(persisted_event)
-        metadata = metadata.model_copy(update={
-            "trace_ids": [*metadata.trace_ids, persisted_event.event_id]
+        safe_events = [*record.run_events, persisted_event]
+        safe_metadata = record.run_metadata.model_copy(update={
+            "trace_ids": [
+                *record.run_metadata.trace_ids,
+                persisted_event.event_id,
+            ]
         })
         record = record.model_copy(update={
-            "run_metadata": metadata,
-            "run_events": events,
+            "run_metadata": safe_metadata,
+            "run_events": safe_events,
         })
+        record = sanitize_run_record(record)
         self.run_store.put(record)
         return AnalysisResult(
             post=record.post,

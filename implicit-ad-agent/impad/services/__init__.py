@@ -11,7 +11,7 @@ from .analyze import (
     RuntimeMode,
     get_default_analysis_service,
 )
-from .run_store import JsonRunStore, RunRecord, RunStore
+from .run_store import JsonRunStore, RunRecord, RunStore, sanitize_run_record
 
 __all__ = [
     "AnalysisResult",
@@ -25,5 +25,6 @@ __all__ = [
     "RunRecord",
     "RunStore",
     "RuntimeMode",
+    "sanitize_run_record",
     "get_default_analysis_service",
 ]
