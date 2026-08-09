@@ -33,12 +33,14 @@ _CAPTURE_TO_COVERAGE = {
     "complete": "covered",
     "partial": "partial",
     "missing": "missing",
+    "unsupported": "unsupported",
     "not_applicable": "not_applicable",
 }
 _MODALITY_MAP = {
     "text": "text",
     "image": "image",
     "comment": "comment",
+    "disclosure": "disclosure",
     "history": "history",
     "metadata": "metadata",
 }
@@ -180,7 +182,7 @@ def _missing_requirements(
 ) -> list[str]:
     missing = []
     for modality, capture in post.capture_status.modalities.items():
-        if capture.status not in {"partial", "missing"}:
+        if capture.status not in {"partial", "missing", "unsupported"}:
             continue
         if capture.missing_fields:
             missing.extend(

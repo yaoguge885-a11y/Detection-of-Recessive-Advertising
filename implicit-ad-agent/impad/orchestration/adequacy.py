@@ -61,7 +61,11 @@ def assess_evidence_adequacy(
 
     reasons = []
     text_capture = post.capture_status.modalities.get("text")
-    if text_capture is None or text_capture.status in {"partial", "missing"}:
+    if text_capture is None or text_capture.status in {
+        "partial",
+        "missing",
+        "unsupported",
+    }:
         reasons.append("text_capture_incomplete")
 
     text_results = [
@@ -81,7 +85,7 @@ def assess_evidence_adequacy(
     image_capture = post.capture_status.modalities.get("image")
     image_was_provided = (
         image_capture is not None
-        and image_capture.status != "not_applicable"
+        and image_capture.status not in {"not_applicable", "unsupported"}
     )
     explicit_disclosure_found = any(
         item.kind == "explicit_ad_marker" for item in bundle.items

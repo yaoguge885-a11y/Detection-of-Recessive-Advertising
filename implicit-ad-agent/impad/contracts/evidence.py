@@ -11,8 +11,21 @@ from ..tools.contracts import ToolLimitation, ToolResult
 
 EvidencePolarity = Literal["supports", "contradicts", "neutral"]
 EvidenceStatus = Literal["observed", "degraded", "conflicted"]
-EvidenceSourceType = Literal["text", "image", "comment", "history", "metadata"]
-CoverageStatus = Literal["covered", "partial", "missing", "not_applicable"]
+EvidenceSourceType = Literal[
+    "text",
+    "image",
+    "comment",
+    "disclosure",
+    "history",
+    "metadata",
+]
+CoverageStatus = Literal[
+    "covered",
+    "partial",
+    "missing",
+    "unsupported",
+    "not_applicable",
+]
 
 
 class EvidenceItem(BaseModel):
