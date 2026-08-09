@@ -8,6 +8,7 @@ from .contracts import (
     ValidatedSourceURL,
 )
 from .registry import PlatformAdapterRegistry
+from .media_safety import PlatformMediaPolicy
 from .safe_fetch import (
     DisabledURLFetcher,
     DNSResolver,
@@ -30,6 +31,7 @@ __all__ = [
     "OneHopResponse",
     "PinnedHTTPSHTTPTransport",
     "PlatformAdapter",
+    "PlatformMediaPolicy",
     "PlatformAdapterRegistry",
     "URLImportCorrections",
     "URLImportError",

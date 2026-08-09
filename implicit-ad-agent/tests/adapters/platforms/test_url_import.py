@@ -7,11 +7,13 @@ import pytest
 
 from impad.adapters import post_record_from_manual
 from impad.adapters.platforms import (
+    DisabledURLFetcher,
     PlatformAdapterRegistry,
     URLImportCorrections,
     URLImportError,
     URLImportService,
 )
+from impad.contracts import MediaRecord
 from impad.services import AnalysisService, JsonRunStore
 
 
@@ -29,10 +31,12 @@ class StaticAdapter:
     def __init__(self):
         self.calls = 0
         self.last_source = None
+        self.last_fetcher = None
 
-    def preview(self, source):
+    def preview(self, source, *, fetcher):
         self.calls += 1
         self.last_source = source
+        self.last_fetcher = fetcher
         return post_record_from_manual({
             "post_id": "fixture-post",
             "platform": self.platform,
@@ -50,8 +54,8 @@ class StaticAdapter:
 
 
 class QueryValueLeakingAdapter(StaticAdapter):
-    def preview(self, source):
-        post = super().preview(source)
+    def preview(self, source, *, fetcher):
+        post = super().preview(source, fetcher=fetcher)
         return post.model_copy(update={"text": "do-not-store"})
 
 
@@ -60,9 +64,25 @@ class TextAdapter(StaticAdapter):
         super().__init__()
         self.text = text
 
-    def preview(self, source):
-        post = super().preview(source)
+    def preview(self, source, *, fetcher):
+        post = super().preview(source, fetcher=fetcher)
         return post.model_copy(update={"text": self.text})
+
+
+class UnsafeMediaAdapter(StaticAdapter):
+    def __init__(self, ref):
+        super().__init__()
+        self.ref = ref
+
+    def preview(self, source, *, fetcher):
+        post = super().preview(source, fetcher=fetcher)
+        return post.model_copy(update={
+            "media": [MediaRecord(
+                media_id="media-unsafe",
+                type="image",
+                ref=self.ref,
+            )],
+        })
 
 
 class BlockingAnalysisService(AnalysisService):
@@ -117,6 +137,29 @@ def test_preview_normalizes_source_without_running_analysis(tmp_path):
     assert adapter.last_source.fetch_url == (
         "https://example.test/post/1?token=secret"
     )
+    assert isinstance(adapter.last_fetcher, DisabledURLFetcher)
+    assert not (tmp_path / "runs").exists()
+
+
+def test_url_import_injects_fetcher_and_rejects_unsafe_adapter_media(
+    tmp_path,
+):
+    analysis = _analysis_service(tmp_path)
+    adapter = UnsafeMediaAdapter(ref="../outside.jpg")
+    fetcher = DisabledURLFetcher()
+    service = URLImportService(
+        analysis_service=analysis,
+        registry=PlatformAdapterRegistry([adapter]),
+        fetcher=fetcher,
+        media_cache_root=tmp_path / "cache",
+    )
+
+    with pytest.raises(URLImportError) as exc:
+        service.preview("https://example.test/post/1")
+
+    assert adapter.last_fetcher is fetcher
+    assert exc.value.code == "unsafe_media_reference"
+    assert service.preview_store._records == {}
     assert not (tmp_path / "runs").exists()
 
 

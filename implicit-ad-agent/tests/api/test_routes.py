@@ -30,7 +30,7 @@ class StaticURLAdapter:
     platform = "fixture"
     supported_hosts = ("example.test",)
 
-    def preview(self, source):
+    def preview(self, source, *, fetcher):
         return post_record_from_manual({
             "post_id": "fixture-post",
             "platform": self.platform,

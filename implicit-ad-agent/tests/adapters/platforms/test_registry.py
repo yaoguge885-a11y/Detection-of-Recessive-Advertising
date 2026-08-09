@@ -15,7 +15,7 @@ class StaticAdapter:
     platform = "fixture"
     supported_hosts = ("example.test",)
 
-    def preview(self, source):
+    def preview(self, source, *, fetcher):
         raise AssertionError("not used by registry resolution")
 
 
