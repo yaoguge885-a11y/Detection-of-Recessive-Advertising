@@ -1,6 +1,6 @@
 # HANDOFF：隐性广告识别项目
 
-> 面向下一位接手开发者的事实交接。最后更新：2026-08-08（合并历史基线工程包与M1事实门同步后）。
+> 面向下一位接手开发者的事实交接。最后更新：2026-08-09（P5.7安全工程验收与事实门同步后）。
 > 先读本文件，再读 `docs/隐性广告识别项目_说明书.md`、`docs/隐性广告识别项目_分阶段计划表.md` 和 `docs/superpowers/` 下已确认的设计/实施记录。
 
 ## 1. 一句话目标
@@ -75,8 +75,9 @@
 | API与run查询 | `/api/v1/analyze`、`/api/v1/analyze/batch`、URL预览/确认、`/api/v1/runs/{run_id}`、`/api/v1/capabilities`及兼容`/analyze`共用服务 |
 | URL服务边界 | HTTPS/authority/port/本地地址校验、显式PlatformAdapter注册、无网络预览、可审计修正和一次性确认已实现；默认注册表为空，不声称支持真实平台 |
 | P5.2开发者研究工作台 | 同源、无构建的`/workbench`已接入既有API：单条、混合有效/无效批量、能力门控URL预览/确认、完整run九区渲染、复制/UTF-8下载；默认URL适配器为空且fail closed |
+| P5.7安全工程门 | 重定向逐跳复核、DNS私网/变化阻断与IP固定、URL/输出脱敏、提示注入隔离、媒体路径边界、MCP/假A2A权限与超时、生成物扫描均已通过离线验收；未请求真实平台 |
 | 评估基础 | 三分类Macro-F1、暗广P/R/F1、AUPRC、ECE/Brier、混淆/错误桶；P4新增固定种子bootstrap区间、显式拒答前预测和risk-coverage工程报告 |
-| 默认回归 | 2026-07-31 P1→P3整合收尾全量`405 passed, 2 skipped, 1 warning`；P5.2历史聚焦`28 passed, 1 warning`；P5.1历史聚焦`58 passed`；P4历史聚焦`61 passed` |
+| 默认回归 | 2026-08-09 P5.7收口全量`495 passed, 2 skipped, 1 warning`；P5.7聚焦`144 passed`；warning仍为既有Starlette/httpx弃用提示 |
 | 真实视觉测试 | 显式 `vision_integration`，GPU路径此前实测 `2 passed` |
 
 ### 4.2 P2.5缺口关闭状态
@@ -224,6 +225,14 @@
 - 数据集指纹：`adb39f1840df62cbeef52faabde85177536478c1c06d37bbb747a9a2bb59a3a5`。该指纹是后续增量补齐、标注与审批的版本锚点。
 - 审查修复后新鲜验证：治理/增量聚焦`30 passed`，自动判断`21 passed`，全量`405 passed, 2 skipped, 1 warning`；`pip check`、`compileall`和两套P1资产校验通过。
 
+### 4.14 2026-08-08 P5.7安全工程验收
+
+- 工程门：PASS。完整证据矩阵见`docs/security/2026-08-08-p5-7-security-acceptance.md`。
+- 新鲜聚焦回归：`144 passed in 5.31s`；最终新鲜全量：`495 passed, 2 skipped, 1 warning in 12.71s`。`compileall`、`pip check`和`git diff --check`退出码均为0。
+- 已验证八项控制：重定向逐跳重新校验；DNS变化/私网答案阻断并固定已校验IP；URL凭据、非默认端口、query/fragment脱敏；网页提示注入保持用户数据角色；平台正文不能扩大工具白名单；路径穿越/异常媒体引用失败关闭；MCP与假A2A超时、伪造身份、越权调用边界；API、报告、run和扫描器输出不泄漏Cookie、Token或敏感URL。
+- 生产扫描器仅输出路径、规则、行号、匹配字节长度和SHA-256；对干净验收run退出0，对不安全合成fixture退出1且不回显秘密。
+- 本验收完全离线，没有请求真实平台URL。假A2A只证明供未来P5.5复用的共享策略；P5.3/P5.4真实适配器、P5.5真实A2A、P5.6对照、四人UAT、M1、M4和M5仍未完成。
+
 ## 5. P1数据资产事实
 
 远端最新P1成果已经合并到本地P3整合分支，但“资产合并”不等于M1验收完成。
@@ -298,7 +307,7 @@ Owner负责交付，Reviewer必须来自另一方向。共享契约由L维护，
 2. 并行完成M1外部事实工作：≥3000唯一合规候选、来源条款与人工隐私审批、第二轮盲标、仲裁、≥1500 Gold和零泄漏切分。
 3. 决定`data-tooling/`与`implicit-ad-agent/scripts/data/`的唯一维护来源；在决定前每次修改都必须同步镜像并运行字节一致性测试。
 4. 保持已完成的P4工程准入回归；M1通过后替换为真实纵向特征/学习模型，并在验证集完成Judge校准、阈值、消融和risk-coverage实验。
-5. 保持P5.1/P5.2服务与工作台回归；先完成四人团队UAT，再依次做P5.3小红书缓存fixture/适配器、P5.4 B站适配器和P5.5～5.7 A2A、运行模式对照与完整安全验收。LightRAG保持非阻塞A/B候选。
+5. 保持P5.1/P5.2/P5.7回归；先完成四人团队UAT，再依次做P5.3小红书缓存fixture/适配器、P5.4 B站适配器、P5.5真实A2A和P5.6运行模式对照。LightRAG保持非阻塞A/B候选。
 
 ## 9. 常用验证命令
 
@@ -331,6 +340,10 @@ cd implicit-ad-agent
 
 # P5.2研究工作台工程门
 .\.venv\Scripts\python.exe -m pytest tests\web tests\test_app.py tests\api -q
+
+# P5.7安全工程门
+.\.venv\Scripts\python.exe -m pytest tests\adapters\platforms\test_url_safety.py tests\adapters\platforms\test_safe_fetch.py tests\adapters\platforms\test_media_safety.py tests\adapters\platforms\test_url_import.py tests\orchestration\test_remote_policy.py tests\orchestration\test_mcp_gateway.py tests\orchestration\test_function_calling.py tests\protocols\mcp tests\security -q
+.\.venv\Scripts\python.exe scripts\security\scan_p5_7_artifacts.py --path <generated-artifact-directory>
 
 # 零Key本地工作台（浏览器打开 http://127.0.0.1:8765/workbench）
 $env:LANGSMITH_TRACING = 'false'
@@ -366,7 +379,7 @@ $env:LANGCHAIN_TRACING_V2 = 'false'
 .\implicit-ad-agent\.venv\Scripts\python.exe data-tooling\validate_submission_assets.py
 ```
 
-本次整合后的当前预期：零Key全量`405 passed, 2 skipped, 1 warning`，治理/增量聚焦`30 passed`，自动判断模块`21 passed`，两个P1校验器均输出`VALIDATION PASSED`。P5.2、P5.1、P4和P3的历史聚焦结果保留在对应验收章节。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；校验器绿不替代M1事实门。
+当前新鲜预期：零Key全量`495 passed, 2 skipped, 1 warning`，P5.7聚焦`144 passed`；治理/增量与自动判断的历史聚焦结果仍见对应章节。每次跨阶段集成都要同时跑P1资产校验、M1数据测试与默认全量回归；测试绿不替代M1/M4/M5事实门。
 
 M1真实数据审计、迁移、Schema、隐私、pilot一致性和门禁的PowerShell命令见`data-tooling/README.md`。当前门禁预期退出码为2；在外部证据补齐前，不要把它改成成功预期。
 
