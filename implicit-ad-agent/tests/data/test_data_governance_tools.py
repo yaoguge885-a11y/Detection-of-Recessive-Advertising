@@ -198,6 +198,52 @@ def test_privacy_classification_keeps_critical_finding_raw(
     )
 
 
+def test_privacy_classification_allows_approved_record_with_low_finding(
+    valid_v1_record: dict,
+) -> None:
+    findings = [
+        {
+            "field": "text",
+            "type": "高熵文本（疑似编码/加密内容）",
+            "match": "entropy=5.60, length=120",
+            "severity": "low",
+        }
+    ]
+
+    assert (
+        privacy_scan.classify_record(
+            valid_v1_record,
+            findings,
+            {valid_v1_record["post_id"]},
+        )
+        == "public"
+    )
+
+
+def test_privacy_scan_ignores_normalized_opaque_media_reference(
+    valid_v1_record: dict,
+) -> None:
+    valid_v1_record["media"] = [
+        {"ref": "media/post_0123456789abcdef/00.webp"},
+        {"ref": "media/a844971983d0bf7fcfb4e3bf/01.jpg"},
+        {"ref": "media/a844971983d0bf7fcfb4e3bf/100.jpg"},
+    ]
+
+    assert privacy_scan.scan_record(valid_v1_record) == []
+
+
+def test_privacy_scan_still_checks_noncanonical_media_reference(
+    valid_v1_record: dict,
+) -> None:
+    valid_v1_record["media"] = [
+        {"ref": "media/uploads/contact_test@example.com.png"}
+    ]
+
+    findings = privacy_scan.scan_record(valid_v1_record)
+
+    assert any(finding["type"] == "邮箱地址" for finding in findings)
+
+
 def test_redact_finding_removes_cleartext_match() -> None:
     finding = {
         "field": "text",

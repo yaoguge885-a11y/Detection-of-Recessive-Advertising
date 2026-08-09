@@ -37,7 +37,12 @@ CST = timezone(timedelta(hours=8))
 SENSITIVE_PATTERNS = [
     (r"\b1[3-9]\d{9}\b", "手机号", "high"),
     (r"\b\d{3}[-.]?\d{4}[-.]?\d{4}\b", "固定电话", "medium"),
-    (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "邮箱地址", "high"),
+    (
+        r"(?<![A-Za-z0-9._%+*\-])[A-Za-z0-9._%+-]+@"
+        r"[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?![A-Za-z0-9.-])",
+        "邮箱地址",
+        "high",
+    ),
     (r"\b\d{6}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]\b", "身份证号", "critical"),
     (r"\b\d{16,19}\b", "银行卡号（疑似）", "critical"),
 ]
@@ -50,8 +55,19 @@ HIGH_ENTROPY_PATTERNS = [
 ]
 
 PII_PATTERNS = [
-    (r"(?:微信|WeChat)\s*(?:号|ID)?\s*[：:]\s*[A-Za-z0-9_-]{6,}", "微信号"),
-    (r"(?:QQ|qq)\s*(?:号|号码)?\s*[：:]\s*\d{5,}", "QQ号"),
+    (
+        r"(?<![A-Za-z0-9_])(?:微信|WeChat)\s*(?:号|ID)?\s*[：:]\s*"
+        r"[A-Za-z0-9_-]{6,}",
+        "微信号",
+    ),
+    (
+        r"(?<![A-Za-z0-9_])QQ\s*(?:群|号|号码)?\s*[：:]\s*\d{5,}",
+        "QQ号",
+    ),
+    (
+        r"(?<![A-Za-z0-9_])(?:UID|用户ID)\s*[：:]\s*[A-Za-z0-9_-]{5,}",
+        "UID/账号标识",
+    ),
     (r"(?:地址|位置|地点)\s*[：:]\s*.{5,50}", "物理地址"),
     (r"(?:手机|电话|联系方式)\s*[：:]\s*\d[\d\- ]{6,}", "联系方式"),
 ]
@@ -60,6 +76,23 @@ URL_SENSITIVE_PARAMS = [
     "token", "key", "secret", "password", "auth", "access_token",
     "api_key", "apikey", "sign", "signature", "credential", "session",
 ]
+
+SAFE_MEDIA_REF_PATTERN = re.compile(
+    r"^(?:media/)?(?:(?:post|comment)_)?[0-9a-f]{16,64}/\d{2,}\.[A-Za-z0-9]+$",
+    re.IGNORECASE,
+)
+
+URL_LIKE_PATTERN = re.compile(
+    r"(?i)(?:https?://|www\.)[^\s<>]+|"
+    r"(?<!@)\b(?:[A-Za-z0-9-]+\.)+"
+    r"(?:com|org|net|cn|io|gov|edu|co|dev|me|info|biz)"
+    r"(?:/[^\s<>]*)?"
+)
+
+ACCOUNT_PREFIX_PATTERN = re.compile(
+    r"(?i)(?:UID|用户ID|QQ(?:群|号|号码)?|微信(?:号|ID)?|WeChat(?:号|ID)?)"
+    r"\s*[：:]?\s*$"
+)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -131,7 +164,8 @@ def scan_record(record: Dict) -> List[Dict[str, Any]]:
     for i, m in enumerate(record.get("media", [])):
         if isinstance(m, dict):
             ref = str(m.get("ref", ""))
-            if ref:
+            normalized_ref = ref.replace("\\", "/")
+            if ref and not SAFE_MEDIA_REF_PATTERN.fullmatch(normalized_ref):
                 _scan_text(ref, f"media[{i}].ref", findings)
 
     # 检查 comments
@@ -146,9 +180,20 @@ def scan_record(record: Dict) -> List[Dict[str, Any]]:
 
 def _scan_text(text: str, field: str, findings: List[Dict]) -> None:
     """在文本中扫描所有敏感模式。"""
+    url_spans = [match.span() for match in URL_LIKE_PATTERN.finditer(text)]
+
+    def inside_url(start: int, end: int) -> bool:
+        return any(start < url_end and end > url_start for url_start, url_end in url_spans)
+
+    def account_identifier_context(start: int) -> bool:
+        prefix = text[max(0, start - 32):start]
+        return ACCOUNT_PREFIX_PATTERN.search(prefix) is not None
+
     # 1. 敏感字段
     for pattern, label, severity in SENSITIVE_PATTERNS:
         for match in re.finditer(pattern, text, re.IGNORECASE):
+            if label in {"手机号", "固定电话", "银行卡号（疑似）"} and account_identifier_context(match.start()):
+                continue
             findings.append({
                 "field": field,
                 "type": label,
@@ -159,6 +204,8 @@ def _scan_text(text: str, field: str, findings: List[Dict]) -> None:
     # 2. 高熵检测
     for pattern, label in HIGH_ENTROPY_PATTERNS:
         for match in re.finditer(pattern, text, re.IGNORECASE):
+            if inside_url(match.start(), match.end()):
+                continue
             findings.append({
                 "field": field,
                 "type": label,
@@ -211,7 +258,10 @@ def classify_record(
     severities = [f["severity"] for f in findings]
     if "critical" in severities:
         return "raw"
-    if findings:
+    # Low-severity entropy findings remain visible in the report, but they are
+    # informational and must not by themselves make an otherwise approved,
+    # anonymized record ineligible for the public layer.
+    if any(f.get("severity") != "low" for f in findings):
         return "interim"
 
     privacy = record.get("privacy") or {}
