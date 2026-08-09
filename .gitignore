@@ -38,6 +38,16 @@ data/raw/
 data/interim/
 data/reports/m1/private/
 data/run_outputs/
+/data/source_archives/
+/data/reports/m1/privacy/privacy_AI_pre_review_B.md
+/data/reports/m1/privacy/privacy_approval.json
+/data/reports/m1/privacy/privacy_media_review_B.json
+/data/reports/m1/privacy/privacy_media_review_B_summary.md
+/data/reports/m1/privacy/privacy_scan_report.json
+/data/reports/m1/privacy/public_allowlist.json
+/data/reports/m1/qwen_calibration_20_review_B.html
+/data/reports/m1/qwen_calibration_20_human_review_B.md
+/data/reports/m1/source_terms_evidence.md
 runs/
 
 # Local collection inputs and annotation trial outputs
