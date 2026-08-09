@@ -168,6 +168,9 @@ creator 历史；标签、标注证据、划分名称、未来帖子和绝对时
 - train 与评估样本数。
 
 在没有 creator-cluster bootstrap 前，只报告点估计，不声称“稳定增益”或统计显著性。
+正式五方法比较、dev/test 隔离、creator-cluster bootstrap、消融和论文止损规则已冻结在
+`docs/superpowers/specs/2026-08-08-p4-experiment-protocol-design.md`；当前 baseline 不因此
+获得尚未实现的区间估计或正式研究结论。
 
 ## 9. 报告与隐私
 
