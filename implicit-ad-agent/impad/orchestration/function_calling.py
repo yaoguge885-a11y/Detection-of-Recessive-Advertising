@@ -244,7 +244,10 @@ class RestrictedFunctionCaller:
                     continue
                 seen_calls.add(duplicate_key)
 
-                run_update = {"call_id": call.id}
+                run_update = {
+                    "call_id": call.id,
+                    "allowed_tools": frozenset(allowed),
+                }
                 timeout_candidates = []
                 if run.timeout_seconds is not None:
                     timeout_candidates.append(run.timeout_seconds)

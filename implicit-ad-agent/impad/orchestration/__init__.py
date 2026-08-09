@@ -38,6 +38,17 @@ from .tool_gateway import (
     UnknownToolError,
 )
 from .mcp_gateway import MCPToolGateway, StdioDetectionMCPClient
+from .remote_policy import (
+    RemoteAuthorizationError,
+    RemoteCapabilityPolicy,
+    RemoteProtocolViolationError,
+    RemoteResultEnvelope,
+    RemoteSecurityError,
+    RemoteTransportTimeout,
+    authorize_remote_capability,
+    invoke_with_deadline,
+    validate_remote_result,
+)
 from .tracing import InMemoryTraceRecorder, RunEvent, RunTrace, attach_trace
 
 __all__ = [
@@ -63,6 +74,12 @@ __all__ = [
     "InMemoryTraceRecorder",
     "LocalToolGateway",
     "MCPToolGateway",
+    "RemoteAuthorizationError",
+    "RemoteCapabilityPolicy",
+    "RemoteProtocolViolationError",
+    "RemoteResultEnvelope",
+    "RemoteSecurityError",
+    "RemoteTransportTimeout",
     "RestrictedFunctionCaller",
     "RunEvent",
     "RunContext",
@@ -72,5 +89,8 @@ __all__ = [
     "ToolGateway",
     "UnavailableToolError",
     "UnknownToolError",
+    "authorize_remote_capability",
     "attach_trace",
+    "invoke_with_deadline",
+    "validate_remote_result",
 ]
