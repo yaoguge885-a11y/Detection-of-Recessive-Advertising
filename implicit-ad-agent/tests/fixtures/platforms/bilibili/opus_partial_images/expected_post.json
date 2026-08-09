@@ -42,14 +42,20 @@
       "image": {
         "status": "partial",
         "captured_fields": [],
-        "missing_fields": [],
-        "issues": []
+        "missing_fields": [
+          "local_media.ref"
+        ],
+        "issues": [
+          "remote_image"
+        ]
       },
       "comment": {
         "status": "unsupported",
         "captured_fields": [],
         "missing_fields": [],
-        "issues": []
+        "issues": [
+          "comments_unsupported"
+        ]
       },
       "disclosure": {
         "status": "complete",

@@ -40,13 +40,17 @@
         "status": "unsupported",
         "captured_fields": [],
         "missing_fields": [],
-        "issues": []
+        "issues": [
+          "image_unsupported"
+        ]
       },
       "comment": {
         "status": "unsupported",
         "captured_fields": [],
         "missing_fields": [],
-        "issues": []
+        "issues": [
+          "comments_unsupported"
+        ]
       },
       "disclosure": {
         "status": "complete",

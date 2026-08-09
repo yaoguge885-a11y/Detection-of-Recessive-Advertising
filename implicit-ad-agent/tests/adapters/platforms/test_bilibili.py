@@ -124,6 +124,207 @@ def test_bilibili_adapter_reads_injected_html_without_network():
 
 
 @pytest.mark.parametrize(
+    ("case", "content_type", "url"),
+    [
+        (
+            "video_no_images",
+            "video",
+            "https://www.bilibili.com/video/BV_SYNTHETIC_001",
+        ),
+        (
+            "opus_partial_images",
+            "opus",
+            "https://www.bilibili.com/opus/bili_opus_001",
+        ),
+        (
+            "article_missing_disclosure_surface",
+            "article",
+            "https://www.bilibili.com/read/cv123456",
+        ),
+    ],
+)
+def test_bilibili_adapter_preview_matches_each_json_fixture(
+    case, content_type, url
+):
+    fixture = _fixture(case)
+    expected = PostRecord.model_validate_json(
+        (fixture / "expected_post.json").read_text("utf-8")
+    )
+    post = BilibiliAdapter().preview(
+        validate_public_https_url(url),
+        fetcher=FixtureFetcher(fixture / "source.html"),
+    )
+    expected = expected.model_copy(update={
+        "provenance": expected.provenance.model_copy(update={
+            "source_ref_hash": "c" * 64,
+        }),
+    })
+
+    assert post == expected
+    assert post.model_dump_json() == parse_bilibili_state(
+        json.loads((fixture / "source_state.json").read_text("utf-8")),
+        content_type=content_type,
+        source_ref_hash="c" * 64,
+    ).model_dump_json()
+
+
+def test_bilibili_video_image_capture_is_unsupported_with_stable_issue():
+    fixture = _fixture("video_no_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+
+    post = parse_bilibili_state(
+        state,
+        content_type="video",
+        source_ref_hash="b" * 64,
+    )
+
+    modality = post.capture_status.modalities["image"]
+    assert modality.status == "unsupported"
+    assert modality.issues == ["image_unsupported"]
+    assert modality.missing_fields == []
+
+
+def test_bilibili_comments_are_explicitly_unsupported():
+    fixture = _fixture("video_no_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+
+    post = parse_bilibili_state(
+        state,
+        content_type="video",
+        source_ref_hash="b" * 64,
+    )
+
+    modality = post.capture_status.modalities["comment"]
+    assert modality.status == "unsupported"
+    assert modality.issues == ["comments_unsupported"]
+    assert modality.missing_fields == []
+
+
+def test_bilibili_media_filters_empty_and_duplicate_refs_using_source_index():
+    fixture = _fixture("opus_partial_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+    state["opusModule"]["pictures"] = [
+        {"url": "https://media.example.test/bilibili/image-a.jpg"},
+        {"url": ""},
+        {"url": None},
+        {"url": "https://media.example.test/bilibili/image-a.jpg"},
+        {"url": "https://media.example.test/bilibili/image-b.jpg"},
+    ]
+
+    post = parse_bilibili_state(
+        state,
+        content_type="opus",
+        source_ref_hash="b" * 64,
+    )
+
+    assert [item.ref for item in post.media] == [
+        "https://media.example.test/bilibili/image-a.jpg",
+        "https://media.example.test/bilibili/image-b.jpg",
+    ]
+    assert [item.media_id for item in post.media] == [
+        "bilibili_opus_image_0",
+        "bilibili_opus_image_4",
+    ]
+    assert post.text.endswith("<图片1>\n<图片5>")
+    modality = post.capture_status.modalities["image"]
+    assert modality.status == "partial"
+    assert modality.issues == ["image_ref_partial", "remote_image"]
+    assert modality.missing_fields == ["media.ref", "local_media.ref"]
+
+
+def test_bilibili_empty_image_refs_are_missing_without_media_placeholders():
+    fixture = _fixture("opus_partial_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+    state["opusModule"]["pictures"] = [{"url": ""}, {"url": None}]
+
+    post = parse_bilibili_state(
+        state,
+        content_type="opus",
+        source_ref_hash="b" * 64,
+    )
+
+    assert post.media == []
+    assert "<图片" not in post.text
+    modality = post.capture_status.modalities["image"]
+    assert modality.status == "missing"
+    assert modality.issues == ["image_ref_missing"]
+    assert modality.missing_fields == ["media.ref"]
+
+
+def test_bilibili_empty_text_is_missing_with_fact_field():
+    fixture = _fixture("opus_partial_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+    state["opusModule"]["title"] = ""
+    state["opusModule"]["description"] = ""
+    state["opusModule"]["pictures"] = []
+
+    post = parse_bilibili_state(
+        state,
+        content_type="opus",
+        source_ref_hash="b" * 64,
+    )
+
+    modality = post.capture_status.modalities["text"]
+    assert post.text == ""
+    assert modality.status == "missing"
+    assert modality.issues == ["empty_text"]
+    assert modality.missing_fields == ["text"]
+
+
+def test_bilibili_article_disclosure_surface_missing_is_audited():
+    fixture = _fixture("article_missing_disclosure_surface")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+
+    post = parse_bilibili_state(
+        state,
+        content_type="article",
+        source_ref_hash="b" * 64,
+    )
+
+    modality = post.capture_status.modalities["disclosure"]
+    assert modality.status == "missing"
+    assert modality.issues == ["disclosure_surface_missing"]
+    assert modality.missing_fields == ["disclosures"]
+
+
+def test_bilibili_disclosures_deduplicate_by_kind_text_source():
+    fixture = _fixture("video_no_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+    state["videoData"]["disclosureLabels"] = ["赞助", "赞助"]
+
+    post = parse_bilibili_state(
+        state,
+        content_type="video",
+        source_ref_hash="b" * 64,
+    )
+
+    assert [item.model_dump() for item in post.disclosures] == [
+        {
+            "kind": "platform_badge",
+            "text": "赞助",
+            "source": "platform_metadata",
+        },
+    ]
+
+
+def test_bilibili_missing_disclosure_labels_are_audited():
+    fixture = _fixture("opus_partial_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+    state["opusModule"].pop("disclosureLabels")
+
+    post = parse_bilibili_state(
+        state,
+        content_type="opus",
+        source_ref_hash="b" * 64,
+    )
+
+    modality = post.capture_status.modalities["disclosure"]
+    assert modality.status == "missing"
+    assert modality.issues == ["disclosure_missing"]
+    assert modality.missing_fields == ["disclosures"]
+
+
+@pytest.mark.parametrize(
     ("case", "content_type", "path", "message"),
     [
         ("video_no_images", "video", "videoData", "bvid"),

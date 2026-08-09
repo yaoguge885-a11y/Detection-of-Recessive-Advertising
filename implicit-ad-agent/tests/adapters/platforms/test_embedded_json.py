@@ -21,6 +21,40 @@ def test_extract_assigned_json_handles_nested_braces_inside_strings():
     }
 
 
+def test_extract_assigned_json_allows_whitespace_around_assignment():
+    html = (
+        "<script>window.__INITIAL_STATE__\n \t = \n  "
+        '{"ok": true};</script>'
+    )
+
+    assert extract_assigned_json(html, "window.__INITIAL_STATE__") == {
+        "ok": True,
+    }
+
+
+def test_extract_assigned_json_requires_assignment_before_object():
+    with pytest.raises(ValueError, match="embedded JSON object not found"):
+        extract_assigned_json(
+            '<script>window.__INITIAL_STATE__ {"ok": true};</script>',
+            "window.__INITIAL_STATE__",
+        )
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        '[{"nested": true}]',
+        '"a string" {"later": true}',
+    ],
+)
+def test_extract_assigned_json_requires_first_token_to_be_object(token):
+    with pytest.raises(ValueError, match="embedded JSON object not found"):
+        extract_assigned_json(
+            f"<script>window.__INITIAL_STATE__ = {token};</script>",
+            "window.__INITIAL_STATE__",
+        )
+
+
 def test_extract_assigned_json_fails_when_assignment_is_absent():
     with pytest.raises(ValueError, match="embedded JSON marker not found"):
         extract_assigned_json("<html></html>", "window.__INITIAL_STATE__")

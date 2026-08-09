@@ -62,8 +62,12 @@
       "image": {
         "status": "partial",
         "captured_fields": [],
-        "missing_fields": [],
-        "issues": []
+        "missing_fields": [
+          "local_media.ref"
+        ],
+        "issues": [
+          "remote_image"
+        ]
       },
       "comment": {
         "status": "complete",

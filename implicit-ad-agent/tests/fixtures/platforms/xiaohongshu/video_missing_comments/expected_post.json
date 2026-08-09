@@ -43,13 +43,19 @@
         "status": "unsupported",
         "captured_fields": [],
         "missing_fields": [],
-        "issues": []
+        "issues": [
+          "image_unsupported"
+        ]
       },
       "comment": {
         "status": "missing",
         "captured_fields": [],
-        "missing_fields": [],
-        "issues": []
+        "missing_fields": [
+          "comments"
+        ],
+        "issues": [
+          "comments_missing"
+        ]
       },
       "disclosure": {
         "status": "complete",

@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from math import isfinite
 from typing import Any
+from urllib.parse import urlsplit
 
 from ...contracts import (
     CaptureModality,
@@ -82,7 +83,13 @@ def _select_note(state: dict[str, Any]) -> dict[str, Any]:
     return entry["note"]
 
 
-def _image_media(note: dict[str, Any]) -> tuple[list[MediaRecord], list[str]]:
+def _image_media(note: dict[str, Any]) -> tuple[
+    list[MediaRecord],
+    list[str],
+    str,
+    list[str],
+    list[str],
+]:
     raw_images = note.get("imageList", [])
     if raw_images is None:
         raw_images = []
@@ -90,19 +97,57 @@ def _image_media(note: dict[str, Any]) -> tuple[list[MediaRecord], list[str]]:
         raise ValueError("Xiaohongshu imageList is invalid")
     media: list[MediaRecord] = []
     markers: list[str] = []
+    seen_refs: set[str] = set()
+    missing_ref = False
+    remote_ref = False
     for index, raw_image in enumerate(raw_images):
         if not isinstance(raw_image, dict):
             raise ValueError("Xiaohongshu imageList entry is invalid")
         reference = raw_image.get("urlDefault")
         if reference is not None and not isinstance(reference, str):
             raise ValueError("Xiaohongshu image URL is invalid")
+        normalized_ref = reference.strip() if reference else ""
+        if not normalized_ref:
+            missing_ref = True
+            continue
+        if normalized_ref in seen_refs:
+            continue
+        seen_refs.add(normalized_ref)
+        remote_ref = remote_ref or urlsplit(normalized_ref).scheme in {
+            "http",
+            "https",
+        }
         media.append(MediaRecord(
             media_id=f"xiaohongshu_image_{index}",
             type="image",
-            ref=reference or None,
+            ref=normalized_ref,
         ))
         markers.append(f"<图片{index + 1}>")
-    return media, markers
+
+    if not media:
+        return (
+            media,
+            markers,
+            "missing",
+            ["image_ref_missing"],
+            ["media.ref"],
+        )
+    if missing_ref:
+        issues = ["image_ref_partial"]
+        missing_fields = ["media.ref"]
+        if remote_ref:
+            issues.append("remote_image")
+            missing_fields.append("local_media.ref")
+        return media, markers, "partial", issues, missing_fields
+    if remote_ref:
+        return (
+            media,
+            markers,
+            "partial",
+            ["remote_image"],
+            ["local_media.ref"],
+        )
+    return media, markers, "complete", [], []
 
 
 def _video_media(note: dict[str, Any]) -> list[MediaRecord]:
@@ -115,21 +160,37 @@ def _video_media(note: dict[str, Any]) -> list[MediaRecord]:
     )]
 
 
-def _comments(note: dict[str, Any]) -> tuple[list[CommentRecord], str]:
+def _comments(note: dict[str, Any]) -> tuple[
+    list[CommentRecord],
+    str,
+    list[str],
+    list[str],
+]:
     raw_comments = note.get("comments")
     interact_info = note.get("interactInfo")
     comment_count = None
     if isinstance(interact_info, dict):
         comment_count = interact_info.get("commentCount")
 
+    if comment_count is not None and (
+        isinstance(comment_count, bool)
+        or not isinstance(comment_count, int)
+        or comment_count < 0
+    ):
+        raise ValueError("Xiaohongshu commentCount is invalid")
+
     if isinstance(raw_comments, list):
         comments: list[CommentRecord] = []
+        seen_ids: set[str] = set()
         for raw_comment in raw_comments:
             if not isinstance(raw_comment, dict):
                 raise ValueError("Xiaohongshu comment entry is invalid")
             comment_id = _required_string(
                 raw_comment.get("id"), "comment id"
             )
+            if comment_id in seen_ids:
+                continue
+            seen_ids.add(comment_id)
             author = raw_comment.get("user")
             author_id = (
                 author.get("userId")
@@ -160,38 +221,53 @@ def _comments(note: dict[str, Any]) -> tuple[list[CommentRecord], str]:
                 is_pinned=is_pinned,
                 created_at=created_at,
             ))
-        return comments, "complete"
+        if comment_count is None:
+            return comments, "complete", [], ["interactInfo.commentCount"]
+        if len(comments) == 0 and comment_count > 0:
+            return comments, "missing", ["comments_missing"], ["comments"]
+        if len(comments) < comment_count:
+            return comments, "partial", ["comments_partial"], ["comments"]
+        return comments, "complete", [], []
 
     if comment_count == 0:
-        return [], "complete"
-    return [], "missing"
+        return [], "complete", [], []
+    return [], "missing", ["comments_missing"], ["comments"]
 
 
 def _disclosures(note: dict[str, Any], text: str) -> tuple[
-    list[DisclosureRecord], str
+    list[DisclosureRecord], str, list[str], list[str]
 ]:
     if "disclosureLabels" not in note:
-        return [], "missing"
+        return [], "missing", ["disclosure_missing"], ["disclosures"]
     labels = note.get("disclosureLabels")
     if not isinstance(labels, list):
         raise ValueError("Xiaohongshu disclosureLabels is invalid")
     disclosures: list[DisclosureRecord] = []
+    seen: set[tuple[str, str, str]] = set()
     for label in labels:
         if not isinstance(label, str) or not label.strip():
             raise ValueError("Xiaohongshu disclosure label is invalid")
-        disclosures.append(DisclosureRecord(
+        disclosure = DisclosureRecord(
             kind="platform_badge",
             text=label,
             source="platform_metadata",
-        ))
+        )
+        key = (disclosure.kind, disclosure.text, disclosure.source)
+        if key not in seen:
+            seen.add(key)
+            disclosures.append(disclosure)
     for marker in _DISCLOSURE_HASHTAGS:
         if _contains_exact_hashtag(text, marker):
-            disclosures.append(DisclosureRecord(
+            disclosure = DisclosureRecord(
                 kind="hashtag",
                 text=marker,
                 source="post_text",
-            ))
-    return disclosures, "complete"
+            )
+            key = (disclosure.kind, disclosure.text, disclosure.source)
+            if key not in seen:
+                seen.add(key)
+                disclosures.append(disclosure)
+    return disclosures, "complete", [], []
 
 
 def parse_xiaohongshu_state(
@@ -213,24 +289,26 @@ def parse_xiaohongshu_state(
     description = note.get("desc", "")
     if not isinstance(title, str) or not isinstance(description, str):
         raise ValueError("Xiaohongshu title or desc is invalid")
-    media, image_markers = _image_media(note)
+    media, image_markers, image_status, image_issues, image_missing = (
+        _image_media(note)
+    )
     media.extend(_video_media(note))
     text_parts = [
         value.strip()
         for value in (title, description)
         if value.strip()
     ]
-    text_parts.extend(image_markers)
-    text = "\n".join(text_parts)
+    text_content = "\n".join(text_parts)
+    text = "\n".join([*text_parts, *image_markers])
 
-    comments, comment_status = _comments(note)
-    disclosures, disclosure_status = _disclosures(note, text)
+    comments, comment_status, comment_issues, comment_missing = _comments(note)
+    disclosures, disclosure_status, disclosure_issues, disclosure_missing = (
+        _disclosures(note, text)
+    )
     if content_type == "video":
         image_status = "unsupported"
-    elif media:
-        image_status = "partial"
-    else:
-        image_status = "missing"
+        image_issues = ["image_unsupported"]
+        image_missing = []
 
     payload = ParsedPlatformPost(
         platform="xiaohongshu",
@@ -248,11 +326,25 @@ def parse_xiaohongshu_state(
         disclosures=disclosures,
         modalities={
             "text": CaptureModality(
-                status="complete" if text else "missing"
+                status="complete" if text_content else "missing",
+                issues=[] if text_content else ["empty_text"],
+                missing_fields=[] if text_content else ["text"],
             ),
-            "image": CaptureModality(status=image_status),
-            "comment": CaptureModality(status=comment_status),
-            "disclosure": CaptureModality(status=disclosure_status),
+            "image": CaptureModality(
+                status=image_status,
+                issues=image_issues,
+                missing_fields=image_missing,
+            ),
+            "comment": CaptureModality(
+                status=comment_status,
+                issues=comment_issues,
+                missing_fields=comment_missing,
+            ),
+            "disclosure": CaptureModality(
+                status=disclosure_status,
+                issues=disclosure_issues,
+                missing_fields=disclosure_missing,
+            ),
         },
         captured_at=_captured_at(state),
     )

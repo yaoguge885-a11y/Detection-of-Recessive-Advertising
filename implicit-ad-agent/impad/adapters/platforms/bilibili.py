@@ -93,7 +93,7 @@ def _image_media(
     section: dict[str, Any],
     key: str,
     content_type: str,
-) -> tuple[list[MediaRecord], list[str]]:
+) -> tuple[list[MediaRecord], list[str], str, list[str], list[str]]:
     raw_images = section.get(key, [])
     if raw_images is None:
         raw_images = []
@@ -102,6 +102,9 @@ def _image_media(
 
     media: list[MediaRecord] = []
     markers: list[str] = []
+    seen_refs: set[str] = set()
+    missing_ref = False
+    remote_ref = False
     for index, raw_image in enumerate(raw_images):
         if not isinstance(raw_image, dict):
             raise ValueError(
@@ -112,13 +115,48 @@ def _image_media(
             raise ValueError(
                 f"Bilibili {content_type} image URL is invalid"
             )
+        normalized_ref = reference.strip() if reference else ""
+        if not normalized_ref:
+            missing_ref = True
+            continue
+        if normalized_ref in seen_refs:
+            continue
+        seen_refs.add(normalized_ref)
+        remote_ref = remote_ref or urlsplit(normalized_ref).scheme in {
+            "http",
+            "https",
+        }
         media.append(MediaRecord(
             media_id=f"bilibili_{content_type}_image_{index}",
             type="image",
-            ref=reference or None,
+            ref=normalized_ref,
         ))
         markers.append(f"<图片{index + 1}>")
-    return media, markers
+
+    if not media:
+        return (
+            media,
+            markers,
+            "missing",
+            ["image_ref_missing"],
+            ["media.ref"],
+        )
+    if missing_ref:
+        issues = ["image_ref_partial"]
+        missing_fields = ["media.ref"]
+        if remote_ref:
+            issues.append("remote_image")
+            missing_fields.append("local_media.ref")
+        return media, markers, "partial", issues, missing_fields
+    if remote_ref:
+        return (
+            media,
+            markers,
+            "partial",
+            ["remote_image"],
+            ["local_media.ref"],
+        )
+    return media, markers, "complete", [], []
 
 
 def _disclosures(
@@ -126,28 +164,33 @@ def _disclosures(
     content_type: str,
     *,
     surface_captured: bool = True,
-) -> tuple[list[DisclosureRecord], str]:
+) -> tuple[list[DisclosureRecord], str, list[str], list[str]]:
     if not surface_captured:
-        return [], "missing"
+        return [], "missing", ["disclosure_surface_missing"], ["disclosures"]
     if "disclosureLabels" not in section:
-        return [], "missing"
+        return [], "missing", ["disclosure_missing"], ["disclosures"]
     labels = section.get("disclosureLabels")
     if not isinstance(labels, list):
         raise ValueError(
             f"Bilibili {content_type} disclosureLabels is invalid"
         )
     disclosures: list[DisclosureRecord] = []
+    seen: set[tuple[str, str, str]] = set()
     for label in labels:
         if not isinstance(label, str) or not label.strip():
             raise ValueError(
                 f"Bilibili {content_type} disclosure label is invalid"
             )
-        disclosures.append(DisclosureRecord(
+        disclosure = DisclosureRecord(
             kind="platform_badge",
             text=label,
             source="platform_metadata",
-        ))
-    return disclosures, "complete"
+        )
+        key = (disclosure.kind, disclosure.text, disclosure.source)
+        if key not in seen:
+            seen.add(key)
+            disclosures.append(disclosure)
+    return disclosures, "complete", [], []
 
 
 def _build(
@@ -168,28 +211,40 @@ def _build(
     body_text = _optional_text(body, "body", content_type)
     media: list[MediaRecord] = []
     image_markers: list[str] = []
+    image_status = "missing"
+    image_issues = ["image_ref_missing"]
+    image_missing = ["media.ref"]
     if image_key is not None:
-        media, image_markers = _image_media(section, image_key, content_type)
+        (
+            media,
+            image_markers,
+            image_status,
+            image_issues,
+            image_missing,
+        ) = _image_media(section, image_key, content_type)
 
     text_parts = [
         value.strip()
         for value in (title_text, body_text)
         if value.strip()
     ]
-    text_parts.extend(image_markers)
-    text = "\n".join(text_parts)
+    text_content = "\n".join(text_parts)
+    text = "\n".join([*text_parts, *image_markers])
 
-    disclosures, disclosure_status = _disclosures(
+    (
+        disclosures,
+        disclosure_status,
+        disclosure_issues,
+        disclosure_missing,
+    ) = _disclosures(
         section,
         content_type,
         surface_captured=surface_captured,
     )
     if content_type == "video":
         image_status = "unsupported"
-    elif media:
-        image_status = "partial"
-    else:
-        image_status = "missing"
+        image_issues = ["image_unsupported"]
+        image_missing = []
 
     payload = ParsedPlatformPost(
         platform="bilibili",
@@ -203,11 +258,25 @@ def _build(
         disclosures=disclosures,
         modalities={
             "text": CaptureModality(
-                status="complete" if text else "missing"
+                status="complete" if text_content else "missing",
+                issues=[] if text_content else ["empty_text"],
+                missing_fields=[] if text_content else ["text"],
             ),
-            "image": CaptureModality(status=image_status),
-            "comment": CaptureModality(status="unsupported"),
-            "disclosure": CaptureModality(status=disclosure_status),
+            "image": CaptureModality(
+                status=image_status,
+                issues=image_issues,
+                missing_fields=image_missing,
+            ),
+            "comment": CaptureModality(
+                status="unsupported",
+                issues=["comments_unsupported"],
+                missing_fields=[],
+            ),
+            "disclosure": CaptureModality(
+                status=disclosure_status,
+                issues=disclosure_issues,
+                missing_fields=disclosure_missing,
+            ),
         },
         captured_at=captured_at,
     )

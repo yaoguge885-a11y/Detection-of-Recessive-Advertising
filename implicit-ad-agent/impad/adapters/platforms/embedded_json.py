@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 
 def extract_assigned_json(html: str, marker: str) -> dict:
@@ -15,8 +16,11 @@ def extract_assigned_json(html: str, marker: str) -> dict:
         raise ValueError("embedded JSON marker not found")
     marker_end += len(marker)
 
-    start = html.find("{", marker_end)
-    if start < 0:
+    assignment = re.match(r"\s*=\s*", html[marker_end:])
+    if assignment is None:
+        raise ValueError("embedded JSON object not found")
+    start = marker_end + assignment.end()
+    if start >= len(html) or html[start] != "{":
         raise ValueError("embedded JSON object not found")
 
     depth = 0
