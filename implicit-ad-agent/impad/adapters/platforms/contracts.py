@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...contracts import (
     CaptureStatus,
     CommentRecord,
+    DisclosureRecord,
     HistoryPost,
     MediaRecord,
     PostRecord,
@@ -88,5 +89,6 @@ class URLImportCorrections(BaseModel):
     published_at: datetime | None = None
     media: list[MediaRecord] | None = None
     comments: list[CommentRecord] | None = None
+    disclosures: list[DisclosureRecord] | None = None
     history: list[HistoryPost] | None = None
     capture_status: CaptureStatus | None = None

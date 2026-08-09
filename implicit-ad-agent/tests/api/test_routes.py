@@ -215,13 +215,27 @@ def test_url_preview_and_confirm_routes(tmp_path):
         "/api/v1/import/url/confirm",
         json={
             "preview_id": preview["preview_id"],
-            "corrections": {"text": "人工修正"},
+            "corrections": {
+                "text": "人工修正",
+                "disclosures": [{
+                    "kind": "platform_badge",
+                    "text": "品牌合作",
+                    "source": "platform_metadata",
+                }],
+            },
             "runtime_mode": "local",
         },
     )
 
     assert confirmed.status_code == 200
-    assert confirmed.json()["run_metadata"]["run_id"]
+    run_id = confirmed.json()["run_metadata"]["run_id"]
+    queried = client.get(f"/api/v1/runs/{run_id}")
+    assert queried.status_code == 200
+    assert queried.json()["post"]["disclosures"] == [{
+        "kind": "platform_badge",
+        "text": "品牌合作",
+        "source": "platform_metadata",
+    }]
 
 
 def test_url_query_secret_is_absent_from_confirmed_run(tmp_path):
@@ -293,7 +307,14 @@ def test_url_confirm_maps_missing_and_invalid_preview_errors(tmp_path):
 
 @pytest.mark.parametrize(
     "immutable_field",
-    ["post_id", "platform", "provenance", "privacy", "unknown"],
+    [
+        "post_id",
+        "platform",
+        "source_type",
+        "provenance",
+        "privacy",
+        "unknown",
+    ],
 )
 def test_url_confirm_rejects_non_allowlisted_corrections_without_consuming(
     tmp_path,

@@ -13,7 +13,7 @@ from impad.adapters.platforms import (
     URLImportError,
     URLImportService,
 )
-from impad.contracts import MediaRecord
+from impad.contracts import DisclosureRecord, MediaRecord
 from impad.services import AnalysisService, JsonRunStore
 
 
@@ -253,6 +253,24 @@ def test_confirm_applies_audited_corrections_and_consumes_preview(
         )
     assert exc.value.code == "preview_not_found"
     assert exc.value.status_code == 404
+
+
+def test_confirm_applies_and_audits_disclosure_corrections(tmp_path):
+    service, _ = _url_service(tmp_path)
+    preview = service.preview("https://example.test/post/1")
+    disclosures = [DisclosureRecord(
+        kind="platform_badge",
+        text="品牌合作",
+        source="platform_metadata",
+    )]
+
+    result = service.confirm(
+        preview.preview_id,
+        URLImportCorrections(disclosures=disclosures),
+    )
+
+    assert result.post.disclosures == disclosures
+    assert "disclosures" in result.post.capture_status.user_corrections
 
 
 def test_concurrent_confirm_reserves_preview_once(tmp_path):
