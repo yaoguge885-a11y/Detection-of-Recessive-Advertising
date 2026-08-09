@@ -1,5 +1,6 @@
 """Shared security boundaries."""
 
+from .artifact_scan import ArtifactFinding, scan_artifacts
 from .content_boundary import (
     PLATFORM_CONTENT_SYSTEM_POLICY,
     UntrustedPlatformContent,
@@ -13,6 +14,7 @@ from .redaction import (
 )
 
 __all__ = [
+    "ArtifactFinding",
     "PLATFORM_CONTENT_SYSTEM_POLICY",
     "REDACTED",
     "SENSITIVE_KEYS",
@@ -20,4 +22,5 @@ __all__ = [
     "build_platform_content_messages",
     "redact_sensitive_text",
     "redact_structure",
+    "scan_artifacts",
 ]
