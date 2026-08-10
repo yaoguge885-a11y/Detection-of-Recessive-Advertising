@@ -48,6 +48,17 @@ data/run_outputs/
 /data/reports/m1/qwen_calibration_20_review_B.html
 /data/reports/m1/qwen_calibration_20_human_review_B.md
 /data/reports/m1/source_terms_evidence.md
+
+# M1 B private/generated review artifacts
+/data/reports/m1/privacy/_media_contact_sheets*/
+/data/reports/m1/privacy/privacy_*_B.html
+/data/reports/m1/privacy/privacy_redaction_draft_B_*.json
+/data/reports/m1/privacy/privacy_approval_after_text_redaction_B.json
+/data/reports/m1/privacy/privacy_supplemental_*_B*.json
+/data/reports/m1/privacy/privacy_text_redaction_finalize_B.json
+/data/reports/m1/privacy/redacted_B_candidate_schema_validation.json
+/data/reports/m1/privacy/text_redaction_rescan_B/
+/data/reports/m1/qwen_calibration_20_human_review_B.json
 runs/
 
 # Local collection inputs and annotation trial outputs
