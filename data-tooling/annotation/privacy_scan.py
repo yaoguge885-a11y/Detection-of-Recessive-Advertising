@@ -216,6 +216,9 @@ def _scan_text(text: str, field: str, findings: List[Dict]) -> None:
     # 3. 直接身份信息
     for pattern, label in PII_PATTERNS:
         for match in re.finditer(pattern, text, re.IGNORECASE):
+            # “地址：https://…”或“位置：www…”是在描述网络地址，不是物理住址。
+            if label == "物理地址" and inside_url(match.start(), match.end()):
+                continue
             findings.append({
                 "field": field,
                 "type": label,
