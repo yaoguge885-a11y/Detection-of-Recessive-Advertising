@@ -74,6 +74,9 @@ data/run_outputs/
 # M1 preflight batches contain complete records and IDs
 /data/reports/m1/preparation/stage5_preflight_*/
 
+# M1 formal locked batches also contain complete records and IDs
+/data/reports/m1/locked_batches/
+
 # M1 B private/generated review artifacts
 /data/reports/m1/privacy/_media_contact_sheets*/
 /data/reports/m1/privacy/privacy_*_B.html
