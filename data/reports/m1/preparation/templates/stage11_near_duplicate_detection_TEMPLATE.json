@@ -1,0 +1,19 @@
+{
+  "status": "preparation_only_not_formal",
+  "dataset_path": null,
+  "dataset_sha256": null,
+  "record_count": null,
+  "algorithm": null,
+  "normalization": null,
+  "similarity_metric": null,
+  "threshold": null,
+  "candidate_pair_count": null,
+  "near_duplicate_pair_count": null,
+  "content_group_count": null,
+  "content_group_assignment_path": null,
+  "reviewed_by_A": null,
+  "executed_by_B": null,
+  "executed_at": null,
+  "limitations": null,
+  "instructions": "真实检测完成后复制到 data/reports/m1/near_duplicate_detection_report.json；正式 status 只能为 passed 或 failed。"
+}
