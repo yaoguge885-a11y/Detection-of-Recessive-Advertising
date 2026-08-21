@@ -47,7 +47,32 @@ data/run_outputs/
 /data/reports/m1/privacy/public_allowlist.json
 /data/reports/m1/qwen_calibration_20_review_B.html
 /data/reports/m1/qwen_calibration_20_human_review_B.md
+/data/reports/m1/qwen_calibration_20_review_A.html
+/data/reports/m1/qwen_calibration_20_human_review_A.json
 /data/reports/m1/source_terms_evidence.md
+
+# M1 formal/private cohort and human decision artifacts
+/data/reports/m1/privacy/formal_*/
+/data/reports/m1/privacy/privacy_spotcheck_*_review_*.json
+/data/reports/m1/privacy_reconciliation_after_spotcheck_*.json
+/data/reports/m1/privacy_rescan_proposal_after_spotcheck_*.json
+/data/reports/m1/privacy_spotcheck_*_validation_B.json
+/data/reports/m1/formal_candidate_proposal_schema_after_spotcheck_B.json
+
+# M1 receipts, local validation evidence, and machine-specific reports
+/data/reports/m1/A_*.json
+/data/reports/m1/A_*.md
+/data/reports/m1/qwen_calibration_20_validation_*.json
+/data/reports/m1/downstream_preparation_*.json
+/data/reports/m1/downstream_readiness_*.json
+/data/reports/m1/terms_apply_report_*.json
+/data/reports/m1/terms_applied_schema_validation.json
+/data/reports/m1/m1_preflight_status_*.md
+/data/reports/m1/M1_current_gate_and_stage5_preparation_*.md
+/data/reports/m1/preparation/canonical_group_metadata_preflight_*.json
+
+# M1 preflight batches contain complete records and IDs
+/data/reports/m1/preparation/stage5_preflight_*/
 
 # M1 B private/generated review artifacts
 /data/reports/m1/privacy/_media_contact_sheets*/
