@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import sys
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -27,6 +28,7 @@ from auto_judge import (  # noqa: E402
     normalize_label,
     normalize_suggestion,
     run_auto_judge,
+    run_ollama_judge,
     summarize_image_analyses,
     summarize_keyword_weights,
 )
@@ -80,7 +82,7 @@ class TestClassifyConfidence:
 # ════════════════════════════════════════════════════════════════════
 class TestNormalizeLabel:
     def test_chinese_labels_kept(self):
-        for label in ("明广", "暗广", "非广", "out_of_scope"):
+        for label in ("明广", "暗广", "非广", "uncertain", "out_of_scope"):
             assert normalize_label(label) == label
 
     def test_code_to_chinese(self):
@@ -88,10 +90,12 @@ class TestNormalizeLabel:
         assert normalize_label("anguang") == "暗广"
         assert normalize_label("feiguang") == "非广"
 
-    def test_invalid_falls_back(self):
-        assert normalize_label("不确定") == "非广"
-        assert normalize_label("") == "非广"
-        assert normalize_label(None) == "非广"
+    def test_invalid_fails_closed(self):
+        assert normalize_label("不确定") == "uncertain"
+        with pytest.raises(ValueError):
+            normalize_label("")
+        with pytest.raises(ValueError):
+            normalize_label(None)
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -247,6 +251,227 @@ class TestRunAutoJudge:
         result = run_auto_judge(SOFT_POST, auto_threshold=0.85)
         assert result["tier"] == "manual"
         assert result["suggestion"] is not None  # 有建议但低于展示下限
+
+
+# ════════════════════════════════════════════════════════════════════
+# M1 Qwen 校准诊断回归（最小、脱敏合成数据）
+# ════════════════════════════════════════════════════════════════════
+DIAGNOSTIC_GUIDE = """# 隐性广告人工标注指南 v-test
+
+EC-24：披露区域、图片或关键评论未采集完整时必须输出 uncertain。
+"""
+
+EVIDENCE_GAP_POST = {
+    "post_id": "post_synthetic_evidence_gap",
+    "title": "合成边界样本",
+    "platform": "synthetic",
+    "text": "这款产品值得关注，详情见评论区。",
+    "comments": [{"text": "置顶评论：合成购买入口"}],
+    "media": [{"ref": "media/synthetic/00.png", "type": "image"}],
+}
+
+
+class _FakeResponse:
+    def __init__(self, content):
+        self._content = content
+        self.status_code = 200
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return {"message": {"content": self._content}}
+
+
+class TestM1GuideAndEvidenceContract:
+    def test_uncertain_is_a_first_class_label(self):
+        assert normalize_label("uncertain") == "uncertain"
+        assert normalize_label("不确定") == "uncertain"
+
+    def test_invalid_label_fails_closed_instead_of_becoming_feiguang(self):
+        with pytest.raises(ValueError, match="非法标签") as exc_info:
+            normalize_label("完全未知标签")
+        assert exc_info.value.label_raw == "完全未知标签"
+
+    def test_prompt_contains_authoritative_guide_comments_and_evidence_state(self):
+        prompt = build_user_prompt(
+            EVIDENCE_GAP_POST,
+            "媒体证据未提供",
+            guide_text=DIAGNOSTIC_GUIDE,
+            guide_version="v-test",
+            guide_sha256="abc123",
+            media_evidence_status="not_requested",
+            collection_complete=None,
+        )
+        assert "EC-24" in prompt
+        assert "置顶评论：合成购买入口" in prompt
+        assert "not_requested" in prompt
+        assert "unknown" in prompt
+        assert "abc123" in prompt
+
+    def test_raw_label_and_evidence_provenance_survive_ollama_parsing(self, monkeypatch):
+        monkeypatch.setattr(
+            "auto_judge.requests.post",
+            lambda *a, **k: _FakeResponse(
+                '{"label":"uncertain","confidence":0.82,'
+                '"evidence_codes":[],"evidence":[],'
+                '"reasoning":"证据不完整","uncertain_reason":"缺媒体"}'
+            ),
+        )
+        result = run_ollama_judge(
+            EVIDENCE_GAP_POST,
+            image_analyses=None,
+            guide_text=DIAGNOSTIC_GUIDE,
+            guide_version="v-test",
+            guide_sha256="abc123",
+            media_analysis_requested=False,
+            collection_complete=None,
+        )
+        assert result["label_raw"] == "uncertain"
+        assert result["label"] == "uncertain"
+        assert result["_backend"] == "ollama"
+        assert result["_guide_sha256"] == "abc123"
+        assert result["_media_evidence_status"] == "not_requested"
+        assert result["_collection_complete"] == "unknown"
+
+    def test_request_explicitly_sets_context_for_full_guide(self, monkeypatch):
+        captured = {}
+
+        def fake_post(*args, **kwargs):
+            captured.update(kwargs)
+            return _FakeResponse(
+                '{"label":"uncertain","confidence":0.2,'
+                '"evidence_codes":[],"evidence":[],"reasoning":"合成",'
+                '"uncertain_reason":"证据不足"}'
+            )
+
+        monkeypatch.setattr("auto_judge.requests.post", fake_post)
+        run_ollama_judge(
+            EVIDENCE_GAP_POST,
+            guide_text=DIAGNOSTIC_GUIDE,
+            media_analysis_requested=False,
+            num_ctx=32768,
+        )
+        assert captured["json"]["options"]["num_ctx"] == 32768
+
+    def test_incomplete_disclosure_evidence_cannot_hard_label_anguang(self, monkeypatch):
+        monkeypatch.setattr(
+            "auto_judge.requests.post",
+            lambda *a, **k: _FakeResponse(
+                '{"label":"暗广","confidence":0.99,'
+                '"evidence_codes":["C","P"],"evidence":["合成证据"],'
+                '"reasoning":"合成推理","uncertain_reason":null}'
+            ),
+        )
+        result = run_ollama_judge(
+            EVIDENCE_GAP_POST,
+            image_analyses=None,
+            guide_text=DIAGNOSTIC_GUIDE,
+            media_analysis_requested=False,
+            collection_complete=None,
+        )
+        assert result["label_raw"] == "暗广"
+        assert result["label"] == "uncertain"
+        assert result["confidence"] < SUGGESTION_LOWER_BOUND
+        assert "采集" in result["uncertain_reason"] or "媒体" in result["uncertain_reason"]
+
+
+class TestM1GovernanceAndAuditContract:
+    def test_zero_auto_threshold_disables_auto_acceptance(self):
+        assert classify_confidence(0.99, 0.0) == "suggest"
+
+    def test_formal_zero_threshold_never_builds_auto_record(self, monkeypatch):
+        monkeypatch.setattr(
+            "auto_judge.run_ollama_judge",
+            lambda *a, **k: normalize_suggestion({"label": "明广", "confidence": 0.99}),
+        )
+        result = run_auto_judge(AD_POST, auto_threshold=0.0)
+        assert result["tier"] == "suggest"
+        assert result["record"] is None
+
+    def test_manual_ollama_path_propagates_loaded_guide(self, monkeypatch):
+        import manual_review_annotate
+
+        captured = {}
+
+        def fake_judge(*args, **kwargs):
+            captured.update(kwargs)
+            return normalize_suggestion({"label": "uncertain", "confidence": 0.1})
+
+        monkeypatch.setattr(manual_review_annotate, "run_ollama_judge", fake_judge)
+        manual_review_annotate.call_ollama_pre_analysis(
+            EVIDENCE_GAP_POST,
+            guide_text=DIAGNOSTIC_GUIDE,
+            model="qwen3.5:4b",
+        )
+        assert captured["guide_text"] == DIAGNOSTIC_GUIDE
+
+    def test_batch_cli_exposes_guide_and_audit_output(self):
+        completed = subprocess.run(
+            [sys.executable, str(ANNOTATION_DIR / "batch_pre_annotate.py"), "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert completed.returncode == 0
+        assert "--guide" in completed.stdout
+        assert "--post-id-manifest" in completed.stdout
+        assert "audit_" in completed.stdout
+
+    def test_manifest_filter_preserves_order_and_rejects_duplicates(self):
+        import batch_pre_annotate
+
+        parser = getattr(batch_pre_annotate, "parse_post_id_manifest")
+        payload = {"items": [{"post_id": "post_b"}, {"post_id": "post_a"}]}
+        assert parser(payload) == ["post_b", "post_a"]
+        with pytest.raises(ValueError, match="重复"):
+            parser({"post_ids": ["post_a", "post_a"]})
+
+    def test_manual_blind_cli_accepts_post_id_manifest(self):
+        completed = subprocess.run(
+            [sys.executable, str(ANNOTATION_DIR / "manual_review_annotate.py"), "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert completed.returncode == 0
+        assert "--post-id-manifest" in completed.stdout
+
+    def test_manual_media_review_audit_tracks_unique_opened_refs(self, tmp_path, monkeypatch):
+        import manual_review_annotate
+
+        media_dir = tmp_path / "media"
+        media_dir.mkdir()
+        (media_dir / "one.jpg").write_bytes(b"one")
+        (media_dir / "two.jpg").write_bytes(b"two")
+        post = {
+            "post_id": "synthetic_media_audit",
+            "media": [
+                {"ref": "media/one.jpg"},
+                {"ref": "media/two.jpg"},
+            ],
+        }
+        opened_refs = set()
+        monkeypatch.setattr("builtins.input", lambda _prompt: "a")
+        monkeypatch.setattr(manual_review_annotate, "_open_file", lambda _path: None)
+
+        opened_count = manual_review_annotate.view_images(
+            post,
+            tmp_path,
+            opened_refs=opened_refs,
+        )
+        audit = manual_review_annotate.make_media_review_audit(post, opened_refs)
+
+        assert opened_count == 2
+        assert opened_refs == {"media/one.jpg", "media/two.jpg"}
+        assert audit == {
+            "media_ref_count": 2,
+            "opened_unique_media_count": 2,
+            "all_media_opened": True,
+            "opened_media_refs": ["media/one.jpg", "media/two.jpg"],
+        }
 
 
 if __name__ == "__main__":
