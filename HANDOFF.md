@@ -1,6 +1,6 @@
 # HANDOFF：隐性广告识别项目
 
-> 面向下一位接手开发者的事实交接。最后更新：2026-07-31（P1→P3本地整合与M1数据复核后）。
+> 面向下一位接手开发者的事实交接。最后更新：2026-08-08（合并历史基线工程包与M1事实门同步后）。
 > 先读本文件，再读 `docs/隐性广告识别项目_说明书.md`、`docs/隐性广告识别项目_分阶段计划表.md` 和 `docs/superpowers/` 下已确认的设计/实施记录。
 
 ## 1. 一句话目标
@@ -70,6 +70,7 @@
 | 法规RAG基础 | 小规模官方法规语料、Chroma/hash向量召回、确定性词法召回、RRF重排分数、引用守卫和版本绑定离线报告 |
 | 知识与报告 | Knowledge MCP、Judge后LawEvidence、Markdown报告和JSON run持久化已接入 |
 | CreatorShift工程准入 | 同creator且严格早于目标时间的HistoryView；mean/max/EMA；复用6维关键词特征的独立图节点；充分历史生成中性证据，不足/缺时间保留非数值状态 |
+| 独立合并历史论文基线 | `baseline/`已实现单帖与单帖+mean/max/EMA历史池化的固定Logistic Regression、M1/split fail-closed门、共同cohort、版本/哈希和隐私安全聚合报告；合成fixture专项`54 passed` |
 | 统一分析服务 | `AnalysisService`统一主图、Judge后法规检索、报告和run持久化；API与CLI共用；批量逐条复用同一`analyze()`并隔离失败 |
 | API与run查询 | `/api/v1/analyze`、`/api/v1/analyze/batch`、URL预览/确认、`/api/v1/runs/{run_id}`、`/api/v1/capabilities`及兼容`/analyze`共用服务 |
 | URL服务边界 | HTTPS/authority/port/本地地址校验、显式PlatformAdapter注册、无网络预览、可审计修正和一次性确认已实现；默认注册表为空，不声称支持真实平台 |
@@ -98,7 +99,7 @@
 
 - **M1数据关口仍未通过**：用户提供ZIP已完成本地审计，权威JSONL有2,901个唯一候选、108个创作者，距3,000还差99；无正式Gold、第二轮盲标、无泄漏切分、条款完成证明、隐私人工审批或Dataset Card审批。M1工具与P3接口可运行，但不能把这写成“M1已验收”或“P3研究实验已就绪”。
 - **P3非数据依赖工程范围已完成，但正式M3仍受M1事实证据约束**：统一服务、API/CLI、MCP超时回落、Knowledge MCP、混合检索、版本绑定报告、run查询、追踪和分类错误分析已通过离线测试；远程MCP可达性、法规覆盖质量和真实数据效果尚未证明。
-- **P4研究门仍未通过**：独立CreatorShift节点、版本化mean/max/EMA夹具基准、bootstrap和risk-coverage工程框架已完成；真实纵向特征/学习模型、Judge验证集校准、阈值选择、消融、置信区间和增益结论仍等待M1 Gold与无泄漏split。
+- **P4研究门仍未通过**：独立`baseline/`历史融合分类工程包已完成并以合成fixture专项`54 passed`验证；真实纵向特征/学习模型、Judge验证集校准、阈值选择、消融、置信区间和增益结论仍等待M1 Gold与无泄漏split。正式Gold=0且M1未通过，暂无真实训练/test指标、CreatorShift增益或M4验收。
 - **P5.2仅完成工程门，不是P5/M5完成**：批量分析、URL安全边界、显式适配器注册、预览/确认和修正审计，以及同源无构建研究工作台均已实现；四人团队UAT、真实小红书/B站适配、A2A远程专家、local/A2A对照、P5.3～P5.7和完整P5安全验收均未完成，M5未通过。
 
 ### 4.4 2026-07-26合并与独立模块验收
@@ -210,6 +211,20 @@
 - 修复 `flet_annotator.py` 原有 4 处无法解析的延迟导入（`scripts.data.annotation.*`/`data_tooling.annotation.*` → 同目录直接导入）。
 - **速度优化（2026-08-02 v2，序列批处理 + 异步流水线）**：`batch_pre_annotate.py` 改造为 asyncio 并发窗口（`--num-parallel`，默认 2）+ 图片预取线程池（`--image-workers`）；`ollama_server.py` 新增 `--num-parallel`（启动时设 `OLLAMA_NUM_PARALLEL`，GPU 同时解码多请求）+ `OLLAMA_MAX_QUEUE` 放宽。图片分析 YOLO/OCR 模型改为线程安全全局缓存（不再每条重载）。用法：`ollama_server.py --num-parallel 2 serve --preload` + `batch_pre_annotate.py --num-parallel 2`。并发窗口需与服务器 NUM_PARALLEL 匹配；8GB 显存 + 9B 建议 2-3。已实测 4 条长文帖子并发 2 跑通（乱序完成、0 回退、自动保存正常）。
 - **断点续传（2026-08-02 v2）**：`batch_pre_annotate.py` 新增 `--resume <时间戳>` / `--resume-latest`。每条帖子完成后写入 `progress_<时间戳>.jsonl` 检查点（含 tier/label/confidence/fallback/error），中断后可恢复：跳过已完成帖子、从检查点重建统计、继续追加原 auto/suggest 输出。已实测：3 条批次中断后 `--resume-latest` 恢复，正确显示"已处理 3 条，剩余 0 条"、0 条重复推理。
+
+### 4.13 2026-07-31 P1→P3本地整合与M1数据复核
+
+- 从`origin/P3@ba0ab58`建立隔离工作树与`codex/p1-m1-into-p3`分支；合并`origin/P1-·-数据地基与标注规范@43c59ac`，合并提交为`ca8fc2d`，两边历史均保留。
+- 删除P1分支中的一次性URL/作者列表、临时诊断脚本、运行日志和本机输出；保留可参数化的增量合并工具，并用窄范围`.gitignore`防止同类产物再次进入Git。
+- P3运行时适配器按`schema_version`加载v1.0或v1.2权威Schema；v1.1按v1.2兼容验证，未知版本和未知字段继续fail closed。v1.2来源扩展字段经Schema验证后只映射运行时所需字段。
+- 用户ZIP只读检查无路径穿越，解压到`data/run_outputs/merged_20260728`（Git忽略）；原始ZIP未修改，真实正文、媒体、URL和ID映射均未提交。
+- 当前权威JSONL审计：2,901行/2,901唯一帖子、108个创作者、Bilibili 2,182 + WeChat 719、14,174个唯一媒体引用全部可定位、15,066个磁盘媒体文件、0重复帖子。
+- Schema v1.2校验为2,901有效/0无效；这次未启用隐私扫描，不能沿用其他数据批次的PII处置结论。
+- 独立代码审查发现并关闭治理旁路：一致性与Gold工具现在只接受`annotation_method="human"`且标注者ID经首尾空白归一化后非空、不同、非`system`的标注对；`auto_accepted`、缺失方法/ID和同一标注者均聚合排除，正式轮次标记会fail closed。两份运行镜像字节一致并有回归保护。
+- `scripts/merge_incremental.py`只升级v1.1或接收v1.2；不再写入`is_content=null`或未定义的LLM字段，每条记录在目标备份、追加或媒体复制前先通过权威v1.2 Schema校验。
+- M1门禁仍为`passed=false`、退出码2：候选差99、Gold为0、正式第二轮κ待复核、条款与隐私审批未完成、无泄漏切分缺失、Dataset Card未审批。
+- 数据集指纹：`adb39f1840df62cbeef52faabde85177536478c1c06d37bbb747a9a2bb59a3a5`。该指纹是后续增量补齐、标注与审批的版本锚点。
+- 审查修复后新鲜验证：治理/增量聚焦`30 passed`，自动判断`21 passed`，全量`405 passed, 2 skipped, 1 warning`；`pip check`、`compileall`和两套P1资产校验通过。
 
 ### 4.13 2026-07-31 P1→P3本地整合与M1数据复核
 

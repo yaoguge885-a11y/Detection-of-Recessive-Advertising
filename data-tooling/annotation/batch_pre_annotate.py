@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import statistics
 import sys
 import threading
 import time
@@ -526,11 +527,15 @@ def main() -> None:
     # ── 模型预热：先加载并驻留模型，避免每条帖子冷启动加载 6.6GB ──
     if not args.no_warmup:
         print(f"\n⏳ 预热模型 {args.ollama_model}（首次加载可能需要 1~2 分钟）...")
+        warmup_started = time.perf_counter()
         ok = warm_up_model(
             model=args.ollama_model,
             url=args.ollama_url,
             timeout=OLLAMA_WARMUP_TIMEOUT,
             keep_alive=keep_alive,
+        )
+        stats["warmup_duration_sec"] = round(
+            time.perf_counter() - warmup_started, 3
         )
         if ok:
             print(f"  ✅ 模型已就绪（常驻 {keep_alive}，后续推理直接命中已加载模型）")

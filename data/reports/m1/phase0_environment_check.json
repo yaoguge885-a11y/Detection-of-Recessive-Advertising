@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-08-05",
+  "reviewer": "B",
+  "project_python": "3.12.5",
+  "python_requirement": ">=3.10",
+  "pip_check": "passed",
+  "ollama_version": "0.32.5",
+  "selected_model": "qwen3.5:4b",
+  "model_storage": "D:\\OllamaModels",
+  "model_storage_note": "The default Ollama models directory is a Windows directory junction to D:\\OllamaModels.",
+  "runtime_mode": "CPU fallback; no usable discrete GPU detected by Ollama",
+  "api_smoke_test": {
+    "endpoint": "http://127.0.0.1:11434/api/chat",
+    "think": false,
+    "temperature": 0,
+    "keep_alive": "30m",
+    "response_seconds": 7.17,
+    "json_parse_status": "ok"
+  },
+  "status": "passed"
+}

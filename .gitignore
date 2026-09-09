@@ -38,6 +38,55 @@ data/raw/
 data/interim/
 data/reports/m1/private/
 data/run_outputs/
+/data/source_archives/
+/data/reports/m1/privacy/privacy_AI_pre_review_B.md
+/data/reports/m1/privacy/privacy_approval.json
+/data/reports/m1/privacy/privacy_media_review_B.json
+/data/reports/m1/privacy/privacy_media_review_B_summary.md
+/data/reports/m1/privacy/privacy_scan_report.json
+/data/reports/m1/privacy/public_allowlist.json
+/data/reports/m1/qwen_calibration_20_review_B.html
+/data/reports/m1/qwen_calibration_20_human_review_B.md
+/data/reports/m1/qwen_calibration_20_review_A.html
+/data/reports/m1/qwen_calibration_20_human_review_A.json
+/data/reports/m1/source_terms_evidence.md
+
+# M1 formal/private cohort and human decision artifacts
+/data/reports/m1/privacy/formal_*/
+/data/reports/m1/privacy/privacy_spotcheck_*_review_*.json
+/data/reports/m1/privacy_reconciliation_after_spotcheck_*.json
+/data/reports/m1/privacy_rescan_proposal_after_spotcheck_*.json
+/data/reports/m1/privacy_spotcheck_*_validation_B.json
+/data/reports/m1/formal_candidate_proposal_schema_after_spotcheck_B.json
+
+# M1 receipts, local validation evidence, and machine-specific reports
+/data/reports/m1/A_*.json
+/data/reports/m1/A_*.md
+/data/reports/m1/qwen_calibration_20_validation_*.json
+/data/reports/m1/downstream_preparation_*.json
+/data/reports/m1/downstream_readiness_*.json
+/data/reports/m1/terms_apply_report_*.json
+/data/reports/m1/terms_applied_schema_validation.json
+/data/reports/m1/m1_preflight_status_*.md
+/data/reports/m1/M1_current_gate_and_stage5_preparation_*.md
+/data/reports/m1/preparation/canonical_group_metadata_preflight_*.json
+
+# M1 preflight batches contain complete records and IDs
+/data/reports/m1/preparation/stage5_preflight_*/
+
+# M1 formal locked batches also contain complete records and IDs
+/data/reports/m1/locked_batches/
+
+# M1 B private/generated review artifacts
+/data/reports/m1/privacy/_media_contact_sheets*/
+/data/reports/m1/privacy/privacy_*_B.html
+/data/reports/m1/privacy/privacy_redaction_draft_B_*.json
+/data/reports/m1/privacy/privacy_approval_after_text_redaction_B.json
+/data/reports/m1/privacy/privacy_supplemental_*_B*.json
+/data/reports/m1/privacy/privacy_text_redaction_finalize_B.json
+/data/reports/m1/privacy/redacted_B_candidate_schema_validation.json
+/data/reports/m1/privacy/text_redaction_rescan_B/
+/data/reports/m1/qwen_calibration_20_human_review_B.json
 runs/
 
 # Local collection inputs and annotation trial outputs
