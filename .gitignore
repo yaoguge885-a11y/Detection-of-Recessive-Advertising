@@ -118,3 +118,10 @@ data/dataset_full.zip.baiduyun.uploading.cfg
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# M1 local blind-review sources, outputs and diagnosis with record-level evidence
+/data/reports/m1/qwen_blind_test_*/
+/data/reports/m1/qwen_calibration_diagnosis.md
+/data/reports/m1/qwen_calibration_20_review_manifest.json
+/data/reports/m1/privacy_scan_report.json
+/.codex_tmp/
