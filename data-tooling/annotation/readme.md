@@ -1,5 +1,17 @@
 # 标注工具舱说明（README）
 
+## 2026-09-09 P1 / M1 整合更新
+
+当前交接入口为 [HANDOFF](../../HANDOFF.md)。下方旧版说明中的性能数字与测试数量属于历史记录；模型时延以本次实际审计为准。
+
+- `batch_pre_annotate.py` 保留 `--num-parallel` 与 `--resume [batch_id]`，加入完整指南、固定清单、`--num-ctx` 和逐条审计。
+- `batch_annotation_runtime.py` 实现受限并行、顺序落盘和原子检查点；续跑要求输入/指南/代码/媒体/参数一致，拒绝旧格式进度文件。`--auto-threshold 0` 禁用自动接收，`uncertain` 保留人工处理。
+- `build_m1_qwen_blind_remote_v2_manifest.py`、`generate_m1_qwen_blind_html.py`、`package_m1_qwen_blind_role.py` 构成清单 → 独立角色页面 → 便携包链路。已有真实 v2包继续冻结，新工具不自动替换它们。
+- `python scripts/demo_m1_handoff.py` 从仓库根目录执行，只用合成数据完成交付链路，不需要真实材料或模型。
+- 新增运行与包装专项回归；完整命令及测试数量见 [验证记录](../../docs/verification_2026-09-09.md)。
+
+## 历史工具说明
+
 > 更新日期：2026-07-31
 > 本目录包含隐性广告识别人工标注 + 分置信度自动判断（AI 协驾）的完整工具链。
 

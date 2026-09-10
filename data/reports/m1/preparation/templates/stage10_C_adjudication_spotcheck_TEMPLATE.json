@@ -1,0 +1,16 @@
+{
+  "status": "preparation_only_not_formal",
+  "reviewer": "C",
+  "reviewed_at": null,
+  "adjudication_sha256": null,
+  "population_count": null,
+  "sample_seed": null,
+  "sample_count": null,
+  "required_sample_range": "30-50",
+  "checked_original_text": null,
+  "checked_available_media": null,
+  "checked_A_B_original_labels": null,
+  "checked_joint_reason": null,
+  "issues": [],
+  "conclusion": null
+}

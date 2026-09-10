@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -54,7 +55,9 @@ try:
         OLLAMA_DEFAULT_URL,
         OLLAMA_TIMEOUT,
         OLLAMA_KEEP_ALIVE,
+        OLLAMA_NUM_CTX,
         DEFAULT_AUTO_THRESHOLD,
+        SuggestionContractError,
         classify_confidence,
         keyword_fallback,
         run_ollama_judge,
@@ -66,7 +69,11 @@ except Exception:  # pragma: no cover - auto_judge 不可用时降级为纯人�
     OLLAMA_DEFAULT_URL = "http://localhost:11434"
     OLLAMA_TIMEOUT = 120
     OLLAMA_KEEP_ALIVE = "30m"
+    OLLAMA_NUM_CTX = 32768
     DEFAULT_AUTO_THRESHOLD = 0.85
+
+    class SuggestionContractError(ValueError):
+        pass
 
     def classify_confidence(confidence, auto_threshold=DEFAULT_AUTO_THRESHOLD):  # type: ignore
         return "manual"
@@ -78,7 +85,7 @@ except Exception:  # pragma: no cover - auto_judge 不可用时降级为纯人�
         raise RuntimeError("auto_judge 模块不可用")
 
 # ── 标签与证据代码 ──
-VALID_LABELS = {"明广", "暗广", "非广", "out_of_scope"}
+VALID_LABELS = {"明广", "暗广", "非广", "uncertain", "out_of_scope"}
 EVIDENCE_CODES = {
     "D": "明示商业关系（广告/赞助/合作标识）",
     "C": "明确商业对象（单一品牌/商品/店铺/服务为核心）",
@@ -282,12 +289,15 @@ def call_llm_pre_analysis(
 ---
 
 请依据标注规范，返回 JSON 格式的分析结果。"""
+    system_prompt = LLM_PRE_ANALYSIS_SYSTEM
+    if guide_text:
+        system_prompt += f"\n\n## 本次权威标注指南全文\n{guide_text}"
 
     try:
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": LLM_PRE_ANALYSIS_SYSTEM},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.1,
@@ -303,8 +313,8 @@ def call_llm_pre_analysis(
         result = json.loads(content)
     except Exception as e:
         result = {
-            "label": "非广",
-            "confidence": 0.3,
+            "label": "uncertain",
+            "confidence": 0.0,
             "evidence_codes": [],
             "evidence": [],
             "reasoning": f"LLM 调用失败: {e}",
@@ -312,7 +322,7 @@ def call_llm_pre_analysis(
         }
 
     # 标准化字段
-    result.setdefault("label", "非广")
+    result.setdefault("label", "uncertain")
     result.setdefault("confidence", 0.5)
     result.setdefault("evidence_codes", [])
     result.setdefault("evidence", [])
@@ -326,7 +336,10 @@ def call_llm_pre_analysis(
 
     # 校验 label
     if result["label"] not in VALID_LABELS:
-        result["label"] = "非广"
+        raw_label = result["label"]
+        result["label"] = "uncertain"
+        result["confidence"] = 0.0
+        result["uncertain_reason"] = f"LLM 返回非法标签 {raw_label!r}，需人工复核"
 
     # 校验 evidence_codes
     result["evidence_codes"] = [
@@ -344,6 +357,8 @@ def call_ollama_pre_analysis(
     timeout: float = OLLAMA_TIMEOUT,
     keep_alive: Optional[str] = None,
     image_analyses: Optional[Dict[int, Dict]] = None,
+    guide_sha256: Optional[str] = None,
+    num_ctx: int = OLLAMA_NUM_CTX,
 ) -> Dict[str, Any]:
     """调用本地 Ollama 模型做预分析（分置信度自动判断系统）。
 
@@ -359,15 +374,34 @@ def call_ollama_pre_analysis(
             url=url,
             timeout=timeout,
             keep_alive=keep_alive or OLLAMA_KEEP_ALIVE,
+            guide_text=guide_text or "",
+            guide_sha256=guide_sha256 or "",
+            media_analysis_requested=image_analyses is not None,
+            collection_complete=post.get("collection_complete"),
+            num_ctx=num_ctx,
         )
+    except SuggestionContractError as exc:
+        result = {
+            "label": "uncertain",
+            "confidence": 0.0,
+            "evidence_codes": [],
+            "evidence": [],
+            "reasoning": f"Ollama 标签契约错误: {exc}",
+            "uncertain_reason": "模型输出标签不合法，已失败关闭并转人工",
+            "_model": model,
+            "_backend": "ollama-contract-error",
+            "_error": str(exc)[:300],
+        }
     except Exception as exc:
         # ── 失败回退（设计文档 §4.4）：先尝试关键词规则，再无建议则低置信度强制人工 ──
         fb = keyword_fallback(post)
         if fb is not None:
+            fb["_error"] = str(exc)[:300]
+            fb["_fallback"] = True
             return fb
         result = {
-            "label": "非广",
-            "confidence": 0.3,
+            "label": "uncertain",
+            "confidence": 0.0,
             "evidence_codes": [],
             "evidence": [],
             "reasoning": f"Ollama 调用失败: {exc}",
@@ -377,7 +411,7 @@ def call_ollama_pre_analysis(
         }
 
     # 标准化字段（与 call_llm_pre_analysis 对齐）
-    result.setdefault("label", "非广")
+    result.setdefault("label", "uncertain")
     result.setdefault("confidence", 0.5)
     result.setdefault("evidence_codes", [])
     result.setdefault("evidence", [])
@@ -389,7 +423,10 @@ def call_ollama_pre_analysis(
         result["evidence"] = [raw] if raw else []
 
     if result["label"] not in VALID_LABELS:
-        result["label"] = "非广"
+        raw_label = result["label"]
+        result["label"] = "uncertain"
+        result["confidence"] = 0.0
+        result["uncertain_reason"] = f"Ollama 返回非法标签 {raw_label!r}，需人工复核"
 
     result["evidence_codes"] = [
         c for c in result["evidence_codes"] if c in EVIDENCE_CODES
@@ -431,7 +468,12 @@ def format_post_display(post: Dict[str, Any], index: int, total: int) -> str:
 {'─' * 70}"""
 
 
-def view_images(post: Dict[str, Any], media_base: Path) -> int:
+def view_images(
+    post: Dict[str, Any],
+    media_base: Path,
+    *,
+    opened_refs: Optional[Set[str]] = None,
+) -> int:
     """打开帖子的图片供查看，返回实际打开的图片数。
 
     使用系统默认图片查看器打开，Windows 下调用 os.startfile，
@@ -489,11 +531,32 @@ def view_images(post: Dict[str, Any], media_base: Path) -> int:
         try:
             _open_file(str(full_path.resolve()))
             opened += 1
+            if opened_refs is not None:
+                opened_refs.add(ref)
         except Exception as e:
             print(f"  ⚠️ [{idx}] 打开失败: {e}")
 
     print(f"  ✅ 已打开 {opened} 张图片")
     return opened
+
+
+def make_media_review_audit(
+    post: Dict[str, Any],
+    opened_refs: Iterable[str],
+) -> Dict[str, Any]:
+    """记录成功打开的本地媒体；只证明打开，不替代人工查看声明。"""
+    declared_refs = sorted({
+        str(media.get("ref") or "").strip()
+        for media in post.get("media", [])
+        if str(media.get("ref") or "").strip()
+    })
+    opened = sorted(set(opened_refs).intersection(declared_refs))
+    return {
+        "media_ref_count": len(declared_refs),
+        "opened_unique_media_count": len(opened),
+        "all_media_opened": len(opened) == len(declared_refs),
+        "opened_media_refs": opened,
+    }
 
 
 def _open_file(path: str) -> None:
@@ -778,7 +841,7 @@ def print_stats(records: List[Dict[str, Any]]) -> None:
     total = len(records)
     print(f"\n{'=' * 50}")
     print(f"  本次标注统计: 共 {total} 条")
-    for label in ["明广", "暗广", "非广", "out_of_scope"]:
+    for label in ["明广", "暗广", "非广", "uncertain", "out_of_scope"]:
         count = labels.get(label, 0)
         pct = count / total * 100 if total else 0
         print(f"    {label}: {count} ({pct:.1f}%)")
@@ -809,9 +872,14 @@ def main() -> None:
         help="输入的帖子 JSONL 文件路径 (默认: data/run_outputs/anonymized_posts.jsonl)",
     )
     parser.add_argument(
+        "--post-id-manifest",
+        default="",
+        help="可选 JSON 清单（items/post_ids）；只标注其中 post_id，并严格保留清单顺序",
+    )
+    parser.add_argument(
         "--guide", "-g",
-        default="docs/02-标注规范指南.md",
-        help="标注指南 markdown 文件路径 (默认: docs/02-标注规范指南.md)",
+        default="docs/annotation_guide_v1.md",
+        help="标注指南 markdown 文件路径 (默认: docs/annotation_guide_v1.md)",
     )
     parser.add_argument(
         "--output-dir", "-o",
@@ -879,7 +947,15 @@ def main() -> None:
         default=OLLAMA_TIMEOUT,
         help=f"Ollama 单条推理超时秒数（默认 {OLLAMA_TIMEOUT}）",
     )
+    parser.add_argument(
+        "--ollama-num-ctx",
+        type=int,
+        default=OLLAMA_NUM_CTX,
+        help=f"Ollama 上下文窗口（默认 {OLLAMA_NUM_CTX}，需容纳完整指南与证据）",
+    )
     args = parser.parse_args()
+    if args.ollama_num_ctx <= 0:
+        parser.error("--ollama-num-ctx 必须为正整数")
 
     # ── 1. 加载帖子数据 ──
     input_path = Path(args.input)
@@ -889,6 +965,39 @@ def main() -> None:
 
     all_posts = load_jsonl(input_path)
     print(f"✅ 已加载 {len(all_posts)} 条帖子")
+
+    if args.post_id_manifest:
+        manifest_path = Path(args.post_id_manifest).resolve()
+        if not manifest_path.exists() or not manifest_path.is_file():
+            parser.error(f"post-id manifest 不存在: {manifest_path}")
+        try:
+            from batch_pre_annotate import parse_post_id_manifest  # type: ignore
+
+            manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+            selected_ids = parse_post_id_manifest(manifest_payload)
+        except (ImportError, OSError, json.JSONDecodeError, ValueError) as exc:
+            parser.error(f"post-id manifest 无效: {exc}")
+
+        posts_by_id: Dict[str, Dict[str, Any]] = {}
+        duplicate_input_ids = []
+        for post in all_posts:
+            post_id = str(post.get("post_id") or "").strip()
+            if post_id in posts_by_id:
+                duplicate_input_ids.append(post_id)
+            posts_by_id[post_id] = post
+        if duplicate_input_ids:
+            parser.error(f"输入含重复 post_id: {sorted(set(duplicate_input_ids))[:5]}")
+        missing_ids = [post_id for post_id in selected_ids if post_id not in posts_by_id]
+        if missing_ids:
+            parser.error(
+                f"manifest 中有 {len(missing_ids)} 个 post_id 不在输入中: {missing_ids[:5]}"
+            )
+        all_posts = [posts_by_id[post_id] for post_id in selected_ids]
+        manifest_sha256 = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+        print(
+            f"✅ 已按盲测清单筛选 {len(all_posts)} 条，严格保留顺序: "
+            f"{manifest_path} (sha256={manifest_sha256})"
+        )
 
     # ── 2. 获取标注人 ID ──
     annotator_id = args.annotator_id.strip()
@@ -900,6 +1009,11 @@ def main() -> None:
     # ── 3. 加载标注指南 ──
     guide_path = Path(args.guide)
     guide_text = load_guide(guide_path)
+    guide_sha256 = (
+        hashlib.sha256(guide_path.read_bytes()).hexdigest()
+        if guide_path.exists()
+        else hashlib.sha256(guide_text.encode("utf-8")).hexdigest()
+    )
     if guide_path.exists():
         print(f"✅ 已加载标注指南: {guide_path}")
     else:
@@ -952,10 +1066,11 @@ def main() -> None:
     try:
         for idx, post in enumerate(pending, 1):
             print(format_post_display(post, idx, total_pending))
+            opened_media_refs: Set[str] = set()
 
             # ── 自动查看图片 ──
             if args.auto_view:
-                view_images(post, media_base)
+                view_images(post, media_base, opened_refs=opened_media_refs)
 
             llm_result = None
             if not args.no_llm:
@@ -963,9 +1078,11 @@ def main() -> None:
                     print("⏳ 正在调用 Ollama 预分析...")
                     llm_result = call_ollama_pre_analysis(
                         post, guide_text,
+                        guide_sha256=guide_sha256,
                         model=args.ollama_model,
                         url=args.ollama_url,
                         timeout=args.ollama_timeout,
+                        num_ctx=args.ollama_num_ctx,
                     )
                 else:
                     print("⏳ 正在调用 LLM 预分析...")
@@ -985,6 +1102,9 @@ def main() -> None:
                     uncertain_reason=llm_result.get("uncertain_reason"),
                     llm_suggestion=llm_result,
                     post=post,
+                )
+                record["media_review_audit"] = make_media_review_audit(
+                    post, opened_media_refs
                 )
                 record["annotation_method"] = "auto_accepted"  # 自动保存标记（不参与 κ）
                 append_annotation(output_file, record)
@@ -1009,7 +1129,7 @@ def main() -> None:
                     return
 
                 if action == "v":
-                    view_images(post, media_base)
+                    view_images(post, media_base, opened_refs=opened_media_refs)
                     continue
 
                 if action == "s":
@@ -1028,6 +1148,9 @@ def main() -> None:
                         uncertain_reason=llm_result.get("uncertain_reason"),
                         llm_suggestion=llm_result,
                         post=post,
+                    )
+                    record["media_review_audit"] = make_media_review_audit(
+                        post, opened_media_refs
                     )
                     # ── 可选补充字段 ──
                     if not args.no_supplement:
@@ -1062,6 +1185,9 @@ def main() -> None:
                         uncertain_reason=uncertain,
                         llm_suggestion=llm_result,
                         post=post,
+                    )
+                    record["media_review_audit"] = make_media_review_audit(
+                        post, opened_media_refs
                     )
                     # ── 可选补充字段 ──
                     if not args.no_supplement:

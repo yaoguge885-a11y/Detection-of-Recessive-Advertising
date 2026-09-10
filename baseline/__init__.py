@@ -1,0 +1,60 @@
+"""Isolated, privacy-safe history baseline package."""
+
+from .contracts import (
+    LABELS,
+    BaselineInputError,
+    ContentPost,
+    GoldRecord,
+    InputBundle,
+    SplitAssignments,
+    load_input_bundle,
+    sha256_file,
+)
+from .features import (
+    CATEGORY_WORDS,
+    DEFAULT_EMA_ALPHA,
+    FEATURE_VERSION,
+    MINIMUM_HISTORY,
+    SATURATION,
+    WEIGHT_DIMENSIONS,
+    Cohort,
+    FeatureRow,
+    PreparedSample,
+    build_common_cohort,
+    compute_keyword_weights,
+    method_vector,
+    pool_history,
+)
+from .runner import METHODS, ClassifierConfig, MethodResult, evaluate_predictions, run_baselines
+from .reporting import build_report, serialize_report
+
+__all__ = [
+    "LABELS",
+    "BaselineInputError",
+    "ContentPost",
+    "GoldRecord",
+    "InputBundle",
+    "SplitAssignments",
+    "load_input_bundle",
+    "sha256_file",
+    "FEATURE_VERSION",
+    "WEIGHT_DIMENSIONS",
+    "CATEGORY_WORDS",
+    "SATURATION",
+    "MINIMUM_HISTORY",
+    "DEFAULT_EMA_ALPHA",
+    "FeatureRow",
+    "PreparedSample",
+    "Cohort",
+    "compute_keyword_weights",
+    "pool_history",
+    "build_common_cohort",
+    "method_vector",
+    "METHODS",
+    "ClassifierConfig",
+    "MethodResult",
+    "evaluate_predictions",
+    "run_baselines",
+    "build_report",
+    "serialize_report",
+]
