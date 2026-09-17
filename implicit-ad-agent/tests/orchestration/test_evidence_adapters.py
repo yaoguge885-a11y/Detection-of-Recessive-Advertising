@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 
 from impad.adapters.manual import post_record_from_manual
+from impad.contracts.post import CaptureModality
 from impad.orchestration.evidence_adapters import (
     build_evidence_bundle,
     evidence_items_from_tool_result,
@@ -231,3 +232,20 @@ def test_ocr_disclosure_marker_becomes_explicit_disclosure_evidence():
     assert disclosure[0].bbox == [10, 20, 100, 50]
     assert disclosure[0].source_type == "image"
     assert disclosure[0].polarity == "supports"
+
+
+def test_disclosure_and_unsupported_capture_are_preserved_in_coverage():
+    post = post_record_from_manual({"text": "普通记录"})
+    post.capture_status.modalities["disclosure"] = CaptureModality(
+        status="unsupported",
+        issues=["disclosure_surface_unsupported"],
+    )
+
+    bundle = build_evidence_bundle(post, [])
+    disclosure = next(
+        item for item in bundle.coverage
+        if item.modality == "disclosure"
+    )
+
+    assert disclosure.status == "unsupported"
+    assert "capture:disclosure:unsupported" in bundle.missing_requirements

@@ -2,7 +2,7 @@
 
 本版交付给组长在 **`P1-·-数据地基与标注规范`** 分支检查，再由组长决定是否合并 `main`。包含原 M1 分支、原工作区中已完成的可复用修改、运行示例、测试、依赖约束与进展报告。
 
-先读本文完成运行，再查看 [组长进展与组会汇报](docs/progress/2026-09-09-project-status.md)、[逐文件上传备注](docs/upload_notes_2026-09-09.md)、[Qwen 诊断](docs/m1_qwen_diagnosis_public.md) 和 [数据集卡](docs/dataset_card_current.md)。旧交接在 [历史文档](docs/history/HANDOFF_before_p1_m1_20260909.md)，其中日期、分支位置和测试数量均为历史快照。
+先读本文完成运行，再查看 [组长进展与组会汇报](docs/progress/2026-09-09-project-status.md)、[逐文件上传备注](docs/upload_notes_2026-09-09.md)、[Qwen 诊断](docs/m1_qwen_diagnosis_public.md) 和 [数据集卡](docs/dataset_card_current.md)。旧交接在 [历史文档](docs/history/HANDOFF_before_p1_m1_20260909.md)；P3 分支（`P3-合并baseline`）侧旧交接已一并归档为 [P3 侧历史交接](docs/history/HANDOFF_p3_side_20260809.md)。两者中的日期、分支位置和测试数量均为历史快照。
 
 ## 1. 接手时先对齐的事实
 

@@ -187,6 +187,7 @@ def test_workbench_has_all_input_and_result_landmarks(tmp_path):
         'id="single-panel"',
         'id="batch-panel"',
         'id="url-panel"',
+        'id="correction-disclosures"',
         'id="submission-status"',
         'id="batch-results"',
         'id="verdict-section"',

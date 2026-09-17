@@ -3,17 +3,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...contracts import (
     CaptureStatus,
     CommentRecord,
+    DisclosureRecord,
     HistoryPost,
     MediaRecord,
     PostRecord,
 )
+
+if TYPE_CHECKING:
+    from .safe_fetch import SafeURLFetcher
 
 
 @dataclass(frozen=True)
@@ -51,7 +55,12 @@ class PlatformAdapter(Protocol):
     platform: str
     supported_hosts: tuple[str, ...]
 
-    def preview(self, source: ValidatedSourceURL) -> PostRecord:
+    def preview(
+        self,
+        source: ValidatedSourceURL,
+        *,
+        fetcher: "SafeURLFetcher",
+    ) -> PostRecord:
         """Return a normalized post without running classification."""
 
 
@@ -80,5 +89,6 @@ class URLImportCorrections(BaseModel):
     published_at: datetime | None = None
     media: list[MediaRecord] | None = None
     comments: list[CommentRecord] | None = None
+    disclosures: list[DisclosureRecord] | None = None
     history: list[HistoryPost] | None = None
     capture_status: CaptureStatus | None = None

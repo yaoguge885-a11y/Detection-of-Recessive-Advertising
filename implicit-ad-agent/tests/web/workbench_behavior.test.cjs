@@ -156,7 +156,8 @@ function setup(fetchImpl = () => Promise.reject(new Error("unexpected fetch"))) 
     "url-confirm-form", "url-discard", "url-preview-result", "url-preview-meta",
     "correction-text", "correction-creator", "correction-published-at",
     "correction-media", "correction-comments", "correction-history",
-    "correction-capture", "single-recovery", "result-empty", "result-content",
+    "correction-disclosures", "correction-capture", "single-recovery",
+    "result-empty", "result-content",
     "verdict-section", "coverage-section", "evidence-section", "creator-shift-section",
     "history-section", "law-section", "trace-section", "report-section", "raw-section",
   ];
@@ -172,6 +173,7 @@ function setup(fetchImpl = () => Promise.reject(new Error("unexpected fetch"))) 
   elements.get("correction-media").value = "[]";
   elements.get("correction-comments").value = "[]";
   elements.get("correction-history").value = "[]";
+  elements.get("correction-disclosures").value = "[]";
   elements.get("correction-capture").value = "{}";
   for (const formId of ["single-form", "batch-form", "url-preview-form", "url-confirm-form"]) {
     const form = elements.get(formId);
@@ -368,6 +370,64 @@ async function testUrlConfirmationCannotReplaceNewerSingleIntent() {
   assert.match(textOf(fixture.elements.get("verdict-section")), /run-B/);
 }
 
+async function testUrlDisclosureCorrectionsFillAndSubmit() {
+  const calls = [];
+  const disclosure = {
+    kind: "platform_badge",
+    text: "品牌合作",
+    source: "platform_metadata",
+  };
+  const fixture = setup((path, options) => {
+    calls.push({path, options});
+    if (path === "/api/v1/import/url/confirm") {
+      return response(runResponse("run-disclosures", "Disclosure"));
+    }
+    if (path === "/api/v1/runs/run-disclosures") {
+      return response(runRecord("run-disclosures", "Disclosure"));
+    }
+    return Promise.reject(new Error(`unexpected path: ${path}`));
+  });
+  fixture.sandbox.setupUrlForms();
+  fixture.sandbox.renderUrlPreview({preview_id: "preview-disclosures", post: {
+    text: "fixture", creator_id: "creator", published_at: null,
+    media: [], comments: [], disclosures: [disclosure], history: [],
+    capture_status: {},
+  }});
+
+  assert.equal(
+    fixture.elements.get("correction-disclosures").value,
+    JSON.stringify([disclosure], null, 2),
+  );
+  await fixture.elements.get("url-confirm-form").emit("submit", submitEvent());
+
+  const confirmCalls = callsFor(calls, "/api/v1/import/url/confirm");
+  assert.equal(confirmCalls.length, 1);
+  const payload = JSON.parse(confirmCalls[0].options.body);
+  assert.deepEqual(payload.corrections.disclosures, [disclosure]);
+}
+
+async function testUrlDisclosureCorrectionsRejectNonArrayWithoutConfirming() {
+  const calls = [];
+  const fixture = setup((path, options) => {
+    calls.push({path, options});
+    return Promise.reject(new Error(`unexpected path: ${path}`));
+  });
+  fixture.sandbox.setupUrlForms();
+  fixture.sandbox.renderUrlPreview({preview_id: "preview-invalid-disclosures", post: {
+    text: "fixture", creator_id: "creator", published_at: null,
+    media: [], comments: [], disclosures: [], history: [], capture_status: {},
+  }});
+  fixture.elements.get("correction-disclosures").value = "{}";
+
+  await fixture.elements.get("url-confirm-form").emit("submit", submitEvent());
+
+  assert.equal(callsFor(calls, "/api/v1/import/url/confirm").length, 0);
+  assert.match(
+    fixture.elements.get("submission-status").textContent,
+    /披露标记必须是JSON数组/,
+  );
+}
+
 async function testPersistedSingleRunOffersOnePostRecoveryAndThenRenders() {
   const calls = [];
   const fixture = setup((path, options) => {
@@ -410,6 +470,8 @@ async function main() {
     testLaterBatchSubmissionWinsWhenEarlierBatchLoadsLast,
     testBatchViewCannotReplaceNewerSingleIntent,
     testUrlConfirmationCannotReplaceNewerSingleIntent,
+    testUrlDisclosureCorrectionsFillAndSubmit,
+    testUrlDisclosureCorrectionsRejectNonArrayWithoutConfirming,
     testPersistedSingleRunOffersOnePostRecoveryAndThenRenders,
   ];
   const selected = process.env.WORKBENCH_TEST;

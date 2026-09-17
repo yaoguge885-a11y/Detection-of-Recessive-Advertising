@@ -188,6 +188,7 @@ function renderUrlPreview(preview) {
   byId("correction-published-at").value = post.published_at || "";
   byId("correction-media").value = jsonText(post.media);
   byId("correction-comments").value = jsonText(post.comments);
+  byId("correction-disclosures").value = jsonText(post.disclosures || []);
   byId("correction-history").value = jsonText(post.history);
   byId("correction-capture").value = jsonText(post.capture_status);
 }
@@ -199,6 +200,10 @@ function urlCorrections() {
     published_at: byId("correction-published-at").value || null,
     media: parseJsonArray(byId("correction-media").value, "媒体"),
     comments: parseJsonArray(byId("correction-comments").value, "评论"),
+    disclosures: parseJsonArray(
+      byId("correction-disclosures").value,
+      "披露标记",
+    ),
     history: parseJsonArray(byId("correction-history").value, "历史"),
     capture_status: parseJsonObject(
       byId("correction-capture").value,

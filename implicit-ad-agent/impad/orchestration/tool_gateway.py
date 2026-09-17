@@ -32,6 +32,7 @@ class RunContext(BaseModel):
     run_id: str = Field(min_length=1)
     call_id: str | None = None
     timeout_seconds: float | None = Field(default=None, gt=0)
+    allowed_tools: frozenset[str] | None = None
 
 
 class UnknownToolError(LookupError):

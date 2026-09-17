@@ -12,6 +12,7 @@ from impad.contracts.post import (
     HistoryPost,
     PostRecord,
 )
+from impad.adapters.manual import post_record_from_manual
 
 
 def _capture() -> CaptureStatus:
@@ -206,3 +207,9 @@ def test_post_record_rejects_target_post_inside_resolved_history():
                 )
             ],
         )
+
+
+def test_existing_manual_post_defaults_to_no_structured_disclosures():
+    post = post_record_from_manual({"text": "普通记录"})
+
+    assert post.disclosures == []

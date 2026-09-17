@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ..contracts import EvidenceBundle, PostRecord, RunMetadata, VerdictReport
+from ..security.redaction import redact_sensitive_text
 
 
 def legal_query(post: PostRecord, report: VerdictReport) -> str:
@@ -106,4 +107,4 @@ def render_readable_report(
         f"- MCP 本地回落次数：{metadata.fallback_count}",
         f"- Judge：{report.judgment_method}",
     ])
-    return "\n".join(lines)
+    return redact_sensitive_text("\n".join(lines))
