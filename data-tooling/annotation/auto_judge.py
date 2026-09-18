@@ -65,6 +65,11 @@ OLLAMA_NUM_CTX = 32768
 # 自动判断只关心最终 JSON 判定，关闭 thinking 模式可显著加速。
 OLLAMA_DISABLE_THINKING = True
 
+# OpenAI 兼容云端端点（DeepSeek 等），走 /chat/completions，支持并发加速。
+OPENAI_COMPAT_DEFAULT_URL = "https://api.deepseek.com/v1"
+OPENAI_COMPAT_DEFAULT_MODEL = "deepseek-flash"
+OPENAI_COMPAT_TIMEOUT = 120  # 单条云端推理超时（秒）
+
 DEFAULT_AUTO_THRESHOLD = 0.85  # 自动保存阈值（默认，可调 0.70–0.95）
 SUGGESTION_LOWER_BOUND = 0.55  # 建议展示下限：低于此值不展示建议（防锚定）
 

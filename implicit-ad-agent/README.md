@@ -131,9 +131,16 @@ python run_demo.py
 # 5) 运行确定性 P2.5 主图
 python run_demo.py --llm             # 兼容旧参数名；不读取 Key
 
-# 6) 起后端服务
-python -m uvicorn app:app --reload   # 打开 http://127.0.0.1:8000/docs
+# 6) 起后端服务（接口文档 http://127.0.0.1:8000/docs）
+python -m uvicorn app:app --reload
+
+# 7) 起开发者研究工作台（app.py 内置 host=127.0.0.1 port=4000）
+python app.py                        # 浏览器打开 http://127.0.0.1:4000/workbench
 ```
+
+> 工作台与 `/api/v1/capabilities`、`/api/v1/analyze` 依赖 chromadb 离线法规库检索器：
+> 先 `python -m pip install -e ".[rag]"`（或 `pip install "chromadb>=1.1,<2"`）。
+> 未装时 `/workbench` 静态页仍返回 200，但接口报 500，页面提示「初始化失败：请求失败（HTTP 500）」。
 
 ### Windows PowerShell 激活
 
