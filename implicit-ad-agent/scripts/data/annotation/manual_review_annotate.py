@@ -37,10 +37,48 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# ── Windows GBK 控制台兼容：强制 UTF-8 输出（emoji/中文不乱码）──
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 CST = timezone(timedelta(hours=8))  # 中国标准时间 +08:00
 
+# ── 分置信度自动判断（co-pilot-auto-judge-design）──
+try:
+    from auto_judge import (  # type: ignore
+        OLLAMA_DEFAULT_MODEL,
+        OLLAMA_DEFAULT_URL,
+        OLLAMA_TIMEOUT,
+        OLLAMA_KEEP_ALIVE,
+        DEFAULT_AUTO_THRESHOLD,
+        classify_confidence,
+        keyword_fallback,
+        run_ollama_judge,
+    )
+    _HAS_AUTO_JUDGE = True
+except Exception:  # pragma: no cover - auto_judge 不可用时降级为纯人工
+    _HAS_AUTO_JUDGE = False
+    OLLAMA_DEFAULT_MODEL = "qwen3.5:9b"
+    OLLAMA_DEFAULT_URL = "http://localhost:11434"
+    OLLAMA_TIMEOUT = 120
+    OLLAMA_KEEP_ALIVE = "30m"
+    DEFAULT_AUTO_THRESHOLD = 0.85
+
+    def classify_confidence(confidence, auto_threshold=DEFAULT_AUTO_THRESHOLD):  # type: ignore
+        return "manual"
+
+    def keyword_fallback(post, keyword_weights=None):  # type: ignore
+        return None
+
+    def run_ollama_judge(*args, **kwargs):  # type: ignore
+        raise RuntimeError("auto_judge 模块不可用")
+
 # ── 标签与证据代码 ──
-VALID_LABELS = {"明广", "暗广", "非广", "out_of_scope"}
+VALID_LABELS = ("明广", "暗广", "非广", "uncertain", "out_of_scope")
 EVIDENCE_CODES = {
     "D": "明示商业关系（广告/赞助/合作标识）",
     "C": "明确商业对象（单一品牌/商品/店铺/服务为核心）",
@@ -57,7 +95,7 @@ ANNOTATION_GUIDE_SUMMARY = """\
                     标注指南 v1.0 速查
 ═══════════════════════════════════════════════════════════════
 
-【三元标签】明广 / 暗广 / 非广 / out_of_scope
+【标签】明广 / 暗广 / 非广 / uncertain / out_of_scope
 
 【判定流程】
   Step 1 → 是否在研究范围内？否 → out_of_scope
@@ -221,7 +259,7 @@ def call_llm_pre_analysis(
     model = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
     title = post.get("title") or ""
-    text = post.get("text", "")
+    text = str(post.get("text") or "")
     # 截断过长的正文（保留前 5000 字）
     if len(text) > 5000:
         text = text[:5000] + "\n\n[... 正文过长已截断，完整内容请查看原始数据 ...]"
@@ -298,25 +336,113 @@ def call_llm_pre_analysis(
     return result
 
 
+def call_ollama_pre_analysis(
+    post: Dict[str, Any],
+    guide_text: Optional[str] = None,
+    model: str = OLLAMA_DEFAULT_MODEL,
+    url: str = OLLAMA_DEFAULT_URL,
+    timeout: float = OLLAMA_TIMEOUT,
+    keep_alive: Optional[str] = None,
+    image_analyses: Optional[Dict[int, Dict]] = None,
+) -> Dict[str, Any]:
+    """调用本地 Ollama 模型做预分析（分置信度自动判断系统）。
+
+    与 call_llm_pre_analysis 返回结构一致（中文标签），失败时返回低置信度
+    结果并说明原因（confidence=0.3 < 0.55，强制人工判断）。
+    """
+    try:
+        result = run_ollama_judge(
+            post,
+            image_analyses=image_analyses,
+            keyword_weights=None,
+            model=model,
+            url=url,
+            timeout=timeout,
+            keep_alive=keep_alive or OLLAMA_KEEP_ALIVE,
+        )
+    except Exception as exc:
+        # ── 失败回退（设计文档 §4.4）：先尝试关键词规则，再无建议则低置信度强制人工 ──
+        fb = keyword_fallback(post)
+        if fb is not None:
+            return fb
+        result = {
+            "label": "非广",
+            "confidence": 0.3,
+            "evidence_codes": [],
+            "evidence": [],
+            "reasoning": f"Ollama 调用失败: {exc}",
+            "uncertain_reason": "Ollama 不可用/超时，需人工独立判断",
+            "_model": model,
+            "_backend": "ollama-error",
+        }
+
+    # 标准化字段（与 call_llm_pre_analysis 对齐）
+    result.setdefault("label", "非广")
+    result.setdefault("confidence", 0.5)
+    result.setdefault("evidence_codes", [])
+    result.setdefault("evidence", [])
+    result.setdefault("reasoning", "")
+    result.setdefault("uncertain_reason", None)
+
+    if isinstance(result.get("evidence"), str):
+        raw = result["evidence"].strip()
+        result["evidence"] = [raw] if raw else []
+
+    if result["label"] not in VALID_LABELS:
+        result["label"] = "非广"
+
+    result["evidence_codes"] = [
+        c for c in result["evidence_codes"] if c in EVIDENCE_CODES
+    ]
+    return result
+
+
 def format_post_display(post: Dict[str, Any], index: int, total: int) -> str:
     """格式化帖子展示文本。"""
-    title = post.get("title") or "(无标题)"
+    raw_title = post.get("title")
+    title = "(无标题)" if raw_title is None or str(raw_title).strip().lower() in {"", "none", "null"} else str(raw_title)
     text = post.get("text", "")
     if len(text) > 800:
-        text = text[:800] + "\n\n[... 正文过长已截断，完整内容请查看原始数据 ...]"
+        text = text[:800] + "\n\n[... 正文过长已截断，按 t 查看完整正文 ...]"
 
-    media_count = len(post.get("media", []))
+    media = post.get("media") or []
+    media_count = len(media)
     media_refs = ""
     if media_count > 0:
-        refs = [m.get("ref", "?") for m in post["media"][:5]]
-        media_refs = f"\n  📷 图片({media_count}张): " + ", ".join(refs)
+        refs = [str(m.get("ref") or "(无本地引用)") for m in media[:5]]
+        media_refs = f"\n  📷 媒体({media_count}项): " + ", ".join(refs)
         if media_count > 5:
-            media_refs += f" ... 等共{media_count}张"
+            media_refs += f" ... 等共{media_count}项"
 
     comment_count = len(post.get("comments", []))
-    blog_id = post.get("blogger_id", "?")
+    blog_id = str(post.get("blogger_id") or "?")
     platform = post.get("platform", "?")
     published = post.get("published_at") or "未知"
+
+    source_urls: List[str] = []
+    for container in (post, post.get("_collected"), post.get("provenance")):
+        if not isinstance(container, dict):
+            continue
+        for key in ("source_url", "url"):
+            value = container.get(key)
+            if isinstance(value, str) and value.strip() and value.strip() not in source_urls:
+                source_urls.append(value.strip())
+
+    video_urls: List[str] = []
+    for item in media:
+        if not isinstance(item, dict) or str(item.get("type", "")).lower() != "video":
+            continue
+        value = item.get("source_url")
+        if isinstance(value, str) and value.strip() and value.strip() not in video_urls:
+            video_urls.append(value.strip())
+
+    link_lines = ""
+    if source_urls:
+        link_label = "🎬 视频/原帖链接" if source_urls[0] in video_urls else "🔗 原帖链接"
+        link_lines += f"\n{link_label}: {source_urls[0]}"
+    for video_url in video_urls:
+        if video_url not in source_urls:
+            link_lines += "\n🎬 视频链接: " + video_url
 
     return f"""\
 {'─' * 70}
@@ -325,11 +451,24 @@ def format_post_display(post: Dict[str, Any], index: int, total: int) -> str:
 🆔 post_id: {post.get('post_id', '?')}
 📅 发布时间: {published}
 📱 平台: {platform}  |  博主: {blog_id[:16]}...{media_refs}
-💬 评论数: {comment_count}
+💬 评论数: {comment_count}{link_lines}
 {'─' * 70}
 📝 正文:
 {text}
 {'─' * 70}"""
+
+
+def format_full_post_text(post: Dict[str, Any]) -> str:
+    """格式化当前帖子的完整正文，不改变标注状态。"""
+    text = str(post.get("text") or "")
+    if not text:
+        text = "(正文为空)"
+    return f"""\
+{'═' * 70}
+📄 完整正文 | post_id: {post.get('post_id', '?')}
+{'═' * 70}
+{text}
+{'═' * 70}"""
 
 
 def view_images(post: Dict[str, Any], media_base: Path) -> int:
@@ -339,14 +478,17 @@ def view_images(post: Dict[str, Any], media_base: Path) -> int:
     其他平台使用 webbrowser.open。
     支持批量打开（传入索引范围如 1-5）或逐张打开。
     """
-    media = post.get("media", [])
+    media = post.get("media") or []
     if not media:
         print("  (无图片)")
         return 0
 
     print(f"\n📷 共 {len(media)} 张图片:")
     for i, m in enumerate(media, 1):
-        ref = m.get("ref", "?")
+        ref = m.get("ref")
+        if not ref:
+            print(f"  [{i}] (无本地引用，类型: {m.get('type', 'unknown')})  ✗ 无法打开")
+            continue
         full_path = media_base / ref
         exists = "✓" if full_path.exists() else "✗ 缺失"
         print(f"  [{i}] {ref}  {exists}")
@@ -382,7 +524,10 @@ def view_images(post: Dict[str, Any], media_base: Path) -> int:
     indices = sorted(set(indices))
     opened = 0
     for idx in indices:
-        ref = media[idx - 1].get("ref", "")
+        ref = media[idx - 1].get("ref")
+        if not ref:
+            print(f"  ⚠️ [{idx}] 没有本地媒体引用，无法打开")
+            continue
         full_path = media_base / ref
         if not full_path.exists():
             print(f"  ⚠️ [{idx}] 文件不存在: {full_path}")
@@ -537,6 +682,8 @@ def make_annotation_record(
         "evidence_codes": evidence_codes,
         "evidence": evidence,
         "uncertain_reason": uncertain_reason,
+        # ── 标注方式标记（"human"=人工，"auto_accepted"=自动保存，自动不参与 κ）──
+        "annotation_method": "human",
         # ── 补充 Schema 字段 (05-标注补充-图像与备注结构.md) ──
         "image_analyses": image_analyses or [],
         "markdown_notes": markdown_notes,
@@ -677,7 +824,7 @@ def print_stats(records: List[Dict[str, Any]]) -> None:
     total = len(records)
     print(f"\n{'=' * 50}")
     print(f"  本次标注统计: 共 {total} 条")
-    for label in ["明广", "暗广", "非广", "out_of_scope"]:
+    for label in VALID_LABELS:
         count = labels.get(label, 0)
         pct = count / total * 100 if total else 0
         print(f"    {label}: {count} ({pct:.1f}%)")
@@ -747,6 +894,36 @@ def main() -> None:
         "--annotator-id",
         default="",
         help="直接指定标注人 ID（跳过交互式询问）",
+    )
+    parser.add_argument(
+        "--auto-threshold",
+        type=float,
+        default=0.0,
+        help=(
+            "分置信度自动判断：置信度 ≥ 此阈值时自动保存标注并跳过人工确认"
+            f"（默认 0=关闭；建议 0.85，范围 0.70–0.95）"
+        ),
+    )
+    parser.add_argument(
+        "--ollama-backend",
+        action="store_true",
+        help="使用本地 Ollama 做预分析（代替 OpenAI 云端 LLM）",
+    )
+    parser.add_argument(
+        "--ollama-model",
+        default=OLLAMA_DEFAULT_MODEL,
+        help=f"Ollama 模型名（默认 {OLLAMA_DEFAULT_MODEL}）",
+    )
+    parser.add_argument(
+        "--ollama-url",
+        default=OLLAMA_DEFAULT_URL,
+        help=f"Ollama 服务地址（默认 {OLLAMA_DEFAULT_URL}）",
+    )
+    parser.add_argument(
+        "--ollama-timeout",
+        type=float,
+        default=OLLAMA_TIMEOUT,
+        help=f"Ollama 单条推理超时秒数（默认 {OLLAMA_TIMEOUT}）",
     )
     args = parser.parse_args()
 
@@ -828,15 +1005,48 @@ def main() -> None:
 
             llm_result = None
             if not args.no_llm:
-                print("⏳ 正在调用 LLM 预分析...")
-                llm_result = call_llm_pre_analysis(post, guide_text)
+                if args.ollama_backend:
+                    print("⏳ 正在调用 Ollama 预分析...")
+                    llm_result = call_ollama_pre_analysis(
+                        post, guide_text,
+                        model=args.ollama_model,
+                        url=args.ollama_url,
+                        timeout=args.ollama_timeout,
+                    )
+                else:
+                    print("⏳ 正在调用 LLM 预分析...")
+                    llm_result = call_llm_pre_analysis(post, guide_text)
                 print(format_llm_suggestion(llm_result))
+
+            # ── 自动保存：高置信度直接记录，跳过人工确认 ──
+            if (args.auto_threshold > 0 and llm_result
+                    and llm_result.get("confidence", 0) >= args.auto_threshold):
+                record = make_annotation_record(
+                    post_id=post["post_id"],
+                    annotator_id=annotator_id,
+                    label=llm_result["label"],
+                    confidence=llm_result["confidence"],
+                    evidence_codes=llm_result["evidence_codes"],
+                    evidence=llm_result["evidence"],
+                    uncertain_reason=llm_result.get("uncertain_reason"),
+                    llm_suggestion=llm_result,
+                    post=post,
+                )
+                record["annotation_method"] = "auto_accepted"  # 自动保存标记（不参与 κ）
+                append_annotation(output_file, record)
+                annotated_this_session.append(record)
+                print(
+                    f"  🟢 自动保存 [置信度 {llm_result['confidence']:.0%} ≥ "
+                    f"{args.auto_threshold:.0%}]: {llm_result['label']}"
+                )
+                print(f"  ⏭️  已自动保存 {post.get('post_id')}，跳至下一条\n")
+                continue
 
             # 交互式确认
             default_label = llm_result.get("label", "非广") if llm_result else "非广"
 
             while True:
-                action = input("操作 [y=采纳建议 / n=手动修改 / v=查看图片 / s=跳过 / q=保存退出]: ").strip().lower()
+                action = input("操作 [y=采纳建议 / n=手动修改 / t=完整正文 / v=查看媒体 / s=跳过 / q=保存退出]: ").strip().lower()
 
                 if action == "q":
                     print("\n⏹️  用户退出，正在保存...")
@@ -846,6 +1056,10 @@ def main() -> None:
 
                 if action == "v":
                     view_images(post, media_base)
+                    continue
+
+                if action == "t":
+                    print(format_full_post_text(post))
                     continue
 
                 if action == "s":
@@ -885,7 +1099,10 @@ def main() -> None:
                     confidence = prompt_confidence()
                     evidence = prompt_evidence_text()
                     uncertain = None
-                    if confidence < 0.6:
+                    if label == "uncertain":
+                        while not uncertain:
+                            uncertain = input("  不确定原因（uncertain 必填）: ").strip() or None
+                    elif confidence < 0.6:
                         uncertain = input("  不确定原因（直接回车跳过）: ").strip() or None
 
                     record = make_annotation_record(
@@ -909,7 +1126,7 @@ def main() -> None:
                     print(f"  ✅ 已记录: {label} (确信度: {confidence:.0%})\n")
                     break
 
-                print("  无效操作，请输入 y / n / v / s / q")
+                print("  无效操作，请输入 y / n / t / v / s / q")
 
         # ── 8. 完成 ──
         print("\n🎉 本轮标注全部完成！")

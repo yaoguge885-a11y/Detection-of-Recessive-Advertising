@@ -78,7 +78,7 @@ except Exception:  # pragma: no cover - auto_judge 不可用时降级为纯人�
         raise RuntimeError("auto_judge 模块不可用")
 
 # ── 标签与证据代码 ──
-VALID_LABELS = {"明广", "暗广", "非广", "out_of_scope"}
+VALID_LABELS = ("明广", "暗广", "非广", "uncertain", "out_of_scope")
 EVIDENCE_CODES = {
     "D": "明示商业关系（广告/赞助/合作标识）",
     "C": "明确商业对象（单一品牌/商品/店铺/服务为核心）",
@@ -95,7 +95,7 @@ ANNOTATION_GUIDE_SUMMARY = """\
                     标注指南 v1.0 速查
 ═══════════════════════════════════════════════════════════════
 
-【三元标签】明广 / 暗广 / 非广 / out_of_scope
+【标签】明广 / 暗广 / 非广 / uncertain / out_of_scope
 
 【判定流程】
   Step 1 → 是否在研究范围内？否 → out_of_scope
@@ -259,7 +259,7 @@ def call_llm_pre_analysis(
     model = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
     title = post.get("title") or ""
-    text = post.get("text", "")
+    text = str(post.get("text") or "")
     # 截断过长的正文（保留前 5000 字）
     if len(text) > 5000:
         text = text[:5000] + "\n\n[... 正文过长已截断，完整内容请查看原始数据 ...]"
@@ -399,23 +399,50 @@ def call_ollama_pre_analysis(
 
 def format_post_display(post: Dict[str, Any], index: int, total: int) -> str:
     """格式化帖子展示文本。"""
-    title = post.get("title") or "(无标题)"
+    raw_title = post.get("title")
+    title = "(无标题)" if raw_title is None or str(raw_title).strip().lower() in {"", "none", "null"} else str(raw_title)
     text = post.get("text", "")
     if len(text) > 800:
-        text = text[:800] + "\n\n[... 正文过长已截断，完整内容请查看原始数据 ...]"
+        text = text[:800] + "\n\n[... 正文过长已截断，按 t 查看完整正文 ...]"
 
-    media_count = len(post.get("media", []))
+    media = post.get("media") or []
+    media_count = len(media)
     media_refs = ""
     if media_count > 0:
-        refs = [m.get("ref", "?") for m in post["media"][:5]]
-        media_refs = f"\n  📷 图片({media_count}张): " + ", ".join(refs)
+        refs = [str(m.get("ref") or "(无本地引用)") for m in media[:5]]
+        media_refs = f"\n  📷 媒体({media_count}项): " + ", ".join(refs)
         if media_count > 5:
-            media_refs += f" ... 等共{media_count}张"
+            media_refs += f" ... 等共{media_count}项"
 
     comment_count = len(post.get("comments", []))
-    blog_id = post.get("blogger_id", "?")
+    blog_id = str(post.get("blogger_id") or "?")
     platform = post.get("platform", "?")
     published = post.get("published_at") or "未知"
+
+    source_urls: List[str] = []
+    for container in (post, post.get("_collected"), post.get("provenance")):
+        if not isinstance(container, dict):
+            continue
+        for key in ("source_url", "url"):
+            value = container.get(key)
+            if isinstance(value, str) and value.strip() and value.strip() not in source_urls:
+                source_urls.append(value.strip())
+
+    video_urls: List[str] = []
+    for item in media:
+        if not isinstance(item, dict) or str(item.get("type", "")).lower() != "video":
+            continue
+        value = item.get("source_url")
+        if isinstance(value, str) and value.strip() and value.strip() not in video_urls:
+            video_urls.append(value.strip())
+
+    link_lines = ""
+    if source_urls:
+        link_label = "🎬 视频/原帖链接" if source_urls[0] in video_urls else "🔗 原帖链接"
+        link_lines += f"\n{link_label}: {source_urls[0]}"
+    for video_url in video_urls:
+        if video_url not in source_urls:
+            link_lines += "\n🎬 视频链接: " + video_url
 
     return f"""\
 {'─' * 70}
@@ -424,11 +451,24 @@ def format_post_display(post: Dict[str, Any], index: int, total: int) -> str:
 🆔 post_id: {post.get('post_id', '?')}
 📅 发布时间: {published}
 📱 平台: {platform}  |  博主: {blog_id[:16]}...{media_refs}
-💬 评论数: {comment_count}
+💬 评论数: {comment_count}{link_lines}
 {'─' * 70}
 📝 正文:
 {text}
 {'─' * 70}"""
+
+
+def format_full_post_text(post: Dict[str, Any]) -> str:
+    """格式化当前帖子的完整正文，不改变标注状态。"""
+    text = str(post.get("text") or "")
+    if not text:
+        text = "(正文为空)"
+    return f"""\
+{'═' * 70}
+📄 完整正文 | post_id: {post.get('post_id', '?')}
+{'═' * 70}
+{text}
+{'═' * 70}"""
 
 
 def view_images(post: Dict[str, Any], media_base: Path) -> int:
@@ -438,14 +478,17 @@ def view_images(post: Dict[str, Any], media_base: Path) -> int:
     其他平台使用 webbrowser.open。
     支持批量打开（传入索引范围如 1-5）或逐张打开。
     """
-    media = post.get("media", [])
+    media = post.get("media") or []
     if not media:
         print("  (无图片)")
         return 0
 
     print(f"\n📷 共 {len(media)} 张图片:")
     for i, m in enumerate(media, 1):
-        ref = m.get("ref", "?")
+        ref = m.get("ref")
+        if not ref:
+            print(f"  [{i}] (无本地引用，类型: {m.get('type', 'unknown')})  ✗ 无法打开")
+            continue
         full_path = media_base / ref
         exists = "✓" if full_path.exists() else "✗ 缺失"
         print(f"  [{i}] {ref}  {exists}")
@@ -481,7 +524,10 @@ def view_images(post: Dict[str, Any], media_base: Path) -> int:
     indices = sorted(set(indices))
     opened = 0
     for idx in indices:
-        ref = media[idx - 1].get("ref", "")
+        ref = media[idx - 1].get("ref")
+        if not ref:
+            print(f"  ⚠️ [{idx}] 没有本地媒体引用，无法打开")
+            continue
         full_path = media_base / ref
         if not full_path.exists():
             print(f"  ⚠️ [{idx}] 文件不存在: {full_path}")
@@ -778,7 +824,7 @@ def print_stats(records: List[Dict[str, Any]]) -> None:
     total = len(records)
     print(f"\n{'=' * 50}")
     print(f"  本次标注统计: 共 {total} 条")
-    for label in ["明广", "暗广", "非广", "out_of_scope"]:
+    for label in VALID_LABELS:
         count = labels.get(label, 0)
         pct = count / total * 100 if total else 0
         print(f"    {label}: {count} ({pct:.1f}%)")
@@ -1000,7 +1046,7 @@ def main() -> None:
             default_label = llm_result.get("label", "非广") if llm_result else "非广"
 
             while True:
-                action = input("操作 [y=采纳建议 / n=手动修改 / v=查看图片 / s=跳过 / q=保存退出]: ").strip().lower()
+                action = input("操作 [y=采纳建议 / n=手动修改 / t=完整正文 / v=查看媒体 / s=跳过 / q=保存退出]: ").strip().lower()
 
                 if action == "q":
                     print("\n⏹️  用户退出，正在保存...")
@@ -1010,6 +1056,10 @@ def main() -> None:
 
                 if action == "v":
                     view_images(post, media_base)
+                    continue
+
+                if action == "t":
+                    print(format_full_post_text(post))
                     continue
 
                 if action == "s":
@@ -1049,7 +1099,10 @@ def main() -> None:
                     confidence = prompt_confidence()
                     evidence = prompt_evidence_text()
                     uncertain = None
-                    if confidence < 0.6:
+                    if label == "uncertain":
+                        while not uncertain:
+                            uncertain = input("  不确定原因（uncertain 必填）: ").strip() or None
+                    elif confidence < 0.6:
                         uncertain = input("  不确定原因（直接回车跳过）: ").strip() or None
 
                     record = make_annotation_record(
@@ -1073,7 +1126,7 @@ def main() -> None:
                     print(f"  ✅ 已记录: {label} (确信度: {confidence:.0%})\n")
                     break
 
-                print("  无效操作，请输入 y / n / v / s / q")
+                print("  无效操作，请输入 y / n / t / v / s / q")
 
         # ── 8. 完成 ──
         print("\n🎉 本轮标注全部完成！")

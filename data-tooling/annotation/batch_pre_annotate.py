@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import statistics
 import sys
 import time
 from datetime import datetime, timezone, timedelta
@@ -63,6 +65,15 @@ from auto_judge import (  # type: ignore # noqa: E402
 )
 
 CST = timezone(timedelta(hours=8))
+
+
+def percentile(values: List[float], probability: float) -> Optional[float]:
+    """Return a deterministic nearest-rank percentile for calibration timing."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    rank = max(1, math.ceil(probability * len(ordered)))
+    return ordered[rank - 1]
 
 
 def load_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -213,18 +224,21 @@ def main() -> None:
         "labels": {},
         "fallback_count": 0,
         "error_count": 0,
+        "error_samples": [],
         "duration_sec": 0.0,
     }
 
     # ── 模型预热：先加载并驻留模型，避免每条帖子冷启动加载 6.6GB ──
     if not args.no_warmup:
         print(f"\n⏳ 预热模型 {args.ollama_model}（首次加载可能需要 1~2 分钟）...")
+        warmup_started = time.perf_counter()
         ok = warm_up_model(
             model=args.ollama_model,
             url=args.ollama_url,
             timeout=OLLAMA_WARMUP_TIMEOUT,
             keep_alive=keep_alive,
         )
+        stats["warmup_duration_sec"] = round(time.perf_counter() - warmup_started, 3)
         if ok:
             print(f"  ✅ 模型已就绪（常驻 {keep_alive}，后续推理直接命中已加载模型）")
         else:
@@ -234,14 +248,17 @@ def main() -> None:
     else:
         stats["warmup_ok"] = None
         stats["keep_alive"] = keep_alive
+        stats["warmup_duration_sec"] = None
 
     auto_records: List[Dict[str, Any]] = []
     suggest_records: List[Dict[str, Any]] = []
     media_base = Path(args.media_base)
+    record_latencies: List[float] = []
 
     start = time.time()
     try:
         for i, post in enumerate(posts, 1):
+            record_started = time.perf_counter()
             pid = post.get("post_id", "?")
             print(f"\n[{i}/{total}] {pid}")
 
@@ -268,6 +285,8 @@ def main() -> None:
                 auto_threshold=args.auto_threshold,
                 keep_alive=keep_alive,
             )
+            record_latency = round(time.perf_counter() - record_started, 3)
+            record_latencies.append(record_latency)
 
             tier = result["tier"]
             stats["tiers"][tier] = stats["tiers"].get(tier, 0) + 1
@@ -275,6 +294,10 @@ def main() -> None:
                 stats["fallback_count"] += 1
             if result["error"]:
                 stats["error_count"] += 1
+                stats["error_samples"].append({
+                    "post_id": pid,
+                    "error": str(result["error"])[:500],
+                })
 
             suggestion = result["suggestion"]
             if suggestion is None:
@@ -312,6 +335,17 @@ def main() -> None:
         print("\n⚠️ 用户中断，保存已处理结果...")
 
     stats["duration_sec"] = round(time.time() - start, 2)
+    stats["record_latency_sec"] = record_latencies
+    stats["first_record_latency_sec"] = record_latencies[0] if record_latencies else None
+    subsequent_latencies = record_latencies[1:]
+    stats["subsequent_median_latency_sec"] = (
+        round(statistics.median(subsequent_latencies), 3)
+        if subsequent_latencies else None
+    )
+    subsequent_p90 = percentile(subsequent_latencies, 0.90)
+    stats["subsequent_p90_latency_sec"] = (
+        round(subsequent_p90, 3) if subsequent_p90 is not None else None
+    )
     stats["finished_at"] = datetime.now(CST).isoformat()
     stats["auto_saved"] = len(auto_records)
     stats["suggested"] = len(suggest_records)
@@ -328,6 +362,10 @@ def main() -> None:
     print(f"  🟡 建议:      {stats['tiers'].get('suggest', 0)}  ({suggest_path.name})")
     print(f"  🔴 纯人工:    {stats['tiers'].get('manual', 0)}")
     print(f"  关键词回退:   {stats['fallback_count']}  (Ollama 失败自动降级)")
+    print(f"  预热耗时:     {stats['warmup_duration_sec']}s")
+    print(f"  首条耗时:     {stats['first_record_latency_sec']}s")
+    print(f"  后续中位耗时: {stats['subsequent_median_latency_sec']}s")
+    print(f"  后续 P90:     {stats['subsequent_p90_latency_sec']}s")
     print(f"  耗时:        {stats['duration_sec']:.1f}s")
     print(f"  统计报告:    {stats_path}")
 

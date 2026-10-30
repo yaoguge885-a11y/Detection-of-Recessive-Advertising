@@ -19,6 +19,7 @@ from scripts.data.annotation import validate_schema
 AGENT_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = AGENT_ROOT.parent
 SCHEMA_PATH = REPO_ROOT / "data" / "schema" / "data_schema_v1.json"
+SCHEMA_V1_2_PATH = REPO_ROOT / "data" / "schema" / "data_schema_v1_2.json"
 SYNTHETIC_PATH = REPO_ROOT / "data" / "synthetic" / "simulated_posts_v1.json"
 
 
@@ -41,6 +42,18 @@ def test_validate_record_rejects_additional_property(
     errors = validate_schema.validate_record(valid_v1_record, schema_v1)
 
     assert any(error.startswith("additionalProperties:") for error in errors)
+
+
+def test_schema_v1_2_is_resolved_from_repository() -> None:
+    resolved = validate_schema.resolve_schema_path(REPO_ROOT, "1.2")
+
+    assert resolved == SCHEMA_V1_2_PATH
+    schema = validate_schema.load_authoritative_schema(REPO_ROOT, "1.2")
+    version_schema = schema["$defs"]["content_record"]["properties"][
+        "schema_version"
+    ]
+    assert version_schema["type"] == "string"
+    assert set(version_schema["enum"]) == {"1.1", "1.2"}
 
 
 def test_validate_record_rejects_bad_datetime(
@@ -214,6 +227,45 @@ def test_redact_finding_removes_cleartext_match() -> None:
         finding["match"].encode("utf-8")
     ).hexdigest()
     assert finding["match"] not in json.dumps(redacted, ensure_ascii=False)
+
+
+def test_privacy_scan_does_not_treat_local_media_hash_as_secret(
+    valid_v1_record: dict,
+) -> None:
+    valid_v1_record["text"] = "普通正文"
+    valid_v1_record["title"] = None
+    valid_v1_record["comments"] = []
+    valid_v1_record["media"] = [
+        {
+            "media_id": "media-1",
+            "type": "image",
+            "ref": "media/630e18bf97a685dbb0121705/00.jpg",
+        }
+    ]
+
+    assert privacy_scan.scan_record(valid_v1_record) == []
+
+
+def test_privacy_scan_does_not_entropy_flag_long_natural_language(
+    valid_v1_record: dict,
+) -> None:
+    valid_v1_record["text"] = "这是一段用于隐私审核的普通中文正文。" * 20
+    valid_v1_record["title"] = None
+    valid_v1_record["comments"] = []
+    valid_v1_record["media"] = []
+
+    assert privacy_scan.scan_record(valid_v1_record) == []
+
+
+def test_privacy_scan_still_detects_secret_in_text(valid_v1_record: dict) -> None:
+    valid_v1_record["text"] = "泄露令牌 sk-a-secret-that-must-not-leak"
+    valid_v1_record["title"] = None
+    valid_v1_record["comments"] = []
+    valid_v1_record["media"] = []
+
+    findings = privacy_scan.scan_record(valid_v1_record)
+
+    assert any(finding["type"] == "API 密钥模式" for finding in findings)
 
 
 def test_public_allowlist_contains_only_explicitly_approved_safe_ids(

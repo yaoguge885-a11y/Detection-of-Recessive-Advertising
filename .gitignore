@@ -34,11 +34,19 @@ dist/
 chroma/
 .langgraph_api/
 *.sqlite3
+/数据集/
 data/raw/
 data/interim/
 data/reports/m1/private/
+data/reports/m1/privacy/
+data/reports/m1/locked_batches/
+data/reports/m1/share/
+data/reports/m1/*.json
+data/reports/m1/*.jsonl
 data/run_outputs/
 runs/
+/reports/
+/tmp/
 
 # Local collection inputs and annotation trial outputs
 data/*_urls*.txt
@@ -59,6 +67,9 @@ data/annotations/preannotated/
 *.tmp
 *.bak
 *.zip
+*.7z
+*.rar
+*.z[0-9][0-9]
 scripts/*_output.txt
 scripts/validate_result.txt
 temp_*.py
