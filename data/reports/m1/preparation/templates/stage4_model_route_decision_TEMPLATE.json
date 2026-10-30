@@ -1,0 +1,21 @@
+{
+  "status": "preparation_only_not_formal",
+  "final_model_choice": null,
+  "allowed_choices": [
+    "qwen3.5:4b",
+    "--no-llm"
+  ],
+  "review_a_sha256": null,
+  "review_b_sha256": null,
+  "validation_sha256": null,
+  "summary": {
+    "reasonable_counts": null,
+    "saved_time_counts": null,
+    "failure_counts": null
+  },
+  "decision_reason": null,
+  "approved_by_A": null,
+  "approved_by_B": null,
+  "approved_at": null,
+  "instructions": "双方完成独立复核并共同确认后，复制到 data/reports/m1/qwen_calibration_20_human_review_summary.json；正式 status 必须为 jointly_approved。"
+}

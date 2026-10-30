@@ -1,0 +1,18 @@
+{
+  "status": "template_only_not_approval",
+  "reviewer": null,
+  "reviewed_at": null,
+  "scope": "M1 formal kappa, Gold and release splits",
+  "review_basis": {
+    "dataset": "data/run_outputs/merged_20260728/anonymized_posts.jsonl",
+    "dataset_fingerprint_sha256": "e9ccada23f8a09ad85dc7d99e097e717c2a9d12ab3ad0a228493460d3f79009c",
+    "review_document": "data/reports/m1/privacy/privacy_AI_pre_review_B.md",
+    "mandatory_review_count": 233,
+    "low_risk_pool_count": 3079,
+    "low_risk_sample_count": 308,
+    "sampling_rule": "ascending SHA-256 of m1-b-privacy-sample-2026-08-06-v2|post_id",
+    "instructions": "B personally reviews every mandatory item and every sampled low-risk item. Put only individually approved IDs in post_ids; record each rejected or redacted ID and reason in excluded."
+  },
+  "post_ids": [],
+  "excluded": []
+}

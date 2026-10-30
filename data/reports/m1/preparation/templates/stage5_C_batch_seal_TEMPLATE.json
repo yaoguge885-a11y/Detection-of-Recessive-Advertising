@@ -1,0 +1,18 @@
+{
+  "status": "preparation_only_not_formal",
+  "sealed_by": "C",
+  "sealed_at": null,
+  "formalization_report_sha256": null,
+  "formal_candidate_sha256": null,
+  "guide_sha256": null,
+  "batch_lock_report_sha256": null,
+  "unique_post_id_count": null,
+  "overlap_count": null,
+  "batches": {
+    "round1": {"count": null, "manifest_sha256": null, "jsonl_sha256": null},
+    "round2": {"count": null, "manifest_sha256": null, "jsonl_sha256": null},
+    "gold_control": {"count": null, "manifest_sha256": null, "jsonl_sha256": null},
+    "gold_assisted": {"count": null, "manifest_sha256": null, "jsonl_sha256": null}
+  },
+  "spotcheck_notes": null
+}

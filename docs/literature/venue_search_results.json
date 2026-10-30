@@ -1,0 +1,4271 @@
+{
+  "generated_by": "scripts/literature/venue_paper_search.py",
+  "sources": [
+    "acl-anthology",
+    "crossref",
+    "arxiv"
+  ],
+  "year_range": [
+    2019,
+    2026
+  ],
+  "queries": [
+    "covert advertising detection social media",
+    "implicit advertising undisclosed sponsorship",
+    "influencer advertising disclosure",
+    "native advertising detection",
+    "promoted post commercial intent detection",
+    "multimodal advertising detection image text",
+    "influencer creator history modeling",
+    "advertising regulation compliance"
+  ],
+  "topics": {
+    "covert_advertising": [
+      "covert ad",
+      "implicit ad",
+      "undisclosed",
+      "ad disclosure",
+      "advertising disclosure",
+      "sponsor(ed|ship)",
+      "native ad",
+      "advertorial",
+      "brand placement",
+      "product placement",
+      "promoted post",
+      "influencer market",
+      "stealth market",
+      "paid partnership",
+      "ad labelling",
+      "disclosure (classification|detection|label)",
+      "paid content"
+    ],
+    "ad_detection": [
+      "ad detection",
+      "advertising detection",
+      "detect\\w* ad",
+      "commercial intent",
+      "promotional intent",
+      "advertisement classification",
+      "spam detection",
+      "commercial content",
+      "ad classification",
+      "advertis"
+    ],
+    "multimodal": [
+      "multimodal",
+      "image[- ]text",
+      "vision[- ]language",
+      "visual advertis",
+      "\\bocr\\b",
+      "cross[- ]modal"
+    ],
+    "creator_history": [
+      "influencer",
+      "creator econom",
+      "user history",
+      "temporal",
+      "preference (shift|drift|change)",
+      "topic drift",
+      "longitudinal",
+      "author profile",
+      "style (change|shift)"
+    ],
+    "compliance_rag": [
+      "regulat",
+      "compliance",
+      "legal",
+      "statute",
+      "retrieval[- ]augmented",
+      "citation",
+      "grounded"
+    ],
+    "agent_system": [
+      "multi[- ]agent",
+      "\\bagent",
+      "tool (use|call)",
+      "function call",
+      "\\bmcp\\b",
+      "a2a"
+    ]
+  },
+  "total_records": 284,
+  "records_with_doi": 279,
+  "venues": [
+    {
+      "key": "acl",
+      "label": "ACL (Annual Meeting of the ACL)",
+      "doi_prefix": "10.18653",
+      "rationale": "NLP 主会：披露文本、隐性广告的文本证据、RAG 引用",
+      "matches": 25
+    },
+    {
+      "key": "emnlp",
+      "label": "EMNLP (+ Findings)",
+      "doi_prefix": "10.18653",
+      "rationale": "应用 NLP 主战场：推广意图分类、误导性内容检测",
+      "matches": 31
+    },
+    {
+      "key": "naacl",
+      "label": "NAACL (+ Findings)",
+      "doi_prefix": "10.18653",
+      "rationale": "北美 ACL 分会，社交媒体文本任务集中",
+      "matches": 20
+    },
+    {
+      "key": "eacl",
+      "label": "EACL (+ Findings)",
+      "doi_prefix": "10.18653",
+      "rationale": "欧洲 ACL 分会",
+      "matches": 9
+    },
+    {
+      "key": "coling",
+      "label": "COLING",
+      "doi_prefix": "10.18653",
+      "rationale": "COLING 主会，多语言/社会媒体",
+      "matches": 8
+    },
+    {
+      "key": "icwsm",
+      "label": "ICWSM",
+      "doi_prefix": "10.1609",
+      "rationale": "最贴题：社交媒体推广内容、影响者披露的实证研究",
+      "matches": 58
+    },
+    {
+      "key": "aaai",
+      "label": "AAAI",
+      "doi_prefix": "10.1609",
+      "rationale": "通用 AI：检测模型、多模态方法",
+      "matches": 97
+    },
+    {
+      "key": "kdd",
+      "label": "KDD",
+      "doi_prefix": "10.1145",
+      "rationale": "广告/垃圾内容检测、图学习与行为建模",
+      "matches": 74
+    },
+    {
+      "key": "www",
+      "label": "WWW / The Web Conference",
+      "doi_prefix": "10.1145",
+      "rationale": "Web 广告生态、影响者营销、虚假推广",
+      "matches": 143
+    },
+    {
+      "key": "wsdm",
+      "label": "WSDM",
+      "doi_prefix": "10.1145",
+      "rationale": "检索/推荐中的商业意图与赞助内容",
+      "matches": 29
+    },
+    {
+      "key": "cikm",
+      "label": "CIKM",
+      "doi_prefix": "10.1145",
+      "rationale": "多模态内容理解与广告应用",
+      "matches": 39
+    },
+    {
+      "key": "sigir",
+      "label": "SIGIR",
+      "doi_prefix": "10.1145",
+      "rationale": "赞助搜索、广告检索与排序",
+      "matches": 27
+    },
+    {
+      "key": "mm",
+      "label": "ACM Multimedia",
+      "doi_prefix": "10.1145",
+      "rationale": "多模态（图像+文本）广告与商品理解",
+      "matches": 11
+    },
+    {
+      "key": "chi",
+      "label": "CHI",
+      "doi_prefix": "10.1145",
+      "rationale": "人因侧：用户能否识别披露、暗广感知实验",
+      "matches": 55
+    },
+    {
+      "key": "cscw",
+      "label": "CSCW",
+      "doi_prefix": "10.1145",
+      "rationale": "创作者经济、平台劳动与披露规范",
+      "matches": 5
+    },
+    {
+      "key": "cvpr",
+      "label": "CVPR",
+      "doi_prefix": "10.1109",
+      "rationale": "视觉广告/品牌/LOGO 检测、场景文字 OCR",
+      "matches": 3
+    },
+    {
+      "key": "iccv",
+      "label": "ICCV",
+      "doi_prefix": "10.1109",
+      "rationale": "视觉广告检测",
+      "matches": 5
+    },
+    {
+      "key": "eccv",
+      "label": "ECCV",
+      "doi_prefix": "10.1007",
+      "rationale": "视觉广告检测（Springer LNCS 卷）",
+      "matches": 0
+    },
+    {
+      "key": "ijcai",
+      "label": "IJCAI",
+      "doi_prefix": "10.24963",
+      "rationale": "通用 AI：检测与社会计算",
+      "matches": 57
+    }
+  ],
+  "records": [
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "AD-FM: Multimodal LLMs for Anomaly Detection via Multi-Stage Reasoning and Fine-Grained Reward Optimization",
+      "authors": "Jingyi Liao; Yongyi Su; Rong-Cheng Tu; Zhao Jin; Wenhao Sun; Yiting Li; Xun Xu; Dacheng Tao; Xulei Yang",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i18.38548",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i18.38548",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Commonality in Few: Few-Shot Multimodal Anomaly Detection via Hypergraph-Enhanced Memory",
+      "authors": "Yuxuan Lin; Hanjing Yan; Xuan Tong; Yang Chang; Huanzhen Wang; Ziheng Zhou; Shuyong Gao; Yan Wang; Wenqiang Zhang",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i9.37636",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i9.37636",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "DMGIN: How Multimodal LLMs Enhance Large Recommendation Models for Lifelong User Post-click Behaviors",
+      "authors": "Zhuoxing Wei; Qingchen Xie; Qi Liu; Jingsong Yu",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i19.38626",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i19.38626",
+      "topics": [
+        "ad_detection",
+        "multimodal",
+        "creator_history"
+      ],
+      "query": "promoted post commercial intent detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Delayed Feedback Modeling with Influence Functions",
+      "authors": "Chenlu Ding; Jiancan Wu; Yancheng Yuan; Cunchun Li; Xiang Wang; Dingxian Wang; Frank Yang; Andrew Rabinovich",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i17.38483",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i17.38483",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Estimating Online Influence Needs Causal Modeling! Counterfactual Analysis of Misinformation Engagement on Social Media",
+      "authors": "Lin Tian; Marian-Andrei Rizoiu",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i2.37078",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i2.37078",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "ProbLog4Fairness: A Neurosymbolic Approach to Modeling and Mitigating Bias",
+      "authors": "Rik Adriaensen; Lucas Van Praet; Jessa Bekker; Robin Manhaeve; Pieter Delobelle; Maarten Buyl",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i24.39033",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i24.39033",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "RefAdGen: High-Fidelity Advertising Image Generation",
+      "authors": "Yiyun Chen; Weikai Yang",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i4.37307",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i4.37307",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "VietCheckMed: Explainable Regulatory Compliance Checking for Medical Advertisements on Vietnamese Social Media",
+      "authors": "Nguyen Thanh Tam; Khanh Quoc Tran; Dat Thanh Pham; Truong Phu Le; Nguyen Hoang Gia Han; Binh T. Nguyen",
+      "year": "2026",
+      "doi": "10.1609/aaai.v40i2.37077",
+      "doi_url": "https://doi.org/10.1609/aaai.v40i2.37077",
+      "topics": [
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "advertising regulation compliance",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Addressing Cold-Start Problem in Click-Through Rate Prediction via Supervised Diffusion Modeling",
+      "authors": "Wenqiao Zhu; Lulu Wang; Jun Wu",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i12.33469",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i12.33469",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "DZAD: Diffusion-based Zero-shot Anomaly Detection",
+      "authors": "Tianrui Zhang; Liang Gao; Xinyu Li; Yiping Gao",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i10.33099",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i10.33099",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "GenAuction: A Generative Auction for Online Advertising",
+      "authors": "Yuchao Ma; Ruohan Qian; Bingzhe Wang; Qi Qi; Wenqiang Liu; Qian Tang; Zhao Shen; Wei Zhong; Bo Shen; Yixin Su; Bin Zou; Wen Yi; Zhi Guo; Shuanglong Li; Lin Liu",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i12.33348",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i12.33348",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "LogicAD: Explainable Anomaly Detection via VLM-based Text Feature Extraction",
+      "authors": "Er Jin; Qihui Feng; Yongli Mou; Gerhard Lakemeyer; Stefan Decker; Oliver Simons; Johannes Stegmaier",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i4.32433",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i4.32433",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "MEATRD: Multimodal Anomalous Tissue Region Detection Enhanced with Spatial Transcriptomics",
+      "authors": "Kaichen Xu; Qilong Wu; Yan Lu; Yinan Zheng; Wenlin Li; Xingjie Tang; Jun Wang; Xiaobo Sun",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i12.33409",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i12.33409",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Revisiting Multimodal Fusion for 3D Anomaly Detection from an Architectural Perspective",
+      "authors": "Kaifang Long; Guoyang Xie; Lianbo Ma; Jiaqi Liu; Zhichao Lu",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i12.33337",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i12.33337",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Understanding Microtargeting Pattern on Social Media",
+      "authors": "Tunazzina Islam",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i28.35212",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i28.35212",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Unlocking the Potential of Reverse Distillation for Anomaly Detection",
+      "authors": "Xinyue Liu; Jianyuan Wang; Biao Leng; Shuo Zhang",
+      "year": "2025",
+      "doi": "10.1609/aaai.v39i6.32601",
+      "doi_url": "https://doi.org/10.1609/aaai.v39i6.32601",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Accelerating Text-to-Image Editing via Cache-Enabled Sparse Diffusion Inference",
+      "authors": "Zihao Yu; Haoyang Li; Fangcheng Fu; Xupeng Miao; Bin Cui",
+      "year": "2024",
+      "doi": "10.1609/aaai.v38i15.29599",
+      "doi_url": "https://doi.org/10.1609/aaai.v38i15.29599",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Generating and Reweighting Dense Contrastive Patterns for Unsupervised Anomaly Detection",
+      "authors": "Songmin Dai; Yifan Wu; Xiaoqiang Li; Xiangyang Xue",
+      "year": "2024",
+      "doi": "10.1609/aaai.v38i2.27910",
+      "doi_url": "https://doi.org/10.1609/aaai.v38i2.27910",
+      "topics": [
+        "compliance_rag"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Parallel Ranking of Ads and Creatives in Real-Time Advertising Systems",
+      "authors": "Zhiguang Yang; Liufang Sang; Haoran Wang; Wenlong Chen; Lu Wang; Jie He; Changping Peng; Zhangang Lin; Chun Gan; Jingping Shao",
+      "year": "2024",
+      "doi": "10.1609/aaai.v38i8.28780",
+      "doi_url": "https://doi.org/10.1609/aaai.v38i8.28780",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Percentile Risk-Constrained Budget Pacing for Guaranteed Display Advertising in Online Optimization",
+      "authors": "Liang Dai; Kejie Lyu; Chengcheng Zhang; Guangming Zhao; Zhonglin Zu; Liang Wang; Bo Zheng",
+      "year": "2024",
+      "doi": "10.1609/aaai.v38i8.28636",
+      "doi_url": "https://doi.org/10.1609/aaai.v38i8.28636",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Recommender Ecosystems: A Mechanism Design Perspective on Holistic Modeling and Optimization",
+      "authors": "Craig Boutilier; Martin Mladenov; Guy Tennenholtz",
+      "year": "2024",
+      "doi": "10.1609/aaai.v38i20.30266",
+      "doi_url": "https://doi.org/10.1609/aaai.v38i20.30266",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Towards Reproducible, Automated, and Scalable Anomaly Detection",
+      "authors": "Yue Zhao",
+      "year": "2024",
+      "doi": "10.1609/aaai.v38i20.30303",
+      "doi_url": "https://doi.org/10.1609/aaai.v38i20.30303",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "ADMoE: Anomaly Detection with Mixture-of-Experts from Noisy Labels",
+      "authors": "Yue Zhao; Guoqing Zheng; Subhabrata Mukherjee; Robert McCann; Ahmed Awadallah",
+      "year": "2023",
+      "doi": "10.1609/aaai.v37i4.25620",
+      "doi_url": "https://doi.org/10.1609/aaai.v37i4.25620",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Blending Advertising with Organic Content in E-commerce via Virtual Bids",
+      "authors": "Carlos Carrion; Zenan Wang; Harikesh Nair; Xianghong Luo; Yulin Lei; Peiqin Gu; Xiliang Lin; Wenlong Chen; Junsheng Jin; Fanan Zhu; Changping Peng; Yongjun Bao; Zhangang Lin; Weipeng Yan; Jingping Shao",
+      "year": "2023",
+      "doi": "10.1609/aaai.v37i13.26835",
+      "doi_url": "https://doi.org/10.1609/aaai.v37i13.26835",
+      "topics": [
+        "ad_detection",
+        "covert_advertising"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "One-for-All: Proposal Masked Cross-Class Anomaly Detection",
+      "authors": "Xincheng Yao; Chongyang Zhang; Ruoqi Li; Jun Sun; Zhenyu Liu",
+      "year": "2023",
+      "doi": "10.1609/aaai.v37i4.25604",
+      "doi_url": "https://doi.org/10.1609/aaai.v37i4.25604",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Real-Time Detection of Robotic Traffic in Online Advertising",
+      "authors": "Anand Muralidhar; Sharad Chitlangia; Rajat Agarwal; Muneeb Ahmed",
+      "year": "2023",
+      "doi": "10.1609/aaai.v37i13.26844",
+      "doi_url": "https://doi.org/10.1609/aaai.v37i13.26844",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Utility Maximizer or Value Maximizer: Mechanism Design for Mixed Bidders in Online Advertising",
+      "authors": "Hongtao Lv; Zhilin Zhang; Zhenzhe Zheng; Jinghan Liu; Chuan Yu; Lei Liu; Lizhen Cui; Fan Wu",
+      "year": "2023",
+      "doi": "10.1609/aaai.v37i5.25718",
+      "doi_url": "https://doi.org/10.1609/aaai.v37i5.25718",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Smart Out-of-Home Advertising Using Artificial Intelligence and GIS Data",
+      "authors": "Nader Nader; Rafael Alexandrou; Iasonas Iasonas; Andreas Pamboris; Harris Papadopoulos; Andreas Konstantinidis",
+      "year": "2022",
+      "doi": "10.1609/aaai.v36i11.21729",
+      "doi_url": "https://doi.org/10.1609/aaai.v36i11.21729",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Bayesian Persuasion under Ex Ante and Ex Post Constraints",
+      "authors": "Yakov Babichenko; Inbal Talgam-Cohen; Konstantin Zabarnyi",
+      "year": "2021",
+      "doi": "10.1609/aaai.v35i6.16648",
+      "doi_url": "https://doi.org/10.1609/aaai.v35i6.16648",
+      "topics": [
+        "ad_detection",
+        "agent_system"
+      ],
+      "query": "promoted post commercial intent detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Comparison Lift: Bandit-based Experimentation System for Online Advertising",
+      "authors": "Tong Geng; Xiliang Lin; Harikesh S. Nair; Jun Hao; Bin Xiang; Shurui Fan",
+      "year": "2021",
+      "doi": "10.1609/aaai.v35i17.17775",
+      "doi_url": "https://doi.org/10.1609/aaai.v35i17.17775",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Coupon Design in Advertising Systems",
+      "authors": "Weiran Shen; Pingzhong Tang; Xun Wang; Yadong Xu; Xiwang Yang",
+      "year": "2021",
+      "doi": "10.1609/aaai.v35i6.16717",
+      "doi_url": "https://doi.org/10.1609/aaai.v35i6.16717",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "DEAR: Deep Reinforcement Learning for Online Advertising Impression in Recommender Systems",
+      "authors": "Xiangyu Zhao; Changsheng Gu; Haoshenglun Zhang; Xiwang Yang; Xiaobing Liu; Jiliang Tang; Hui Liu",
+      "year": "2021",
+      "doi": "10.1609/aaai.v35i1.16156",
+      "doi_url": "https://doi.org/10.1609/aaai.v35i1.16156",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Efficient Optimal Selection for Composited Advertising Creatives with Tree Structure",
+      "authors": "Jin Chen; Tiezheng Ge; Gangwei Jiang; Zhiqiang Zhang; Defu Lian; Kai Zheng",
+      "year": "2021",
+      "doi": "10.1609/aaai.v35i5.16516",
+      "doi_url": "https://doi.org/10.1609/aaai.v35i5.16516",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Modeling the Momentum Spillover Effect for Stock Prediction via Attribute-Driven Graph Attention Networks",
+      "authors": "Rui Cheng; Qing Li",
+      "year": "2021",
+      "doi": "10.1609/aaai.v35i1.16077",
+      "doi_url": "https://doi.org/10.1609/aaai.v35i1.16077",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Online Evaluation of Audiences for Targeted Advertising via Bandit Experiments",
+      "authors": "Tong Geng; Xiliang Lin; Harikesh S. Nair",
+      "year": "2020",
+      "doi": "10.1609/aaai.v34i08.7036",
+      "doi_url": "https://doi.org/10.1609/aaai.v34i08.7036",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "aaai",
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "title": "Social Influence Does Matter: User Action Prediction for In-Feed Advertising",
+      "authors": "Hongyang Wang; Qingfei Meng; Ju Fan; Yuchen Li; Laizhong Cui; Xiaoman Zhao; Chong Peng; Gong Chen; Xiaoyong Du",
+      "year": "2020",
+      "doi": "10.1609/aaai.v34i01.5357",
+      "doi_url": "https://doi.org/10.1609/aaai.v34i01.5357",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+      "title": "TAIGR: Towards Modeling Influencer Content on Social Media via Structured, Pragmatic Inference",
+      "authors": "Nakshatri, Nishanth Sridhar and Caplan, Eylon and Pujari, Rajkumar and Goldwasser, Dan",
+      "year": "2026",
+      "doi": "10.18653/v1/2026.acl-long.1868",
+      "doi_url": "https://doi.org/10.18653/v1/2026.acl-long.1868",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "anthology:2026.acl-long",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 6: Industry Track)",
+      "title": "Towards Faithful Industrial RAG: A Reinforced Co-adaptation Framework for Advertising QA",
+      "authors": "Wenwei Li; Ming Xu; Tianle Xia; Lingxiang Hu; Yiding Sun; Linfang Shang; Liqun Liu; Peng Shu; Huan Yu; Jie Jiang",
+      "year": "2026",
+      "doi": "10.18653/v1/2026.acl-industry.42",
+      "doi_url": "https://doi.org/10.18653/v1/2026.acl-industry.42",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 6: Industry Track)",
+      "title": "ℛ3: Advertisement Compliance ℛectification via Group-ℛelative Experience Extractor and Curriculum ℛeinforcement",
+      "authors": "Yuan Chen; Zhenyu Hu; Mengge Xue; Cao Te; Liqun Liu; Peng Shu; Huan Yu; Jie Jiang",
+      "year": "2026",
+      "doi": "10.18653/v1/2026.acl-industry.24",
+      "doi_url": "https://doi.org/10.18653/v1/2026.acl-industry.24",
+      "topics": [
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "advertising regulation compliance",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Findings of the Association for Computational Linguistics: ACL 2025",
+      "title": "AD-LLM: Benchmarking Large Language Models for Anomaly Detection",
+      "authors": "Yang, Tiankai and Nian, Yi and Li, Li and Xu, Ruiyao and Li, Yuangang and Li, Jiaqi and Xiao, Zhuo and Hu, Xiyang and Rossi, Ryan A. and Ding, Kaize and Hu, Xia and Zhao, Yue",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-acl.79",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-acl.79",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.findings-acl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Findings of the Association for Computational Linguistics: ACL 2025",
+      "title": "AdParaphrase v2.0: Generating Attractive Ad Texts Using a Preference-Annotated Paraphrase Dataset",
+      "authors": "Murakami, Soichiro and Zhang, Peinan and Kamigaito, Hidetaka and Takamura, Hiroya and Okumura, Manabu",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-acl.788",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-acl.788",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.findings-acl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Findings of the Association for Computational Linguistics: ACL 2025",
+      "title": "MATCHED: Multimodal Authorship-Attribution To Combat Human Trafficking in Escort-Advertisement Data",
+      "authors": "Saxena, Vageesh Kumar and Ashpole, Benjamin and Van Dijck, Gijs and Spanakis, Gerasimos",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-acl.225",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-acl.225",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "anthology:2025.findings-acl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)",
+      "title": "Don't Buy it! Reassessing the Ad Understanding Abilities of Contrastive Multimodal Models",
+      "authors": "Bavaresco, Anna and Testoni, Alberto and Fern\\'andez, Raquel",
+      "year": "2024",
+      "doi": "10.18653/v1/2024.acl-short.77",
+      "doi_url": "https://doi.org/10.18653/v1/2024.acl-short.77",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "anthology:2024.acl-short",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Findings of the Association for Computational Linguistics: ACL 2024",
+      "title": "Predicting Narratives of Climate Obstruction in Social Media Advertising",
+      "authors": "Rowlands, Harri and Morio, Gaku and Tanner, Dylan and Manning, Christopher",
+      "year": "2024",
+      "doi": "10.18653/v1/2024.findings-acl.330",
+      "doi_url": "https://doi.org/10.18653/v1/2024.findings-acl.330",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2024.findings-acl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+      "title": "Striking Gold in Advertising: Standardization and Exploration of Ad Text Generation",
+      "authors": "Mita, Masato and Murakami, Soichiro and Kato, Akihiko and Zhang, Peinan",
+      "year": "2024",
+      "doi": "10.18653/v1/2024.acl-long.54",
+      "doi_url": "https://doi.org/10.18653/v1/2024.acl-long.54",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2024.acl-long",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Findings of the Association for Computational Linguistics: ACL 2024",
+      "title": "Toward Reliable Ad-hoc Scientific Information Extraction: A Case Study on Two Materials Dataset",
+      "authors": "Ghosh, Satanu and Brodnik, Neal and Frey, Carolina and Holgate, Collin and Pollock, Tresa and Daly, Samantha and Carton, Samuel",
+      "year": "2024",
+      "doi": "10.18653/v1/2024.findings-acl.897",
+      "doi_url": "https://doi.org/10.18653/v1/2024.findings-acl.897",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2024.findings-acl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+      "title": "AD-KD: Attribution-Driven Knowledge Distillation for Language Model Compression",
+      "authors": "Wu, Siyue and Chen, Hongzhan and Quan, Xiaojun and Wang, Qifan and Wang, Rui",
+      "year": "2023",
+      "doi": "10.18653/v1/2023.acl-long.471",
+      "doi_url": "https://doi.org/10.18653/v1/2023.acl-long.471",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2023.acl-long",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Findings of the Association for Computational Linguistics: ACL 2023",
+      "title": "Encoder and Decoder, Not One Less for Pre-trained Language Model Sponsored NMT",
+      "authors": "Duan, Sufeng and Zhao, Hai",
+      "year": "2023",
+      "doi": "10.18653/v1/2023.findings-acl.222",
+      "doi_url": "https://doi.org/10.18653/v1/2023.findings-acl.222",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "anthology:2023.findings-acl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+      "title": "Helping a Friend or Supporting a Cause? Disentangling Active and Passive Cosponsorship in the U.S. Congress",
+      "authors": "Russo, Giuseppe and Gote, Christoph and Brandenberger, Laurence and Schlosser, Sophia and Schweitzer, Frank",
+      "year": "2023",
+      "doi": "10.18653/v1/2023.acl-long.166",
+      "doi_url": "https://doi.org/10.18653/v1/2023.acl-long.166",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "anthology:2023.acl-long",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Findings of the Association for Computational Linguistics: ACL-IJCNLP 2021",
+      "title": "Analyzing Online Political Advertisements",
+      "authors": "S\\'anchez Villegas, Danae and Mokaram, Saeid and Aletras, Nikolaos",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.findings-acl.321",
+      "doi_url": "https://doi.org/10.18653/v1/2021.findings-acl.321",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2021.findings-acl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "acl",
+      "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+      "title": "Understanding Advertisements with BERT",
+      "authors": "Kalra, Kanika and Kurma, Bhargav and Vadakkeeveetil Sreelatha, Silpa and Patwardhan, Manasi and Karande, Shirish",
+      "year": "2020",
+      "doi": "10.18653/v1/2020.acl-main.674",
+      "doi_url": "https://doi.org/10.18653/v1/2020.acl-main.674",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2020.acl-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2026 CHI Conference on Human Factors in Computing Systems",
+      "title": "Beyond Precision: Understanding the Impact of Algorithmic Accuracy and Transparency on User Perceptions in Keyword-Driven Contextual Advertising",
+      "authors": "Jingwen Cai; Bart Piet Knijnenburg; Johanna Björklund; Sara Leckner",
+      "year": "2026",
+      "doi": "10.1145/3772318.3791240",
+      "doi_url": "https://doi.org/10.1145/3772318.3791240",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems",
+      "title": "Examining Student and Teacher Perspectives on Undisclosed Use of Generative AI in Academic Work",
+      "authors": "Rudaiba Adnin; Atharva Pandkar; Bingsheng Yao; Dakuo Wang; Maitraye Das",
+      "year": "2025",
+      "doi": "10.1145/3706598.3713393",
+      "doi_url": "https://doi.org/10.1145/3706598.3713393",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems",
+      "title": "Influencer: Empowering Everyday Users in Creating Promotional Posts via AI-infused Exploration and Customization",
+      "authors": "Xuye Liu; Annie Sun; Pengcheng An; Tengfei Ma; Jian Zhao",
+      "year": "2025",
+      "doi": "10.1145/3706598.3713309",
+      "doi_url": "https://doi.org/10.1145/3706598.3713309",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems",
+      "title": "Intriguing, Concerning, and Questioning the Impact on Immersion: An Exploration of VR Users' Advertising Experiences and Attitudes",
+      "authors": "Abraham Mhaidli; Selin Erin Fidan; Florian Schaub",
+      "year": "2025",
+      "doi": "10.1145/3706598.3713095",
+      "doi_url": "https://doi.org/10.1145/3706598.3713095",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the Extended Abstracts of the CHI Conference on Human Factors in Computing Systems",
+      "title": "User Willingness to Engage with AI-Generated Influencer Content",
+      "authors": "Cherie Sew; Sarah Schömbs; Ryan M. Kelly; Jorge Goncalves",
+      "year": "2025",
+      "doi": "10.1145/3706599.3719916",
+      "doi_url": "https://doi.org/10.1145/3706599.3719916",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the CHI Conference on Human Factors in Computing Systems",
+      "title": "Behind the Pup-ularity Curtain: Understanding the Motivations, Challenges, and Work Performed in Creating and Managing Pet Influencer Accounts",
+      "authors": "Suhyeon Yoo; Kevin Pu; Khai N. Truong",
+      "year": "2024",
+      "doi": "10.1145/3613904.3642367",
+      "doi_url": "https://doi.org/10.1145/3613904.3642367",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Extended Abstracts of the CHI Conference on Human Factors in Computing Systems",
+      "title": "Cross-Country Examination of People’s Experience with Targeted Advertising on Social Media",
+      "authors": "Smirity Kaushik; Tanusree Sharma; Yaman Yu; Amna F Ali; Yang Wang; Yixin Zou",
+      "year": "2024",
+      "doi": "10.1145/3613905.3650780",
+      "doi_url": "https://doi.org/10.1145/3613905.3650780",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Extended Abstracts of the CHI Conference on Human Factors in Computing Systems",
+      "title": "Visual Explanation for Advertising Creative Workflow",
+      "authors": "Shoko Sawada; Tomoyuki Suzuki; Kota Yamaguchi; Masashi Toyoda",
+      "year": "2024",
+      "doi": "10.1145/3613905.3651123",
+      "doi_url": "https://doi.org/10.1145/3613905.3651123",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems",
+      "title": "Building Positively Affective Location-Based Advertising: A Study of Pokémon GO Players",
+      "authors": "John Dunham; Konstantinos Papangelis; Cati Boulanger; Nicolas Lalone; Evangelia [Lina Nika; Michael Saker; David Schwartz",
+      "year": "2023",
+      "doi": "10.1145/3544548.3580939",
+      "doi_url": "https://doi.org/10.1145/3544548.3580939",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems",
+      "title": "“We Need a Big Revolution in Email Advertising”: Users’ Perception of Persuasion in Permission-based Advertising Emails",
+      "authors": "Anastasia Sergeeva; Björn Rohles; Verena Distler; Vincent Koenig",
+      "year": "2023",
+      "doi": "10.1145/3544548.3581163",
+      "doi_url": "https://doi.org/10.1145/3544548.3581163",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "CHI Conference on Human Factors in Computing Systems Extended Abstracts",
+      "title": "Advertising in Location-Based Games: An Exploration in Pokémon GO",
+      "authors": "John Dunham; Jiangnan Xu; Konstantinos Papangelis; David I Schwartz",
+      "year": "2022",
+      "doi": "10.1145/3491101.3519663",
+      "doi_url": "https://doi.org/10.1145/3491101.3519663",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems",
+      "title": "Identifying Manipulative Advertising Techniques in XR Through Scenario Construction",
+      "authors": "Abraham Hani Mhaidli; Florian Schaub",
+      "year": "2021",
+      "doi": "10.1145/3411764.3445253",
+      "doi_url": "https://doi.org/10.1145/3411764.3445253",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems",
+      "title": "Vinci: An Intelligent Graphic Design System for Generating Advertising Posters",
+      "authors": "Shunan Guo; Zhuochen Jin; Fuling Sun; Jingwen Li; Zhaorui Li; Yang Shi; Nan Cao",
+      "year": "2021",
+      "doi": "10.1145/3411764.3445117",
+      "doi_url": "https://doi.org/10.1145/3411764.3445117",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems",
+      "title": "What Makes a “Bad” Ad? User Perceptions of Problematic Online Advertising",
+      "authors": "Eric Zeng; Tadayoshi Kohno; Franziska Roesner",
+      "year": "2021",
+      "doi": "10.1145/3411764.3445459",
+      "doi_url": "https://doi.org/10.1145/3411764.3445459",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems",
+      "title": "An Empirical Comparison of Technologically Mediated Advertising in Under-connected Populations",
+      "authors": "Mustafa Naseem; Bilal Saleem; Sacha St-Onge Ahmad; Jay Chen; Agha Ali Raza",
+      "year": "2020",
+      "doi": "10.1145/3313831.3376683",
+      "doi_url": "https://doi.org/10.1145/3313831.3376683",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Extended Abstracts of the 2020 CHI Conference on Human Factors in Computing Systems",
+      "title": "Aranyani.id  The Design of Reforestation Funding Program Using Mobile Advertising Application",
+      "authors": "Kairania Qalbi; Gita Prasulistiyono Putra",
+      "year": "2020",
+      "doi": "10.1145/3334480.3381447",
+      "doi_url": "https://doi.org/10.1145/3334480.3381447",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 19th Brazilian Symposium on Human Factors in Computing Systems",
+      "title": "Evaluation of Facebook advertising recommendations explanations with the perspective of semiotic engineering",
+      "authors": "Niltemberg de O. Carvalho; Andréia Libório Sampaio; Ingrid Teixeira Monteiro",
+      "year": "2020",
+      "doi": "10.1145/3424953.3426632",
+      "doi_url": "https://doi.org/10.1145/3424953.3426632",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "chi",
+      "venue": "Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems",
+      "title": "Opportunities for Enhancing Access and Efficacy of Peer Sponsorship in Substance Use Disorder Recovery",
+      "authors": "Jeremy Heyer; Zachary Schmitt; Lynn Dombrowski; Svetlana Yarosh",
+      "year": "2020",
+      "doi": "10.1145/3313831.3376241",
+      "doi_url": "https://doi.org/10.1145/3313831.3376241",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 34th ACM International Conference on Information and Knowledge Management",
+      "title": "KP-Agent: Keyword Pruning in Sponsored Search Advertising via LLM-Powered Contextual Bandits",
+      "authors": "Hou-Wan Long; Yicheng Song; Zidong Wang; Tianshu Sun",
+      "year": "2025",
+      "doi": "10.1145/3746252.3760974",
+      "doi_url": "https://doi.org/10.1145/3746252.3760974",
+      "topics": [
+        "ad_detection",
+        "agent_system",
+        "covert_advertising"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 34th ACM International Conference on Information and Knowledge Management",
+      "title": "Non-autoregressive Generative Auction with Global Externalities for Online Advertising",
+      "authors": "Zuowu Zheng; Ze Wang; Fan Yang; Wenqing Ye; Weihua Huang; Wenqiang He; Teng Zhang; Xingxing Wang",
+      "year": "2025",
+      "doi": "10.1145/3746252.3760955",
+      "doi_url": "https://doi.org/10.1145/3746252.3760955",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 34th ACM International Conference on Information and Knowledge Management",
+      "title": "T-Stars-Poster: A Framework for Product-Centric Advertising Image Design",
+      "authors": "Hongyu Chen; Min Zhou; Jing Jiang; Jiale Chen; Yang Lu; Zihang Lin; Bo Xiao; Tiezheng Ge; Bo Zheng",
+      "year": "2025",
+      "doi": "10.1145/3746252.3761554",
+      "doi_url": "https://doi.org/10.1145/3746252.3761554",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 34th ACM International Conference on Information and Knowledge Management",
+      "title": "UniROM: Unifying Online Advertising Ranking as One Model",
+      "authors": "Junyan Qiu; Ze Wang; Fan Zhang; Zuowu Zheng; Jile Zhu; Jiangke Fan; Teng Zhang; Haitao Wang; Xingxing Wang",
+      "year": "2025",
+      "doi": "10.1145/3746252.3761044",
+      "doi_url": "https://doi.org/10.1145/3746252.3761044",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 33rd ACM International Conference on Information and Knowledge Management",
+      "title": "A Bayesian Multi-Armed Bandit Algorithm for Bid Shading in Online Display Advertising",
+      "authors": "Mengzhuo Guo; Wuqi Zhang; Congde Yuan; Binfeng Jia; Guoqing Song; Hua Hua; Shuangyang Wang; Qingpeng Zhang",
+      "year": "2024",
+      "doi": "10.1145/3627673.3680107",
+      "doi_url": "https://doi.org/10.1145/3627673.3680107",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 33rd ACM International Conference on Information and Knowledge Management",
+      "title": "Enhancing Taobao Display Advertising with Multimodal Representations: Challenges, Approaches and Insights",
+      "authors": "Xiang-Rong Sheng; Feifan Yang; Litong Gong; Biao Wang; Zhangming Chan; Yujing Zhang; Yueyao Cheng; Yong-Nan Zhu; Tiezheng Ge; Han Zhu; Yuning Jiang; Jian Xu; Bo Zheng",
+      "year": "2024",
+      "doi": "10.1145/3627673.3680068",
+      "doi_url": "https://doi.org/10.1145/3627673.3680068",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "3MN: Three Meta Networks for Multi-Scenario and Multi-Task Learning in Online Advertising Recommender Systems",
+      "authors": "Yifei Zhang; Hua Hua; Hui Guo; Shuangyang Wang; Chongyu Zhong; Shijie Zhang",
+      "year": "2023",
+      "doi": "10.1145/3583780.3614651",
+      "doi_url": "https://doi.org/10.1145/3583780.3614651",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "COPR: Consistency-Oriented Pre-Ranking for Online Advertising",
+      "authors": "Zhishan Zhao; Jingyue Gao; Yu Zhang; Shuguang Han; Siyuan Lou; Xiang-Rong Sheng; Zhe Wang; Han Zhu; Yuning Jiang; Jian Xu; Bo Zheng",
+      "year": "2023",
+      "doi": "10.1145/3583780.3615465",
+      "doi_url": "https://doi.org/10.1145/3583780.3615465",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "Combating Ad Fatigue via Frequency-Recency Features in Online Advertising Systems",
+      "authors": "Natalia Silberstein; Or Shoham; Assaf Klein",
+      "year": "2023",
+      "doi": "10.1145/3583780.3615461",
+      "doi_url": "https://doi.org/10.1145/3583780.3615461",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "EdgeNet : Encoder-decoder generative Network for Auction Design in E-commerce Online Advertising",
+      "authors": "Guangyuan Shen; Shengjie Sun; Dehong Gao; Duanxiao Song; Libin Yang; Zhen Wang; Yongping Shi; Wei Ning",
+      "year": "2023",
+      "doi": "10.1145/3583780.3615192",
+      "doi_url": "https://doi.org/10.1145/3583780.3615192",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "LEAD-ID: Language-Enhanced Denoising and Intent Distinguishing Graph Neural Network for Sponsored Search Broad Retrievals",
+      "authors": "Xiao Zhou; Ran Wang; Haorui Li; Qiang Liu; Xingxing Wang; Dong Wang",
+      "year": "2023",
+      "doi": "10.1145/3583780.3615175",
+      "doi_url": "https://doi.org/10.1145/3583780.3615175",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "promoted post commercial intent detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "Leveraging Post-Click User Behaviors for Calibrated Conversion Rate Prediction Under Delayed Feedback in Online Advertising",
+      "authors": "Yuyao Guo; Xiang Ao; Qiming Liu; Qing He",
+      "year": "2023",
+      "doi": "10.1145/3583780.3615161",
+      "doi_url": "https://doi.org/10.1145/3583780.3615161",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "Optimal Real-Time Bidding Strategy for Position Auctions in Online Advertising",
+      "authors": "Weitong Ou; Bo Chen; Weiwen Liu; Xinyi Dai; Weinan Zhang; Wei Xia; Xuan Li; Ruiming Tang; Yong Yu",
+      "year": "2023",
+      "doi": "10.1145/3583780.3614727",
+      "doi_url": "https://doi.org/10.1145/3583780.3614727",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cikm",
+      "venue": "Proceedings of the 32nd ACM International Conference on Information and Knowledge Management",
+      "title": "Quantifying the Effectiveness of Advertising: A Bootstrap Proportion Test for Brand Lift Testing",
+      "authors": "Wanjun Liu; Xiufan Yu; Jialiang Mao; Xiaoxu Wu; Justin Dyer",
+      "year": "2023",
+      "doi": "10.1145/3583780.3615021",
+      "doi_url": "https://doi.org/10.1145/3583780.3615021",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "coling",
+      "venue": "Proceedings of the 31st International Conference on Computational Linguistics",
+      "title": "Detecting deepfakes and false ads through analysis of text and social engineering techniques",
+      "authors": "Martinek, Alicja and Bartuzi-Trokielewicz, Ewelina",
+      "year": "2025",
+      "doi": "",
+      "doi_url": "",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.coling-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "coling",
+      "venue": "Proceedings of the 28th International Conference on Computational Linguistics",
+      "title": "Ad Lingua: Text Classification Improves Symbolism Prediction in Image Advertisements",
+      "authors": "Savchenko, Andrey and Alekseev, Anton and Kwon, Sejeong and Tutubalina, Elena and Myasnikov, Evgeny and Nikolenko, Sergey",
+      "year": "2020",
+      "doi": "10.18653/v1/2020.coling-main.171",
+      "doi_url": "https://doi.org/10.18653/v1/2020.coling-main.171",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2020.coling-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "coling",
+      "venue": "Proceedings of the 28th International Conference on Computational Linguistics",
+      "title": "Topic-driven Ensemble for Online Advertising Generation",
+      "authors": "Nevezhin, Egor and Butakov, Nikolay and Khodorchenko, Maria and Petrov, Maxim and Nasonov, Denis",
+      "year": "2020",
+      "doi": "10.18653/v1/2020.coling-main.206",
+      "doi_url": "https://doi.org/10.18653/v1/2020.coling-main.206",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2020.coling-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "cscw",
+      "venue": "Computer Supported Cooperative Work and Social Computing",
+      "title": "Influencer Publics and the Divergent Construction of Social Media Realities",
+      "authors": "Andrew Beers",
+      "year": "2023",
+      "doi": "10.1145/3584931.3608928",
+      "doi_url": "https://doi.org/10.1145/3584931.3608928",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cscw",
+      "venue": "Companion Publication of the 2022 Conference on Computer Supported Cooperative Work and Social Computing",
+      "title": "This is Why I Like Them: Exploring the Perceived Appeal of Social Media Influencers vs. Traditional Mass Media",
+      "authors": "Hsuan-Jen Lee; Yu-Ling Chou; Jie Tsai; Yung-Ju Chang",
+      "year": "2022",
+      "doi": "10.1145/3500868.3559462",
+      "doi_url": "https://doi.org/10.1145/3500868.3559462",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cscw",
+      "venue": "Companion Publication of the 2019 Conference on Computer Supported Cooperative Work and Social Computing",
+      "title": "The Appeal of Influencers to the Social Media Outreach of Indian Politicians",
+      "authors": "Faisal M. Lalani; Ramaravind Kommiya Mothilal; Joyojeet Pal",
+      "year": "2019",
+      "doi": "10.1145/3311957.3359484",
+      "doi_url": "https://doi.org/10.1145/3311957.3359484",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "cvpr",
+      "venue": "2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)",
+      "title": "Prioritised Moderation for Online Advertising",
+      "authors": "Phanideep Gampa; Akash Anil Valsangkar; Shailesh Choubey; Pooja A",
+      "year": "2023",
+      "doi": "10.1109/cvprw59228.2023.00194",
+      "doi_url": "https://doi.org/10.1109/cvprw59228.2023.00194",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "eacl",
+      "venue": "Proceedings of the 19th Conference of the European Chapter of the Association for Computational Linguistics (Volume 5: Industry Track)",
+      "title": "Enhancing User Safety: Context-Aware Detection of Offensive Query-Ad Pairs in Multimodal Search Advertising",
+      "authors": "Gaurav Kumar; Qiangjian Xi; Tanmaya Shekhar Dabral; Hooshang Ghasemi; Abishek Krishnamoorthy; Danqing Fu; Rui Min; Emilio Antunez; Zhongli Ding; Pradyumna Narayana",
+      "year": "2026",
+      "doi": "10.18653/v1/2026.eacl-industry.36",
+      "doi_url": "https://doi.org/10.18653/v1/2026.eacl-industry.36",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "eacl",
+      "venue": "Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics",
+      "title": "What Clued the AI Doctor In? On the Influence of Data Source and Quality for Transformer-Based Medical Self-Disclosure Detection",
+      "authors": "Valizadeh, Mina and Qian, Xing and Ranjbar-Noiey, Pardis and Caragea, Cornelia and Parde, Natalie",
+      "year": "2023",
+      "doi": "10.18653/v1/2023.eacl-main.86",
+      "doi_url": "https://doi.org/10.18653/v1/2023.eacl-main.86",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "anthology:2023.eacl-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "eacl",
+      "venue": "Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume",
+      "title": "Benchmarking a transformer-FREE model for ad-hoc retrieval",
+      "authors": "Almeida, Tiago and Matos, S\\'ergio",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.eacl-main.293",
+      "doi_url": "https://doi.org/10.18653/v1/2021.eacl-main.293",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2021.eacl-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2026",
+      "title": "From Memory to Behavior: A Behavior-Aware Role-Playing Framework for Social Media Influencers",
+      "authors": "Peng, Ji-Lun and Zhang, Yi-Zhen and Chou, Chun-Nan and Chen, Yun-Nung",
+      "year": "2026",
+      "doi": "",
+      "doi_url": "",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "anthology:2026.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2026",
+      "title": "What Transfers Under Source Shift? Definitions, Examples, and Fine-Tuning for Climate Disclosure Classification",
+      "authors": "Li, Guosheng and Ren, Fenghui and Liu, Bin and Yu, Chuan and Ji, Kaiying and Yue, Lin and Shen, Jun and Qian, Sasa",
+      "year": "2026",
+      "doi": "",
+      "doi_url": "",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "anthology:2026.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2025",
+      "title": "AdDriftBench: A Benchmark for Detecting Data Drift and Label Drift in Short Video Advertising",
+      "authors": "Song, Yinghao and Zeng, Xiangji and Cui, Shuai and Sun, Lu and Liu, Zhaowei and Yuan, Yuan and Wang, Yulu and Zhou, Hai and Gong, Zhaohan",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-emnlp.545",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-emnlp.545",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2025.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing",
+      "title": "BannerAgency: Advertising Banner Design with Multimodal LLM Agents",
+      "authors": "Wang, Heng and Shimose, Yotaro and Takamatsu, Shingo",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.emnlp-main.214",
+      "doi_url": "https://doi.org/10.18653/v1/2025.emnlp-main.214",
+      "topics": [
+        "ad_detection",
+        "agent_system",
+        "multimodal"
+      ],
+      "query": "anthology:2025.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2025",
+      "title": "BannerBench: Benchmarking Vision Language Models for Multi-Ad Selection with Human Preferences",
+      "authors": "Otake, Hiroto and Zhang, Peinan and Sakai, Yusuke and Mita, Masato and Ouchi, Hiroki and Watanabe, Taro",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-emnlp.1311",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-emnlp.1311",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "anthology:2025.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2025",
+      "title": "ICL-Bandit: Relevance Labeling in Advertisement Recommendation Systems via LLM",
+      "authors": "Wang, Lu and Duan, Chiming and Zhao, Pu and Yang, Fangkai and Shi, Yong and Luo, Xuefeng and Xu, Bingjing and Deng, Weiwei and Lin, Qingwei and Zhang, Dongmei",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-emnlp.1273",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-emnlp.1273",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2025.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing",
+      "title": "Improving Online Job Advertisement Analysis via Compositional Entity Extraction",
+      "authors": "Kr\\\"uger, Kai and Binnewitt, Johanna and Ehmann, Kathrin and Winnige, Stefan and Akbik, Alan",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.emnlp-main.1375",
+      "doi_url": "https://doi.org/10.18653/v1/2025.emnlp-main.1375",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2025.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing",
+      "title": "Leveraging Large Models to Evaluate Novel Content: A Case Study on Advertisement Creativity",
+      "authors": "Hou, Zhaoyi Joey and Kovashka, Adriana and Li, Xiang Lorraine",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.emnlp-main.1072",
+      "doi_url": "https://doi.org/10.18653/v1/2025.emnlp-main.1072",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2025.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing",
+      "title": "OMS: On-the-fly, Multi-Objective, Self-Reflective Ad Keyword Generation via LLM Agent",
+      "authors": "Chen, Bowen and Wang, Zhao and Takamatsu, Shingo",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.emnlp-main.938",
+      "doi_url": "https://doi.org/10.18653/v1/2025.emnlp-main.938",
+      "topics": [
+        "agent_system"
+      ],
+      "query": "anthology:2025.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2025",
+      "title": "Post-hoc Study of Climate Microtargeting on Social Media Ads with LLMs: Thematic Insights and Fairness Evaluation",
+      "authors": "Islam, Tunazzina and Goldwasser, Dan",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-emnlp.857",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-emnlp.857",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing",
+      "title": "Real-time Ad Retrieval via LLM-generative Commercial Intention for Sponsored Search Advertising",
+      "authors": "Liu, Tongtong and Wang, Zhaohui and Qin, Meiyue and Lu, Zenghui and Chen, Xudong and Yang, Yuekui and Shu, Peng",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.emnlp-main.1473",
+      "doi_url": "https://doi.org/10.18653/v1/2025.emnlp-main.1473",
+      "topics": [
+        "ad_detection",
+        "covert_advertising"
+      ],
+      "query": "anthology:2025.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2025",
+      "title": "The Face of Persuasion: Analyzing Bias and Generating Culture-Aware Ads",
+      "authors": "Aghazadeh, Aysan and Kovashka, Adriana",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-emnlp.344",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-emnlp.344",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+      "title": "AD-NLP: A Benchmark for Anomaly Detection in Natural Language Processing",
+      "authors": "Bejan, Matei and Manolache, Andrei and Popescu, Marius",
+      "year": "2023",
+      "doi": "10.18653/v1/2023.emnlp-main.664",
+      "doi_url": "https://doi.org/10.18653/v1/2023.emnlp-main.664",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2023.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2023",
+      "title": "An Empirical Investigation of Implicit and Explicit Knowledge-Enhanced Methods for Ad Hoc Dataset Retrieval",
+      "authors": "Luo, Weiqing and Chen, Qiaosheng and Zhang, Zhiyang and Huang, Zixian and Cheng, Gong",
+      "year": "2023",
+      "doi": "10.18653/v1/2023.findings-emnlp.957",
+      "doi_url": "https://doi.org/10.18653/v1/2023.findings-emnlp.957",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2023.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+      "title": "IDTraffickers: An Authorship Attribution Dataset to link and connect Potential Human-Trafficking Operations on Text Escort Advertisements",
+      "authors": "Saxena, Vageesh and Ashpole, Benjamin and van Dijck, Gijs and Spanakis, Gerasimos",
+      "year": "2023",
+      "doi": "10.18653/v1/2023.emnlp-main.524",
+      "doi_url": "https://doi.org/10.18653/v1/2023.emnlp-main.524",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2023.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2021",
+      "title": "Don't Miss the Potential Customers! Retrieving Similar Ads to Improve User Targeting",
+      "authors": "Feng, Yi and Wang, Ting and Li, Chuanyi and Ng, Vincent and Ge, Jidong and Luo, Bin and Hu, Yucheng and Zhang, Xiaopeng",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.findings-emnlp.129",
+      "doi_url": "https://doi.org/10.18653/v1/2021.findings-emnlp.129",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2021.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2021",
+      "title": "Leveraging Bidding Graphs for Advertiser-Aware Relevance Modeling in Sponsored Search",
+      "authors": "Bi, Shuxian and Li, Chaozhuo and Han, Xiao and Liu, Zheng and Xie, Xing and Huang, Haizhen and Wen, Zengxuan",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.findings-emnlp.191",
+      "doi_url": "https://doi.org/10.18653/v1/2021.findings-emnlp.191",
+      "topics": [
+        "covert_advertising",
+        "ad_detection"
+      ],
+      "query": "anthology:2021.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing",
+      "title": "Matching-oriented Embedding Quantization For Ad-hoc Retrieval",
+      "authors": "Xiao, Shitao and Liu, Zheng and Shao, Yingxia and Lian, Defu and Xie, Xing",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.emnlp-main.640",
+      "doi_url": "https://doi.org/10.18653/v1/2021.emnlp-main.640",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2021.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Findings of the Association for Computational Linguistics: EMNLP 2020",
+      "title": "A Semantics-based Approach to Disclosure Classification in User-Generated Online Content",
+      "authors": "Akiti, Chandan and Squicciarini, Anna and Rajtmajer, Sarah",
+      "year": "2020",
+      "doi": "10.18653/v1/2020.findings-emnlp.312",
+      "doi_url": "https://doi.org/10.18653/v1/2020.findings-emnlp.312",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "anthology:2020.findings-emnlp",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+      "title": "Ad-hoc Document Retrieval using Weak-Supervision with BERT and GPT2",
+      "authors": "Mass, Yosi and Roitman, Haggai",
+      "year": "2020",
+      "doi": "10.18653/v1/2020.emnlp-main.343",
+      "doi_url": "https://doi.org/10.18653/v1/2020.emnlp-main.343",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2020.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "emnlp",
+      "venue": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+      "title": "Selection and Generation: Learning towards Multi-Product Advertisement Post Generation",
+      "authors": "Chan, Zhangming and Zhang, Yuchi and Chen, Xiuying and Gao, Shen and Zhang, Zhiqiang and Zhao, Dongyan and Yan, Rui",
+      "year": "2020",
+      "doi": "10.18653/v1/2020.emnlp-main.313",
+      "doi_url": "https://doi.org/10.18653/v1/2020.emnlp-main.313",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2020.emnlp-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "iccv",
+      "venue": "2025 IEEE/CVF International Conference on Computer Vision Workshops (ICCVW)",
+      "title": "A Survey of Human Synergy in Influencer Marketing Through Authenticity-Preserving Content Generation Approaches",
+      "authors": "Nafi Diallo; Pegah Ojaghi",
+      "year": "2025",
+      "doi": "10.1109/iccvw69036.2025.00628",
+      "doi_url": "https://doi.org/10.1109/iccvw69036.2025.00628",
+      "topics": [
+        "covert_advertising",
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "iccv",
+      "venue": "2025 IEEE/CVF International Conference on Computer Vision Workshops (ICCVW)",
+      "title": "From Pixels to Context: Adapting Generative Models for Advertising at Scale",
+      "authors": "HyunHee Chung; Taeyoung Na",
+      "year": "2025",
+      "doi": "10.1109/iccvw69036.2025.00639",
+      "doi_url": "https://doi.org/10.1109/iccvw69036.2025.00639",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Altering Words to Evade Perceived Moderation: Decoding Algospeak in Chinese Social Media Video Captions",
+      "authors": "Andy Zhao",
+      "year": "2026",
+      "doi": "10.1609/icwsm.v20i1.42775",
+      "doi_url": "https://doi.org/10.1609/icwsm.v20i1.42775",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Anti-Establishment Sentiment on TikTok: Implications for Understanding Influence(rs) and Expertise on Social Media",
+      "authors": "Tianliang Xu; Ariel Hasell; Sabina Tomkins",
+      "year": "2026",
+      "doi": "10.1609/icwsm.v20i1.42765",
+      "doi_url": "https://doi.org/10.1609/icwsm.v20i1.42765",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Digital Diasporas: How Origin Characteristics and Host–Native Distance Shape Immigrants’ Online Cultural Retention",
+      "authors": "Aparup Khatua; David Jurgens; Ingmar Weber",
+      "year": "2026",
+      "doi": "10.1609/icwsm.v20i1.42691",
+      "doi_url": "https://doi.org/10.1609/icwsm.v20i1.42691",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Political Advertising on Facebook During the 2022 Australian Federal Election: A Social Identity Perspective",
+      "authors": "Stefano Civelli; Pietro Bernardelle; Frank Mols; Gianluca Demartini",
+      "year": "2026",
+      "doi": "10.1609/icwsm.v20i1.42654",
+      "doi_url": "https://doi.org/10.1609/icwsm.v20i1.42654",
+      "topics": [
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Towards Detecting Persuasion on Social Media: From Model Development to Insights on Persuasion Strategies",
+      "authors": "Elyas Meguellati; Stefano Civelli; Pietro Bernardelle; Shazia Sadiq; Irwin King; Gianluca Demartini",
+      "year": "2026",
+      "doi": "10.1609/icwsm.v20i1.42714",
+      "doi_url": "https://doi.org/10.1609/icwsm.v20i1.42714",
+      "topics": [
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Turning Trust to Transactions: Tracking Affiliate Marketing and FTC Compliance in YouTube’s Influencer Economy",
+      "authors": "Chen Sun; Yash Vekaria; Zubair Shafiq; Rishab Nithyanand",
+      "year": "2026",
+      "doi": "10.1609/icwsm.v20i1.42748",
+      "doi_url": "https://doi.org/10.1609/icwsm.v20i1.42748",
+      "topics": [
+        "compliance_rag",
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Discovering Latent Themes in Social Media Messaging: A Machine-in-the-Loop Approach Integrating LLMs",
+      "authors": "Tunazzina Islam; Dan Goldwasser",
+      "year": "2025",
+      "doi": "10.1609/icwsm.v19i1.35850",
+      "doi_url": "https://doi.org/10.1609/icwsm.v19i1.35850",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Exploring Unknown Social Networks for Discovering Hidden Nodes",
+      "authors": "Sho Tsugawa; Hiroyuki Ohsaki",
+      "year": "2025",
+      "doi": "10.1609/icwsm.v19i1.35911",
+      "doi_url": "https://doi.org/10.1609/icwsm.v19i1.35911",
+      "topics": [
+        "creator_history",
+        "compliance_rag"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Influencer Marketing Augmented Personalized Assortment Planning: A Two-Stage Optimization Problem",
+      "authors": "Jing Yuan; Twumasi Mensah-Boateng; Shaojie Tang",
+      "year": "2024",
+      "doi": "10.1609/icwsm.v18i1.31423",
+      "doi_url": "https://doi.org/10.1609/icwsm.v18i1.31423",
+      "topics": [
+        "covert_advertising",
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "InstaSynth: Opportunities and Challenges in Generating Synthetic Instagram Data with ChatGPT for Sponsored Content Detection",
+      "authors": "Thales Bertaglia; Lily Heisig; Rishabh Kaushal; Adriana Iamnitchi",
+      "year": "2024",
+      "doi": "10.1609/icwsm.v18i1.31303",
+      "doi_url": "https://doi.org/10.1609/icwsm.v18i1.31303",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Keeping Up with the Winner! Targeted Advertisement to Communities in Social Networks",
+      "authors": "Shailaja Mallick; Vishwaraj Doshi; Do Young Eun",
+      "year": "2024",
+      "doi": "10.1609/icwsm.v18i1.31369",
+      "doi_url": "https://doi.org/10.1609/icwsm.v18i1.31369",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Search Engine Revenue from Navigational and Brand Advertising",
+      "authors": "Jeffrey Gleason; Alice Koeninger; Desheng Hu; Jessica Teurn; Yakov Bart; Samsun Knight; Ronald E. Robertson; Christo Wilson",
+      "year": "2024",
+      "doi": "10.1609/icwsm.v18i1.31329",
+      "doi_url": "https://doi.org/10.1609/icwsm.v18i1.31329",
+      "topics": [
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Submodular Optimization beyond Nonnegativity: Adaptive Seed Selection in Incentivized Social Advertising",
+      "authors": "Shaojie Tang; Jing Yuan",
+      "year": "2024",
+      "doi": "10.1609/icwsm.v18i1.31404",
+      "doi_url": "https://doi.org/10.1609/icwsm.v18i1.31404",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Unraveling the Dynamics of Television Debates and Social Media Engagement: Insights from an Indian News Show",
+      "authors": "Kiran Garimella; Abhilash Datta",
+      "year": "2024",
+      "doi": "10.1609/icwsm.v18i1.31325",
+      "doi_url": "https://doi.org/10.1609/icwsm.v18i1.31325",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Host-Centric Social Connectedness of Migrants in Europe on Facebook",
+      "authors": "Aparup Khatua; Emilio Zagheni; Ingmar Weber",
+      "year": "2023",
+      "doi": "10.1609/icwsm.v17i1.22224",
+      "doi_url": "https://doi.org/10.1609/icwsm.v17i1.22224",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Identifying Influential Brokers on Social Media from Social Network Structure",
+      "authors": "Sho Tsugawa; Kohei Watabe",
+      "year": "2023",
+      "doi": "10.1609/icwsm.v17i1.22193",
+      "doi_url": "https://doi.org/10.1609/icwsm.v17i1.22193",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Popular Support for Balancing Equity and Efficiency in Resource Allocation: A Case Study in Online Advertising to Increase Welfare Program Awareness",
+      "authors": "Allison Koenecke; Eric Giannella; Robb Willer; Sharad Goel",
+      "year": "2023",
+      "doi": "10.1609/icwsm.v17i1.22163",
+      "doi_url": "https://doi.org/10.1609/icwsm.v17i1.22163",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "A Large-Scale Longitudinal Multimodal Dataset of State-Backed Information Operations on Twitter",
+      "authors": "Xiaobo Guo; Soroush Vosoughi",
+      "year": "2022",
+      "doi": "10.1609/icwsm.v16i1.19375",
+      "doi_url": "https://doi.org/10.1609/icwsm.v16i1.19375",
+      "topics": [
+        "covert_advertising",
+        "multimodal",
+        "creator_history"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "DISMISS: Database of Indian Social Media Influencers on Twitter",
+      "authors": "Arshia Arya; Soham De; Dibyendu Mishra; Gazal Shekhawat; Ankur Sharma; Anmol Panda; Faisal Lalani; Parantak Singh; Ramaravind Kommiya Mothilal; Rynaa Grover; Sachita Nishal; Saloni Dash; Shehla Shora; Syeda Zainab Akbar; Joyojeet Pal",
+      "year": "2022",
+      "doi": "10.1609/icwsm.v16i1.19370",
+      "doi_url": "https://doi.org/10.1609/icwsm.v16i1.19370",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Divided We Rule: Influencer Polarization on Twitter during Political Crises in India",
+      "authors": "Saloni Dash; Dibyendu Mishra; Gazal Shekhawat; Joyojeet Pal",
+      "year": "2022",
+      "doi": "10.1609/icwsm.v16i1.19279",
+      "doi_url": "https://doi.org/10.1609/icwsm.v16i1.19279",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Engaging Politically Diverse Audiences on Social Media",
+      "authors": "Martin Saveski; Doug Beeferman; David McClure; Deb Roy",
+      "year": "2022",
+      "doi": "10.1609/icwsm.v16i1.19342",
+      "doi_url": "https://doi.org/10.1609/icwsm.v16i1.19342",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Exploring the Magnitude and Effects of Media Influence on Reddit Moderation",
+      "authors": "Hussam Habib; Rishab Nithyanand",
+      "year": "2022",
+      "doi": "10.1609/icwsm.v16i1.19291",
+      "doi_url": "https://doi.org/10.1609/icwsm.v16i1.19291",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Quantifying the Creator Economy: A Large-Scale Analysis of Patreon",
+      "authors": "Lana El Sanyoura; Ashton Anderson",
+      "year": "2022",
+      "doi": "10.1609/icwsm.v16i1.19338",
+      "doi_url": "https://doi.org/10.1609/icwsm.v16i1.19338",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "A Dataset of Multidimensional and Multilingual Social Opinions for Malta’s Annual Government Budget",
+      "authors": "Keith Cortis; Brian Davis",
+      "year": "2021",
+      "doi": "10.1609/icwsm.v15i1.18120",
+      "doi_url": "https://doi.org/10.1609/icwsm.v15i1.18120",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Evaluating Audience Loyalty and Authenticity in Influencer Marketing via Multi-task Multi-relational Learning",
+      "authors": "Seungbae Kim; Xiusi Chen; Jyun-Yu Jiang; Jinyoung Han; Wei Wang",
+      "year": "2021",
+      "doi": "10.1609/icwsm.v15i1.18060",
+      "doi_url": "https://doi.org/10.1609/icwsm.v15i1.18060",
+      "topics": [
+        "covert_advertising",
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "The Relative Value of Facebook Advertising Data for Poverty Mapping",
+      "authors": "Masoomali Fatehkia; Benjamin Coles; Ferda Ofli; Ingmar Weber",
+      "year": "2020",
+      "doi": "10.1609/icwsm.v14i1.7361",
+      "doi_url": "https://doi.org/10.1609/icwsm.v14i1.7361",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "WikiHist.html: English Wikipedia's Full Revision History in HTML Format",
+      "authors": "Blagoj Mitrevski; Tiziano Piccardi; Robert West",
+      "year": "2020",
+      "doi": "10.1609/icwsm.v14i1.7353",
+      "doi_url": "https://doi.org/10.1609/icwsm.v14i1.7353",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "icwsm",
+      "venue": "Proceedings of the International AAAI Conference on Web and Social Media",
+      "title": "Dumping the Closet Skeletons Online: Exploring the Guilty Information Disclosure Behavior on Social Media",
+      "authors": "Yukun Yang; Yeman Huang",
+      "year": "2019",
+      "doi": "10.1609/icwsm.v13i01.3267",
+      "doi_url": "https://doi.org/10.1609/icwsm.v13i01.3267",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-Fifth International Joint Conference on Artificial Intelligence",
+      "title": "GRASP: Enhancing Zero-Shot Multi-Modal Anomaly Detection via Geometric Refinement and Semantic Prompting",
+      "authors": "Zhongbin Sun; Yuze Cui; Yong Zhou",
+      "year": "2026",
+      "doi": "10.24963/ijcai.2026/185",
+      "doi_url": "https://doi.org/10.24963/ijcai.2026/185",
+      "topics": [
+        "multimodal"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence",
+      "title": "HyperTrans: Efficient Hypergraph-Driven Cross-Domain Pattern Transfer in Image Anomaly Detection",
+      "authors": "Tengyu Zhang; Deyu Zeng; Baoqiang Li; Wei Wang; Wei Liu; Zongze Wu",
+      "year": "2025",
+      "doi": "10.24963/ijcai.2025/267",
+      "doi_url": "https://doi.org/10.24963/ijcai.2025/267",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence",
+      "title": "MC3D-AD: A Unified Geometry-aware Reconstruction Model for Multi-category 3D Anomaly Detection",
+      "authors": "Jiayi Cheng; Can Gao; Jie Zhou; Jiajun Wen; Tao Dai; Jinbao Wang",
+      "year": "2025",
+      "doi": "10.24963/ijcai.2025/94",
+      "doi_url": "https://doi.org/10.24963/ijcai.2025/94",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence",
+      "title": "SpeechHGT: A Multimodal Hypergraph Transformer for Speech-Based Early Alzheimer’s Disease Detection",
+      "authors": "Shagufta Abid; Dongyu Zhang; Ahsan Shehzad; Jing Ren; Shuo Yu; Hongfei Lin; Feng Xia",
+      "year": "2025",
+      "doi": "10.24963/ijcai.2025/1015",
+      "doi_url": "https://doi.org/10.24963/ijcai.2025/1015",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence",
+      "title": "Template3D-AD: Point Cloud Template Matching Method Based on Center Points for 3D Anomaly Detection",
+      "authors": "Yi Liu; Changsheng Zhang; Yufei Yang",
+      "year": "2025",
+      "doi": "10.24963/ijcai.2025/182",
+      "doi_url": "https://doi.org/10.24963/ijcai.2025/182",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-ThirdInternational Joint Conference on Artificial Intelligence",
+      "title": "GEM: Generating Engaging Multimodal Content",
+      "authors": "Chongyang Gao; Yiren Jian; Natalia Denisenko; Soroush Vosoughi; V. S. Subrahmanian",
+      "year": "2024",
+      "doi": "10.24963/ijcai.2024/847",
+      "doi_url": "https://doi.org/10.24963/ijcai.2024/847",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-ThirdInternational Joint Conference on Artificial Intelligence",
+      "title": "Modeling Personalized Retweeting Behaviors for Multi-Stage Cascade Popularity Prediction",
+      "authors": "Mingyang Zhou; Yanjie Lin; Gang Liu; Zuwen Li; Hao Liao; Rui Mao",
+      "year": "2024",
+      "doi": "10.24963/ijcai.2024/287",
+      "doi_url": "https://doi.org/10.24963/ijcai.2024/287",
+      "topics": [
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-ThirdInternational Joint Conference on Artificial Intelligence",
+      "title": "Optimal Auction Design with User Coupons in Advertising Systems",
+      "authors": "Xiaodong Liu; Zhikang Fan; Yiming Ding; Yuan Guo; Lihua Zhang; Changcheng Li; Dongying Kong; Han Li; Weiran Shen",
+      "year": "2024",
+      "doi": "10.24963/ijcai.2024/322",
+      "doi_url": "https://doi.org/10.24963/ijcai.2024/322",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-ThirdInternational Joint Conference on Artificial Intelligence",
+      "title": "RoboFusion: Towards Robust Multi-Modal 3D Object Detection via SAM",
+      "authors": "Ziying Song; Guoxing Zhang; Lin Liu; Lei Yang; Shaoqing Xu; Caiyan Jia; Feiyang Jia; Li Wang",
+      "year": "2024",
+      "doi": "10.24963/ijcai.2024/141",
+      "doi_url": "https://doi.org/10.24963/ijcai.2024/141",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-ThirdInternational Joint Conference on Artificial Intelligence",
+      "title": "Vulnerabilities of Single-Round Incentive Compatibility in Auto-bidding: Theory and Evidence from ROI-Constrained Online Advertising Markets",
+      "authors": "Juncheng Li; Pingzhong Tang",
+      "year": "2024",
+      "doi": "10.24963/ijcai.2024/320",
+      "doi_url": "https://doi.org/10.24963/ijcai.2024/320",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-Second International Joint Conference on Artificial Intelligence",
+      "title": "Truthful Auctions for Automated Bidding in Online Advertising",
+      "authors": "Yidan Xing; Zhilin Zhang; Zhenzhe Zheng; Chuan Yu; Jian Xu; Fan Wu; Guihai Chen",
+      "year": "2023",
+      "doi": "10.24963/ijcai.2023/325",
+      "doi_url": "https://doi.org/10.24963/ijcai.2023/325",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirty-First International Joint Conference on Artificial Intelligence",
+      "title": "The Power of Media Agencies in Ad Auctions: Improving Utility through Coordinated Bidding",
+      "authors": "Giulia Romano; Matteo Castiglioni; Alberto Marchesi; Nicola Gatti",
+      "year": "2022",
+      "doi": "10.24963/ijcai.2022/66",
+      "doi_url": "https://doi.org/10.24963/ijcai.2022/66",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Thirtieth International Joint Conference on Artificial Intelligence",
+      "title": "One-Shot Affordance Detection",
+      "authors": "Hongchen Luo; Wei Zhai; Jing Zhang; Yang Cao; Dacheng Tao",
+      "year": "2021",
+      "doi": "10.24963/ijcai.2021/124",
+      "doi_url": "https://doi.org/10.24963/ijcai.2021/124",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence",
+      "title": "An Attention-based Model for Conversion Rate Prediction with Delayed Feedback via Post-click Calibration",
+      "authors": "Yumin Su; Liang Zhang; Quanyu Dai; Bo Zhang; Jinyao Yan; Dan Wang; Yongjun Bao; Sulong Xu; Yang He; Weipeng Yan",
+      "year": "2020",
+      "doi": "10.24963/ijcai.2020/487",
+      "doi_url": "https://doi.org/10.24963/ijcai.2020/487",
+      "topics": [
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "promoted post commercial intent detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence",
+      "title": "BERT-PLI: Modeling Paragraph-Level Interactions for Legal Case Retrieval",
+      "authors": "Yunqiu Shao; Jiaxin Mao; Yiqun Liu; Weizhi Ma; Ken Satoh; Min Zhang; Shaoping Ma",
+      "year": "2020",
+      "doi": "10.24963/ijcai.2020/484",
+      "doi_url": "https://doi.org/10.24963/ijcai.2020/484",
+      "topics": [
+        "compliance_rag"
+      ],
+      "query": "influencer creator history modeling",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence",
+      "title": "Learning to Accelerate Heuristic Searching for Large-Scale Maximum Weighted b-Matching Problems in Online Advertising",
+      "authors": "Xiaotian Hao; Junqi Jin; Jianye Hao; Jin Li; Weixun Wang; Yi Ma; Zhenzhe Zheng; Han Li; Jian Xu; Kun Gai",
+      "year": "2020",
+      "doi": "10.24963/ijcai.2020/475",
+      "doi_url": "https://doi.org/10.24963/ijcai.2020/475",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Twenty-Eighth International Joint Conference on Artificial Intelligence",
+      "title": "Improving Nash Social Welfare Approximations",
+      "authors": "Jugal Garg; Peter McGlaughlin",
+      "year": "2019",
+      "doi": "10.24963/ijcai.2019/42",
+      "doi_url": "https://doi.org/10.24963/ijcai.2019/42",
+      "topics": [
+        "agent_system"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ijcai",
+      "venue": "Proceedings of the Twenty-Eighth International Joint Conference on Artificial Intelligence",
+      "title": "Locate-Then-Detect: Real-time Web Attack Detection via Attention-based Deep Neural Networks",
+      "authors": "Tianlong Liu; Yu Qi; Liang Shi; Jianan Yan",
+      "year": "2019",
+      "doi": "10.24963/ijcai.2019/656",
+      "doi_url": "https://doi.org/10.24963/ijcai.2019/656",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "Beyond Isolated Bidding: Campaign-Channel Coordination for Global Optimal Returns in Online Advertising",
+      "authors": "Yingjie Chen; Zhuoyang Li; Tianli Han; Haotian Zhou; Feng Qi",
+      "year": "2026",
+      "doi": "10.1145/3770855.3818324",
+      "doi_url": "https://doi.org/10.1145/3770855.3818324",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "Deterministic-Allocation and Anonymous Joint Advertising in E-commerce Platforms",
+      "authors": "Zhen Zhang; Luowen Liu; Wanzhi Zhang; Zitian Guo; Kun Huang; Qi Qi; Qianlong Xie; Xingxing Wang",
+      "year": "2026",
+      "doi": "10.1145/3770855.3818370",
+      "doi_url": "https://doi.org/10.1145/3770855.3818370",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "HOBA: Hierarchical On-Policy Bidding Agents for Adaptive Online Advertising",
+      "authors": "Ji Wu; Yunshan Peng; Wentao Bai; Yunke Bai; Wenzheng Shu; Jinan Pang; Yanxiang Zeng; Xialong Liu",
+      "year": "2026",
+      "doi": "10.1145/3770855.3818435",
+      "doi_url": "https://doi.org/10.1145/3770855.3818435",
+      "topics": [
+        "ad_detection",
+        "agent_system"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "PlatformBid: An Auto-Bidding Benchmark from a Unified Advertising Platform's Perspective",
+      "authors": "Shengtian Yang; Yewen Li; Peng Jiang; Zhiyi Lyu; Bo An; Peng Jiang; Qingpeng Cai; Lei Feng",
+      "year": "2026",
+      "doi": "10.1145/3770855.3817573",
+      "doi_url": "https://doi.org/10.1145/3770855.3817573",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "Two-Stage Auctions with Bid Refinement for Online Advertising",
+      "authors": "Yidan Xing; Rui Guo; Yixin Tao; Dagui Chen; Zhenzhe Zheng; Jian Xu; Fan Wu",
+      "year": "2026",
+      "doi": "10.1145/3770855.3817645",
+      "doi_url": "https://doi.org/10.1145/3770855.3817645",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "An Auto-Coupon Framework for Advertiser Retention in Online Advertising",
+      "authors": "Yidan Xing; Haoqi Zhang; Yangsu Liu; Dagui Chen; Zhenzhe Zheng; Fan Wu",
+      "year": "2025",
+      "doi": "10.1145/3711896.3737191",
+      "doi_url": "https://doi.org/10.1145/3711896.3737191",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "ComRecycle: An Intelligent Computation Recycling Framework for Online Advertising",
+      "authors": "Chufeng Shi; Yangsu Liu; Rui Qiu; Zhenzhe Zheng; Dagui Chen; Ruitao Zhu; Fan Wu",
+      "year": "2025",
+      "doi": "10.1145/3711896.3737205",
+      "doi_url": "https://doi.org/10.1145/3711896.3737205",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.1",
+      "title": "Large Vison-Language Foundation Model in Baidu AIGC Image Advertising",
+      "authors": "Zhipeng Jin; Wen Tao; Yafei Li; Yi Yang; Cong Han; Shuanglong Li; Lin Liu",
+      "year": "2025",
+      "doi": "10.1145/3690624.3709401",
+      "doi_url": "https://doi.org/10.1145/3690624.3709401",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.1",
+      "title": "Learning Adaptive Reserve Price in Display Advertising",
+      "authors": "Kun Hu; Shumin Zhang; Lixia Wu; Yongjun Dai; Minfang Lu; Yuting Qiang; Minglong Li",
+      "year": "2025",
+      "doi": "10.1145/3690624.3709439",
+      "doi_url": "https://doi.org/10.1145/3690624.3709439",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2",
+      "title": "Lightweight Auto-bidding based on Traffic Prediction in Live Advertising",
+      "authors": "Bo Yang; Ruixuan Luo; Junqi Jin; Han Zhu",
+      "year": "2025",
+      "doi": "10.1145/3711896.3737241",
+      "doi_url": "https://doi.org/10.1145/3711896.3737241",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "ADSNet: Cross-Domain LTV Prediction with an Adaptive Siamese Network in Advertising",
+      "authors": "Ruize Wang; Hui Xu; Ying Cheng; Qi He; Xing Zhou; Rui Feng; Wei Xu; Lei Huang; Jie Jiang",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671612",
+      "doi_url": "https://doi.org/10.1145/3637528.3671612",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Bi-Objective Contract Allocation for Guaranteed Delivery Advertising",
+      "authors": "Yan Li; Yundu Huang; Wuyang Mao; Furong Ye; Xiang He; Zhonglin Zu; Shaowei Cai",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671752",
+      "doi_url": "https://doi.org/10.1145/3637528.3671752",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Deep Ensemble Shape Calibration: Multi-Field Post-hoc Calibration in Online Advertising",
+      "authors": "Shuai Yang; Hao Yang; Zhuang Zou; Linhe Xu; Shuo Yuan; Yifan Zeng",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671529",
+      "doi_url": "https://doi.org/10.1145/3637528.3671529",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "InLN: Knowledge-aware Incremental Leveling Network for Dynamic Advertising",
+      "authors": "Xujia Li; Jingshu Peng; Lei Chen",
+      "year": "2024",
+      "doi": "10.1145/3637528.3672032",
+      "doi_url": "https://doi.org/10.1145/3637528.3672032",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Joint Auction in the Online Advertising Market",
+      "authors": "Zhen Zhang; Weian Li; Yahui Lei; Bingzhe Wang; Zhicheng Zhang; Qi Qi; Qiang Liu; Xingxing Wang",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671746",
+      "doi_url": "https://doi.org/10.1145/3637528.3671746",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Multi-task Conditional Attention Network for Conversion Prediction in Logistics Advertising",
+      "authors": "Baoshen Guo; Xining Song; Shuai Wang; Wei Gong; Tian He; Xue Liu",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671549",
+      "doi_url": "https://doi.org/10.1145/3637528.3671549",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Optimized Cost Per Click in Online Advertising: A Theoretical Analysis",
+      "authors": "Kaichen Zhang; Zixuan Yuan; Hui Xiong",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671767",
+      "doi_url": "https://doi.org/10.1145/3637528.3671767",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Robust Auto-Bidding Strategies for Online Advertising",
+      "authors": "Qilong Lin; Zhenzhe Zheng; Fan Wu",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671729",
+      "doi_url": "https://doi.org/10.1145/3637528.3671729",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Spending Programmed Bidding: Privacy-friendly Bid Optimization with ROI Constraint in Online Advertising",
+      "authors": "Yumin Su; Min Xiang; Yifei Chen; Yanbiao Li; Tian Qin; Hongyi Zhang; Yasong Li; Xiaobing Liu",
+      "year": "2024",
+      "doi": "10.1145/3637528.3671540",
+      "doi_url": "https://doi.org/10.1145/3637528.3671540",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "A Personalized Automated Bidding Framework for Fairness-aware Online Advertising",
+      "authors": "Haoqi Zhang; Lvyin Niu; Zhenzhe Zheng; Zhilin Zhang; Shan Gu; Fan Wu; Chuan Yu; Jian Xu; Guihai Chen; Bo Zheng",
+      "year": "2023",
+      "doi": "10.1145/3580305.3599765",
+      "doi_url": "https://doi.org/10.1145/3580305.3599765",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "End-to-End Inventory Prediction and Contract Allocation for Guaranteed Delivery Advertising",
+      "authors": "Wuyang Mao; Chuanren Liu; Yundu Huang; Zhonglin Zu; M Harshvardhan; Liang Wang; Bo Zheng",
+      "year": "2023",
+      "doi": "10.1145/3580305.3599332",
+      "doi_url": "https://doi.org/10.1145/3580305.3599332",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Privacy in Advertising: Analytics and Modeling",
+      "authors": "Badih Ghazi; Ravi Kumar; Pasin Manurangsi",
+      "year": "2023",
+      "doi": "10.1145/3580305.3599570",
+      "doi_url": "https://doi.org/10.1145/3580305.3599570",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "kdd",
+      "venue": "Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "title": "Arbitrary Distribution Modeling with Censorship in Real-Time Bidding Advertising",
+      "authors": "Xu Li; Michelle Ma Zhang; Zhenya Wang; Youjun Tong",
+      "year": "2022",
+      "doi": "10.1145/3534678.3539048",
+      "doi_url": "https://doi.org/10.1145/3534678.3539048",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "ml_preprint",
+      "venue": "NeurIPS 2026",
+      "title": "LLM-Auction: Generative Auction towards LLM-Native Advertising",
+      "authors": "Chujie Zhao; Qun Hu; Shiping Song; Dagui Chen; Han Zhu; Jian Xu; Bo Zheng",
+      "year": "2025",
+      "doi": "",
+      "doi_url": "https://arxiv.org/abs/2512.10551v3",
+      "topics": [
+        "covert_advertising",
+        "ad_detection"
+      ],
+      "query": "native advertising detection",
+      "source": "arxiv",
+      "arxiv_id": "2512.10551v3"
+    },
+    {
+      "venue_key": "ml_preprint",
+      "venue": "Disinformation Countermeasures and Machine Learning Workshop at ICML 2022",
+      "title": "Multilingual Disinformation Detection for Digital Advertising",
+      "authors": "Zofia Trstanova; Nadir El Manouzi; Maryline Chen; Andre L. V. da Cunha; Sergei Ivanov",
+      "year": "2022",
+      "doi": "",
+      "doi_url": "https://arxiv.org/abs/2207.10649v1",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "native advertising detection",
+      "source": "arxiv",
+      "arxiv_id": "2207.10649v1"
+    },
+    {
+      "venue_key": "mm",
+      "venue": "Proceedings of the 33rd ACM International Conference on Multimedia",
+      "title": "Will AI Make Agencies Obsolete? Rethinking the Future of Advertising",
+      "authors": "Aleksandr Farseev",
+      "year": "2025",
+      "doi": "10.1145/3746027.3761833",
+      "doi_url": "https://doi.org/10.1145/3746027.3761833",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "mm",
+      "venue": "Proceedings of the 31st ACM International Conference on Multimedia",
+      "title": "Against Opacity: Explainable AI and Large Language Models for Effective Digital Advertising",
+      "authors": "Qi Yang; Marlo Ongpin; Sergey Nikolenko; Alfred Huang; Aleksandr Farseev",
+      "year": "2023",
+      "doi": "10.1145/3581783.3612817",
+      "doi_url": "https://doi.org/10.1145/3581783.3612817",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "mm",
+      "venue": "Proceedings of the 31st ACM International Conference on Multimedia",
+      "title": "AutoPoster: A Highly Automatic and Content-aware Design System for Advertising Poster Generation",
+      "authors": "Jinpeng Lin; Min Zhou; Ye Ma; Yifan Gao; Chenxi Fei; Yangjian Chen; Zhang Yu; Tiezheng Ge",
+      "year": "2023",
+      "doi": "10.1145/3581783.3611930",
+      "doi_url": "https://doi.org/10.1145/3581783.3611930",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Findings of the Association for Computational Linguistics: NAACL 2025",
+      "title": "AdParaphrase: Paraphrase Dataset for Analyzing Linguistic Features toward Generating Attractive Ad Texts",
+      "authors": "Murakami, Soichiro and Zhang, Peinan and Kamigaito, Hidetaka and Takamura, Hiroya and Okumura, Manabu",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.findings-naacl.78",
+      "doi_url": "https://doi.org/10.18653/v1/2025.findings-naacl.78",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.findings-naacl",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+      "title": "AdTEC: A Unified Benchmark for Evaluating Text Quality in Search Engine Advertising",
+      "authors": "Zhang, Peinan and Sakai, Yusuke and Mita, Masato and Ouchi, Hiroki and Watanabe, Taro",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.naacl-long.391",
+      "doi_url": "https://doi.org/10.18653/v1/2025.naacl-long.391",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "anthology:2025.naacl-long",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+      "title": "Adaptive Prompting: Ad-hoc Prompt Composition for Social Bias Detection",
+      "authors": "Splieth\\\"over, Maximilian and Knebler, Tim and Fumagalli, Fabian and Muschalik, Maximilian and Hammer, Barbara and H\\\"ullermeier, Eyke and Wachsmuth, Henning",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.naacl-long.122",
+      "doi_url": "https://doi.org/10.18653/v1/2025.naacl-long.122",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.naacl-long",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+      "title": "SANDWiCH: Semantical Analysis of Neighbours for Disambiguating Words in Context ad Hoc",
+      "authors": "Guzman Olivares, Daniel and Quijano, Lara and Liberatore, Federico",
+      "year": "2025",
+      "doi": "10.18653/v1/2025.naacl-long.358",
+      "doi_url": "https://doi.org/10.18653/v1/2025.naacl-long.358",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2025.naacl-long",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies: Industry Track",
+      "title": "Aspect-based Analysis of Advertising Appeals for Search Engine Advertising",
+      "authors": "Soichiro Murakami; Peinan Zhang; Sho Hoshino; Hidetaka Kamigaito; Hiroya Takamura; Manabu Okumura",
+      "year": "2022",
+      "doi": "10.18653/v1/2022.naacl-industry.9",
+      "doi_url": "https://doi.org/10.18653/v1/2022.naacl-industry.9",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies: Industry Track",
+      "title": "CREATER: CTR-driven Advertising Text Generation with Controlled Pre-Training and Contrastive Fine-Tuning",
+      "authors": "Penghui Wei; Xuanhua Yang; ShaoGuo Liu; Liang Wang; Bo Zheng",
+      "year": "2022",
+      "doi": "10.18653/v1/2022.naacl-industry.2",
+      "doi_url": "https://doi.org/10.18653/v1/2022.naacl-industry.2",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies: Industry Papers",
+      "title": "An Empirical Study of Generating Texts for Search Engine Advertising",
+      "authors": "Hidetaka Kamigaito; Peinan Zhang; Hiroya Takamura; Manabu Okumura",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.naacl-industry.32",
+      "doi_url": "https://doi.org/10.18653/v1/2021.naacl-industry.32",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies: Industry Papers",
+      "title": "Benchmarking Commercial Intent Detection Services with Practice-Driven Evaluations",
+      "authors": "Haode Qi; Lin Pan; Atin Sood; Abhishek Shah; Ladislav Kunc; Mo Yu; Saloni Potdar",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.naacl-industry.38",
+      "doi_url": "https://doi.org/10.18653/v1/2021.naacl-industry.38",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "promoted post commercial intent detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "naacl",
+      "venue": "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+      "title": "``Nice Try, Kiddo'': Investigating Ad Hominems in Dialogue Responses",
+      "authors": "Sheng, Emily and Chang, Kai-Wei and Natarajan, Prem and Peng, Nanyun",
+      "year": "2021",
+      "doi": "10.18653/v1/2021.naacl-main.60",
+      "doi_url": "https://doi.org/10.18653/v1/2021.naacl-main.60",
+      "topics": [
+        "advertising_general"
+      ],
+      "query": "anthology:2021.naacl-main",
+      "source": "acl-anthology"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Open Linguistics",
+      "title": "Cognitive poetics of implicit pragmatic meaning in advertising discourse: intentionality, presuppositions, and interpretive mechanisms",
+      "authors": "Aida Nurbayeva; Gulzhan Tulekova; Sholpan Smagulova; Gulnara Rizakhojayeva; Yedilbay Ospanov; Magzhan Zhumagulov",
+      "year": "2026",
+      "doi": "10.1515/opli-2025-0090",
+      "doi_url": "https://doi.org/10.1515/opli-2025-0090",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "(unknown)",
+      "title": "How Covert Influencer Marketing Shape Consumer’s Susceptibility: The Moderating Role of Advertising Skepticism",
+      "authors": "Hamid Mahmood; Lilian Anthonysamy; Abdul Rauf; Muhammad Mohsin; Irfan Sabir",
+      "year": "2026",
+      "doi": "10.2139/ssrn.7388385",
+      "doi_url": "https://doi.org/10.2139/ssrn.7388385",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "JURNAL TEKNOLOGI DAN OPEN SOURCE",
+      "title": "A Deep Learning-Based Sentiment Classification for Identifying Advertorial Content in Online News",
+      "authors": "Brian Rizqi Paradisiaca Darnoto; Dony Bahtera Firmawan; Fahrobby Adnan",
+      "year": "2025",
+      "doi": "10.36378/jtos.v8i1.4450",
+      "doi_url": "https://doi.org/10.36378/jtos.v8i1.4450",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "advertorial detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Advances in Economics, Management and Political Sciences",
+      "title": "Covert Marketing Advertising Law Review Paper",
+      "authors": "Meixi Yao",
+      "year": "2025",
+      "doi": "10.54254/2754-1169/2025.20056",
+      "doi_url": "https://doi.org/10.54254/2754-1169/2025.20056",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "(unknown)",
+      "title": "Evaluating Multimodal Large Language Models for Implicit Advertising Reasoning",
+      "authors": "Haozhi Sun; Heng Yuan",
+      "year": "2025",
+      "doi": "10.21203/rs.3.rs-5914045/v1",
+      "doi_url": "https://doi.org/10.21203/rs.3.rs-5914045/v1",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "implicit advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Journal of Research in Interactive Marketing",
+      "title": "How do consumers respond to influencer discount codes? Insights from covert advertising processing",
+      "authors": "Guolan Yang",
+      "year": "2025",
+      "doi": "10.1108/jrim-07-2024-0343",
+      "doi_url": "https://doi.org/10.1108/jrim-07-2024-0343",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Journal of Education, Humanities and Social Sciences",
+      "title": "Mechanisms By Which Implicit Advertising on Short Video Platforms Erodes Consumer Trust",
+      "authors": "Jiayi Chen",
+      "year": "2025",
+      "doi": "10.54097/gzja7x72",
+      "doi_url": "https://doi.org/10.54097/gzja7x72",
+      "topics": [
+        "covert_advertising",
+        "ad_detection"
+      ],
+      "query": "implicit advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Ege Akademik Bakis (Ege Academic Review)",
+      "title": "Regulations on Covert Advertising: An Analysis of Advertising Board Decisions in Türkiye",
+      "authors": "Güldane Zengin",
+      "year": "2025",
+      "doi": "10.21121/eab.20250407",
+      "doi_url": "https://doi.org/10.21121/eab.20250407",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Journal of Vacation Marketing",
+      "title": "Short-form tourism video advertisements: Overt versus covert persuasion and advertising literacy",
+      "authors": "Killian Jialong Tan; Zhaoyu Chen; Tzung-Cheng Huan",
+      "year": "2025",
+      "doi": "10.1177/13567667251360434",
+      "doi_url": "https://doi.org/10.1177/13567667251360434",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Proceedings of the Third International Workshop on Social and Metaverse Computing, Sensing and Networking",
+      "title": "AdSpectorX: A Multimodal Expert Spector for Covert Advertising Detection on Chinese Social Media",
+      "authors": "Zongmin Zhang; Yujie Han; Zhou Zhang; Yule Liu; Jingyi Zheng; Zhen Sun",
+      "year": "2024",
+      "doi": "10.1145/3698387.3700001",
+      "doi_url": "https://doi.org/10.1145/3698387.3700001",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "International Journal of Healthcare and Information Technology",
+      "title": "E-Advertorial Design using the Addie Model as a Marketing and Health Promotion Strategy",
+      "authors": "Yoswenita Susindra; Dessya Putri Ayu; Agatha Widyawati; Ria Chandra Kartika",
+      "year": "2024",
+      "doi": "10.25047/ijhitech.v1i2.4576",
+      "doi_url": "https://doi.org/10.25047/ijhitech.v1i2.4576",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "advertorial detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "(unknown)",
+      "title": "­Identified Disclosure to Increase Consumers’ Detection of Native Advertising",
+      "authors": "Dalia Shilian; Eyal Pe'er",
+      "year": "2024",
+      "doi": "10.2139/ssrn.4745019",
+      "doi_url": "https://doi.org/10.2139/ssrn.4745019",
+      "topics": [
+        "ad_detection",
+        "covert_advertising"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Sensors",
+      "title": "Implicit IAT Measures and Neurophysiological fNIRS Markers in Response to High-Engagement Advertising",
+      "authors": "Michela Balconi; Martina Sansone; Carlotta Acconito",
+      "year": "2023",
+      "doi": "10.3390/s23094332",
+      "doi_url": "https://doi.org/10.3390/s23094332",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "JOURNAL OF APPLIED MULTIMEDIA AND NETWORKING",
+      "title": "VIDEO ADVERTORIAL EKSOTIS KEPRI DI BATAM TELEVISI “DESTINASI WISATA PATUNG SERIBU WAJAH TANJUNGPINANG” MENGGUNAKAN METODE EPIC MODEL",
+      "authors": "Adi Baitul Yusri Arif; Satria Bayu Aji",
+      "year": "2023",
+      "doi": "10.30871/jamn.v7i2.6054",
+      "doi_url": "https://doi.org/10.30871/jamn.v7i2.6054",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "advertorial detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Social Media + Society",
+      "title": "Valuating Words: Semantic Practices in Web Search Advertising",
+      "authors": "Anna Jobin",
+      "year": "2023",
+      "doi": "10.1177/20563051231195549",
+      "doi_url": "https://doi.org/10.1177/20563051231195549",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "undisclosed advertising social media",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Research Anthology on Social Media Advertising and Building Consumer Relationships",
+      "title": "An Empirical Study on Determining the Effectiveness of Social Media Advertising",
+      "authors": "Taanika Arora; Bhawna Agarwal",
+      "year": "2022",
+      "doi": "10.4018/978-1-6684-6287-4.ch105",
+      "doi_url": "https://doi.org/10.4018/978-1-6684-6287-4.ch105",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "undisclosed advertising social media",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Sustainability",
+      "title": "Direct Expression or Indirect Transmission? An Empirical Research on the Impacts of Explicit and Implicit Appeals in Green Advertising",
+      "authors": "Jin Sun; Chen Chen; Junmei Lan",
+      "year": "2022",
+      "doi": "10.3390/su142316192",
+      "doi_url": "https://doi.org/10.3390/su142316192",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Webology",
+      "title": "It’s Fraud! Application of Machine Learning Techniques for Detection of Fraudulent Digital Advertising",
+      "authors": "Snigdha Mathur; Sunita Daniel",
+      "year": "2022",
+      "doi": "10.14704/web/v19i1/web19166",
+      "doi_url": "https://doi.org/10.14704/web/v19i1/web19166",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Jurnal Onoma: Pendidikan, Bahasa, dan Sastra",
+      "title": "The Persuasive speech in business advertorial discourse",
+      "authors": "Anastasia Baan",
+      "year": "2022",
+      "doi": "10.30605/onoma.v8i2.2592",
+      "doi_url": "https://doi.org/10.30605/onoma.v8i2.2592",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "advertorial detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "(unknown)",
+      "title": "The Role of Advertising Disclosure and Persuasion Knowledge in Travel Influencer Videos on Instagram",
+      "authors": "Irina Mihaela Gorea",
+      "year": "2022",
+      "doi": "10.32920/19008986",
+      "doi_url": "https://doi.org/10.32920/19008986",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "influencer disclosure compliance",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "(unknown)",
+      "title": "The Role of Advertising Disclosure and Persuasion Knowledge in Travel Influencer Videos on Instagram",
+      "authors": "Irina Mihaela Gorea",
+      "year": "2022",
+      "doi": "10.32920/19008986.v1",
+      "doi_url": "https://doi.org/10.32920/19008986.v1",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "influencer disclosure compliance",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Journal of Business Research",
+      "title": "Influencer advertising on social media: The multiple inference model on influencer-product congruence and sponsorship disclosure",
+      "authors": "Do Yuon Kim; Hye-Young Kim",
+      "year": "2021",
+      "doi": "10.1016/j.jbusres.2020.02.020",
+      "doi_url": "https://doi.org/10.1016/j.jbusres.2020.02.020",
+      "topics": [
+        "covert_advertising",
+        "ad_detection",
+        "creator_history"
+      ],
+      "query": "influencer disclosure compliance",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Jurnal Basataka (JBT)",
+      "title": "BENTUK TANDA DALAM WACANA IKLAN ADVERTORIAL MEDIA MASSA CETAK",
+      "authors": "Nurhusna Nurhusna",
+      "year": "2020",
+      "doi": "10.36277/basataka.v3i1.81",
+      "doi_url": "https://doi.org/10.36277/basataka.v3i1.81",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "advertorial detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Journal of Media Research",
+      "title": "Social Media Inﬂuencer Advertising versus Advertising on Social Media Account of a Brand. Evidence from an Experimental Design",
+      "authors": "Delia Cristina BALABAN; Roberta Gabriela RACZ",
+      "year": "2020",
+      "doi": "10.24193/jmr.38.3",
+      "doi_url": "https://doi.org/10.24193/jmr.38.3",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "undisclosed advertising social media",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "Jurnal Abdimas BSI: Jurnal Pengabdian Kepada Masyarakat",
+      "title": "Strategi Kreatif Menulis Advertorial Menggunakan Microsoft Word",
+      "authors": "Ratna Kartika Sari; Iin Soraya",
+      "year": "2019",
+      "doi": "10.31294/jabdimas.v2i2.5890",
+      "doi_url": "https://doi.org/10.31294/jabdimas.v2i2.5890",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "advertorial detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "other_venue",
+      "venue": "International Journal of Advertising",
+      "title": "The Covert Advertising Recognition and Effects (CARE) model: Processes of persuasion in native advertising and other masked formats",
+      "authors": "Bartosz W. Wojdynski; Nathaniel J. Evans",
+      "year": "2019",
+      "doi": "10.1080/02650487.2019.1658438",
+      "doi_url": "https://doi.org/10.1080/02650487.2019.1658438",
+      "topics": [
+        "covert_advertising",
+        "ad_detection"
+      ],
+      "query": "covert advertising detection",
+      "source": "crossref-global"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 49th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "Beyond Single Slot: Joint Optimization for Multi-Slot Guaranteed Display Advertising",
+      "authors": "Zhaoqi Zhang; Jiaming Deng; Miao Xie; Linyou Cai; Qianlong Xie; Xingxing Wang; Siqiang Luo; Gao Cong",
+      "year": "2026",
+      "doi": "10.1145/3805712.3808398",
+      "doi_url": "https://doi.org/10.1145/3805712.3808398",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 49th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "Generative Bid Shading in Real-Time Bidding Advertising",
+      "authors": "Yinqiu Huang; Hao Ma; Wenshuai Chen; Zongwei Wang; Shuli Wang; Yongqiang Zhang; Xue Wei; Yinhua Zhu; Haitao Wang; Xingxing Wang",
+      "year": "2026",
+      "doi": "10.1145/3805712.3809566",
+      "doi_url": "https://doi.org/10.1145/3805712.3809566",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "Hybrid Advertising in the Sponsored Search",
+      "authors": "Zhen Zhang; Weian Li; Yuhan Wang; Qi Qi; Kun Huang",
+      "year": "2025",
+      "doi": "10.1145/3726302.3729999",
+      "doi_url": "https://doi.org/10.1145/3726302.3729999",
+      "topics": [
+        "ad_detection",
+        "covert_advertising"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "Retrieval-Augmented Image Captioning and Generation with Entity Concepts Enhancement for Baidu Multimodal Advertising",
+      "authors": "Lei Shen; Kang Zhao; Zhipeng Jin; Wen Tao; Yi Yang; Cong Han; Shuanglong Li; Zhongmin Cai; Lin Liu",
+      "year": "2025",
+      "doi": "10.1145/3726302.3731957",
+      "doi_url": "https://doi.org/10.1145/3726302.3731957",
+      "topics": [
+        "ad_detection",
+        "multimodal",
+        "compliance_rag"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "Robust Inverse Retrieval in Online Advertising with Contrastive Learning",
+      "authors": "Phaniram Sayapaneni; Konstantin Shmakov; Sunil Goda",
+      "year": "2025",
+      "doi": "10.1145/3726302.3731967",
+      "doi_url": "https://doi.org/10.1145/3726302.3731967",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "SAGraph: A Large-Scale Social Graph Dataset with Comprehensive Context for Influencer Selection in Marketing",
+      "authors": "Xiaoqing Zhang; Yuhan Liu; Jianzhou Wang; Zhenxing Hu; Xiuying Chen; Rui Yan",
+      "year": "2025",
+      "doi": "10.1145/3726302.3730334",
+      "doi_url": "https://doi.org/10.1145/3726302.3730334",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "Enhancing Baidu Multimodal Advertisement with Chinese Text-to-Image Generation via Bilingual Alignment and Caption Synthesis",
+      "authors": "Kang Zhao; Xinyu Zhao; Zhipeng Jin; Yi Yang; Wen Tao; Cong Han; Shuanglong Li; Lin Liu",
+      "year": "2024",
+      "doi": "10.1145/3626772.3661350",
+      "doi_url": "https://doi.org/10.1145/3626772.3661350",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "GATS: Generative Audience Targeting System for Online Advertising",
+      "authors": "Cong Jiang; Zhongde Chen; Bo Zhang; Yankun Ren; Xin Dong; Lei Cheng; Xinxing Yang; Longfei Li; Jun Zhou; Linjian Mo",
+      "year": "2024",
+      "doi": "10.1145/3626772.3661372",
+      "doi_url": "https://doi.org/10.1145/3626772.3661372",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "Enhancing Dynamic Image Advertising with Vision-Language Pre-training",
+      "authors": "Zhoufutu Wen; Xinyu Zhao; Zhipeng Jin; Yi Yang; Wei Jia; Xiaodong Chen; Shuanglong Li; Lin Liu",
+      "year": "2023",
+      "doi": "10.1145/3539618.3591844",
+      "doi_url": "https://doi.org/10.1145/3539618.3591844",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "sigir",
+      "venue": "Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval",
+      "title": "LOVF: Layered Organic View Fusion for Click-through Rate Prediction in Online Advertising",
+      "authors": "Lingwei Kong; Lu Wang; Xiwei Zhao; Junsheng Jin; Zhangang Lin; Jinghe Hu; Jingping Shao",
+      "year": "2023",
+      "doi": "10.1145/3539618.3592014",
+      "doi_url": "https://doi.org/10.1145/3539618.3592014",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the Eighteenth ACM International Conference on Web Search and Data Mining",
+      "title": "Efficient Creative Selection in Online Advertising using Top-Two Thompson Sampling",
+      "authors": "Daiki Katsuragawa; Yusuke Kaneko; Kaito Ariu; Kenshi Abe",
+      "year": "2025",
+      "doi": "10.1145/3701551.3706128",
+      "doi_url": "https://doi.org/10.1145/3701551.3706128",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the 17th ACM International Conference on Web Search and Data Mining",
+      "title": "Cost-Effective Active Learning for Bid Exploration in Online Advertising",
+      "authors": "Zixiao Wang; Zhenzhe Zheng; Yanrong Kang; Jiani Huang",
+      "year": "2024",
+      "doi": "10.1145/3616855.3635839",
+      "doi_url": "https://doi.org/10.1145/3616855.3635839",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the Sixteenth ACM International Conference on Web Search and Data Mining",
+      "title": "Boosting Advertising Space: Designing Ad Auctions for Augment Advertising",
+      "authors": "Yangsu Liu; Dagui Chen; Zhenzhe Zheng; Zhilin Zhang; Chuan Yu; Fan Wu; Guihai Chen",
+      "year": "2023",
+      "doi": "10.1145/3539597.3570381",
+      "doi_url": "https://doi.org/10.1145/3539597.3570381",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the Sixteenth ACM International Conference on Web Search and Data Mining",
+      "title": "Feature Missing-aware Routing-and-Fusion Network for Customer Lifetime Value Prediction in Advertising",
+      "authors": "Xuejiao Yang; Binfeng Jia; Shuangyang Wang; Shijie Zhang",
+      "year": "2023",
+      "doi": "10.1145/3539597.3570460",
+      "doi_url": "https://doi.org/10.1145/3539597.3570460",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the Sixteenth ACM International Conference on Web Search and Data Mining",
+      "title": "Under the Hood of Social Media Advertising: How Do We use AI Responsibly for Advertising Targeting and Creative Evaluation",
+      "authors": "Aleksandr Farseev",
+      "year": "2023",
+      "doi": "10.1145/3539597.3575791",
+      "doi_url": "https://doi.org/10.1145/3539597.3575791",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "covert advertising detection social media",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the Fifteenth ACM International Conference on Web Search and Data Mining",
+      "title": "An Adaptive Unified Allocation Framework for Guaranteed Display Advertising",
+      "authors": "Xiao Cheng; Chuanren Liu; Liang Dai; Peng Zhang; Zhen Fang; Zhonglin Zu",
+      "year": "2022",
+      "doi": "10.1145/3488560.3498500",
+      "doi_url": "https://doi.org/10.1145/3488560.3498500",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the 14th ACM International Conference on Web Search and Data Mining",
+      "title": "Discovering Undisclosed Paid Partnership on Social Media via Aspect-Attentive Sponsored Post Learning",
+      "authors": "Seungbae Kim; Jyun-Yu Jiang; Wei Wang",
+      "year": "2021",
+      "doi": "10.1145/3437963.3441803",
+      "doi_url": "https://doi.org/10.1145/3437963.3441803",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "wsdm",
+      "venue": "Proceedings of the 13th International Conference on Web Search and Data Mining",
+      "title": "Extreme Regression for Dynamic Search Advertising",
+      "authors": "Yashoteja Prabhu; Aditya Kusupati; Nilesh Gupta; Manik Varma",
+      "year": "2020",
+      "doi": "10.1145/3336191.3371768",
+      "doi_url": "https://doi.org/10.1145/3336191.3371768",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2026",
+      "title": "AHBid: An Adaptable Hierarchical Bidding Framework for Cross-Channel Advertising",
+      "authors": "Xinxin Yang; Yangyang Tang; Yikun Zhou; Yaolei Liu; Yun Li; Bo Yang",
+      "year": "2026",
+      "doi": "10.1145/3774904.3792322",
+      "doi_url": "https://doi.org/10.1145/3774904.3792322",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2026",
+      "title": "Anatomy of Generative Scam Campaigns in Online Advertising Ecosystems",
+      "authors": "Ewelina Bartuzi-Trokielewicz; Alicja Martinek",
+      "year": "2026",
+      "doi": "10.1145/3774905.3794690",
+      "doi_url": "https://doi.org/10.1145/3774905.3794690",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2026",
+      "title": "DARA: Few-shot Budget Allocation in Online Advertising via In-Context Decision Making with RL-Finetuned LLMs",
+      "authors": "Mingxuan Song; Yusen Huo; Bohan Zhou; Shenglin Yin; Zhen Xiao; Jieyi Long; Zhilin Zhang; Chuan Yu",
+      "year": "2026",
+      "doi": "10.1145/3774904.3792129",
+      "doi_url": "https://doi.org/10.1145/3774904.3792129",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2026",
+      "title": "Feedback Control for Small Budget Campaigns in Advertising",
+      "authors": "Sreeja Apparaju; Yichuan Niu; Xixi Qi",
+      "year": "2026",
+      "doi": "10.1145/3774905.3794688",
+      "doi_url": "https://doi.org/10.1145/3774905.3794688",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2026",
+      "title": "Multi-field Balance-aware Calibration of Predictions in Online Advertising",
+      "authors": "Zi-Kang Wang; Lei Gong; Shu-Ting Shi; Lan-Zhe Guo; Mu-Yu Zhang",
+      "year": "2026",
+      "doi": "10.1145/3774904.3792967",
+      "doi_url": "https://doi.org/10.1145/3774904.3792967",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2026",
+      "title": "Online Advertising with Spatial Interactions",
+      "authors": "Gagan Aggarwal; Yifan Wang; Mingfei Zhao",
+      "year": "2026",
+      "doi": "10.1145/3774904.3792370",
+      "doi_url": "https://doi.org/10.1145/3774904.3792370",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2026",
+      "title": "Prediction Guardian: A Distribution-based Real-time Anomaly Detection and Mitigation Framework for Online Advertising",
+      "authors": "Gaurav Nagar; Yang Jin; Heesuk Son; Mohit Asudani; Shubham Chandra Gupta; Xing Zhang; Kestutis Patiejunas; Atul Goyal; Huan Guo; Jing Maggie Ma; Yijia Liu; Yi Meng; Bilal Fadlallah",
+      "year": "2026",
+      "doi": "10.1145/3774905.3796194",
+      "doi_url": "https://doi.org/10.1145/3774905.3796194",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2026",
+      "title": "Users Pay Twice: The Hidden Energy Cost of Web Advertising",
+      "authors": "Samuel Pélissier; Naif Mehanna; Sterenn Roux; Quentin Perez; Walter Rudametkin; Johann Bourcier; Pierre Laperdrix",
+      "year": "2026",
+      "doi": "10.1145/3774904.3792414",
+      "doi_url": "https://doi.org/10.1145/3774904.3792414",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2026",
+      "title": "Vertical Semi-Federated Learning for Efficient Online Advertising",
+      "authors": "Wenjie Li; Shu-Tao Xia; Jiangke Fan; Teng Zhang; Xingxing Wang",
+      "year": "2026",
+      "doi": "10.1145/3774904.3792940",
+      "doi_url": "https://doi.org/10.1145/3774904.3792940",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2026",
+      "title": "When Ads Become Profiles: Uncovering the Invisible Risk of Web Advertising at Scale with LLMs",
+      "authors": "Baiyu Chen; Benjamin Tag; Hao Xue; Daniel Angus; Flora Salim",
+      "year": "2026",
+      "doi": "10.1145/3774904.3793060",
+      "doi_url": "https://doi.org/10.1145/3774904.3793060",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2026",
+      "title": "Workshop on Emerging Trends in Web Advertising",
+      "authors": "Muadh Al Kalbani; Ehsan Toreini",
+      "year": "2026",
+      "doi": "10.1145/3774905.3794686",
+      "doi_url": "https://doi.org/10.1145/3774905.3794686",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM on Web Conference 2025",
+      "title": "Assessing Compliance in Digital Advertising: A Deep Dive into Acceptable Ads Standards",
+      "authors": "Ahsan Zafar; Anupam Das",
+      "year": "2025",
+      "doi": "10.1145/3696410.3714725",
+      "doi_url": "https://doi.org/10.1145/3696410.3714725",
+      "topics": [
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM on Web Conference 2025",
+      "title": "CTR-Driven Advertising Image Generation with Multimodal Large Language Models",
+      "authors": "Xingye Chen; Wei Feng; Zhenbang Du; Weizhen Wang; Yanyin Chen; Haohan Wang; Linkai Liu; Yaoyu Li; Jinyuan Zhao; Yu Li; Zheng Zhang; Jingjing Lv; Junjie Shen; Zhangang Lin; Jingping Shao; Yuanjie Shao; Xinge You; Changxin Gao; Nong Sang",
+      "year": "2025",
+      "doi": "10.1145/3696410.3714836",
+      "doi_url": "https://doi.org/10.1145/3696410.3714836",
+      "topics": [
+        "ad_detection",
+        "multimodal"
+      ],
+      "query": "multimodal advertising detection image text",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM on Web Conference 2025",
+      "title": "Computational Advertising: Recent Advances",
+      "authors": "Junwei Pan; Zhilin Zhang; Han Zhu; Jian Xu; Jie Jiang; Bo Zheng",
+      "year": "2025",
+      "doi": "10.1145/3701716.3715872",
+      "doi_url": "https://doi.org/10.1145/3701716.3715872",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM on Web Conference 2025",
+      "title": "Efficient and Practical Approximation Algorithms for Advertising in Content Feeds",
+      "authors": "Guangyi Zhang; Ilie Sarpe; Aristides Gionis",
+      "year": "2025",
+      "doi": "10.1145/3696410.3714902",
+      "doi_url": "https://doi.org/10.1145/3696410.3714902",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM on Web Conference 2025",
+      "title": "MCNet: Monotonic Calibration Networks for Expressive Uncertainty Calibration in Online Advertising",
+      "authors": "Quanyu Dai; Jiaren Xiao; Zhaocheng Du; Jieming Zhu; Chengxiao Luo; Xiao-Ming Wu; Zhenhua Dong",
+      "year": "2025",
+      "doi": "10.1145/3696410.3714802",
+      "doi_url": "https://doi.org/10.1145/3696410.3714802",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM on Web Conference 2025",
+      "title": "Middleman Bias in Advertising: Aligning Relevance of Keyphrase Recommendations with Search",
+      "authors": "Soumik Dey; Wei Zhang; Hansi Wu; Bingfeng Dong; Binbin Li",
+      "year": "2025",
+      "doi": "10.1145/3701716.3717858",
+      "doi_url": "https://doi.org/10.1145/3701716.3717858",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM on Web Conference 2025",
+      "title": "Two-stage Auction Design in Online Advertising",
+      "authors": "Zhikang Fan; Lan Hu; Ruirui Wang; Zhongrui Ma; Yue Wang; Qi Ye; Weiran Shen",
+      "year": "2025",
+      "doi": "10.1145/3696410.3714735",
+      "doi_url": "https://doi.org/10.1145/3696410.3714735",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2024",
+      "title": "AI Driven Online Advertising: Market Design, Generative AI, and Ethics",
+      "authors": "Fengxiang He; Mengnan Du; Aris Filos-Ratsikas; Lu Cheng; Qingquan Song; Min Lin; John Vines",
+      "year": "2024",
+      "doi": "10.1145/3589335.3641295",
+      "doi_url": "https://doi.org/10.1145/3589335.3641295",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2024",
+      "title": "Detecting Generated Native Ads in Conversational Search",
+      "authors": "Sebastian Schmidt; Ines Zelch; Janek Bevendorff; Benno Stein; Matthias Hagen; Martin Potthast",
+      "year": "2024",
+      "doi": "10.1145/3589335.3651489",
+      "doi_url": "https://doi.org/10.1145/3589335.3651489",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "native advertising detection",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2024",
+      "title": "Mystique: A Budget Pacing System for Performance Optimization in Online Advertising",
+      "authors": "Rotem Stram; Rani Abboud; Alex Shtoff; Oren Somekh; Ariel Raviv; Yair Koren",
+      "year": "2024",
+      "doi": "10.1145/3589335.3648342",
+      "doi_url": "https://doi.org/10.1145/3589335.3648342",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2024",
+      "title": "Privacy in Web Advertising: Analytics and Modeling",
+      "authors": "Badih Ghazi; Ravi Kumar; Pasin Manurangsi",
+      "year": "2024",
+      "doi": "10.1145/3589335.3641252",
+      "doi_url": "https://doi.org/10.1145/3589335.3641252",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2023",
+      "title": "Are Mobile Advertisements in Compliance with App’s Age Group?",
+      "authors": "Yanjie Zhao; Tianming Liu; Haoyu Wang; Yepang Liu; John Grundy; Li Li",
+      "year": "2023",
+      "doi": "10.1145/3543507.3583534",
+      "doi_url": "https://doi.org/10.1145/3543507.3583534",
+      "topics": [
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "advertising regulation compliance",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2023",
+      "title": "Fairness-aware Guaranteed Display Advertising Allocation under Traffic Cost Constraint",
+      "authors": "Liang Dai; Zhonglin Zu; Hao Wu; Liang Wang; Bo Zheng",
+      "year": "2023",
+      "doi": "10.1145/3543507.3583501",
+      "doi_url": "https://doi.org/10.1145/3543507.3583501",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Companion Proceedings of the ACM Web Conference 2023",
+      "title": "Followers Tell Who an Influencer Is",
+      "authors": "Dheeman Saha; Md. Rashidul Hasan; Abdullah Mueen",
+      "year": "2023",
+      "doi": "10.1145/3543873.3587576",
+      "doi_url": "https://doi.org/10.1145/3543873.3587576",
+      "topics": [
+        "creator_history"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2023",
+      "title": "Online Advertising in Ukraine and Russia During the 2022 Russian Invasion",
+      "authors": "Christina Yeung; Umar Iqbal; Yekaterina Tsipenyuk O'Neil; Tadayoshi Kohno; Franziska Roesner",
+      "year": "2023",
+      "doi": "10.1145/3543507.3583484",
+      "doi_url": "https://doi.org/10.1145/3543507.3583484",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2023",
+      "title": "The Thin Ideology of Populist Advertising on Facebook during the 2019 EU Elections",
+      "authors": "Arthur Capozzi; Gianmarco De Francisci Morales; Yelena Mejova; Corrado Monti; André Panisson",
+      "year": "2023",
+      "doi": "10.1145/3543507.3583267",
+      "doi_url": "https://doi.org/10.1145/3543507.3583267",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2022",
+      "title": "On Designing a Two-stage Auction for Online Advertising",
+      "authors": "Yiqing Wang; Xiangyu Liu; Zhenzhe Zheng; Zhilin Zhang; Miao Xu; Chuan Yu; Fan Wu",
+      "year": "2022",
+      "doi": "10.1145/3485447.3512054",
+      "doi_url": "https://doi.org/10.1145/3485447.3512054",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the ACM Web Conference 2022",
+      "title": "Regulating Online Political Advertising",
+      "authors": "Eray Turkel",
+      "year": "2022",
+      "doi": "10.1145/3485447.3512253",
+      "doi_url": "https://doi.org/10.1145/3485447.3512253",
+      "topics": [
+        "ad_detection",
+        "compliance_rag"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the Web Conference 2021",
+      "title": "A Hybrid Bandit Model with Visual Priors for Creative Ranking in Display Advertising",
+      "authors": "Shiyao Wang; Qi Liu; Tiezheng Ge; Defu Lian; Zhiqiang Zhang",
+      "year": "2021",
+      "doi": "10.1145/3442381.3449910",
+      "doi_url": "https://doi.org/10.1145/3442381.3449910",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the Web Conference 2021",
+      "title": "Automated Creative Optimization for E-Commerce Advertising",
+      "authors": "Jin Chen; Ju Xu; Gangwei Jiang; Tiezheng Ge; Zhiqiang Zhang; Defu Lian; Kai Zheng",
+      "year": "2021",
+      "doi": "10.1145/3442381.3449909",
+      "doi_url": "https://doi.org/10.1145/3442381.3449909",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the Web Conference 2021",
+      "title": "GuideBoot: Guided Bootstrap for Deep Contextual Banditsin Online Advertising",
+      "authors": "Feiyang Pan; Haoming Li; Xiang Ao; Wei Wang; Yanrong Kang; Ao Tan; Qing He",
+      "year": "2021",
+      "doi": "10.1145/3442381.3449987",
+      "doi_url": "https://doi.org/10.1145/3442381.3449987",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the Web Conference 2021",
+      "title": "Incrementality Testing in Programmatic Advertising: Enhanced Precision with Double-Blind Designs",
+      "authors": "Joel Barajas; Narayan Bhamidipati",
+      "year": "2021",
+      "doi": "10.1145/3442381.3450106",
+      "doi_url": "https://doi.org/10.1145/3442381.3450106",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of the Web Conference 2021",
+      "title": "Stochastic bandits for multi-platform budget optimization in online advertising",
+      "authors": "Vashist Avadhanula; Riccardo Colini Baldeschi; Stefano Leonardi; Karthik Abinav Sankararaman; Okke Schrijvers",
+      "year": "2021",
+      "doi": "10.1145/3442381.3450074",
+      "doi_url": "https://doi.org/10.1145/3442381.3450074",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of The Web Conference 2020",
+      "title": "Detecting Undisclosed Paid Editing in Wikipedia",
+      "authors": "Nikesh Joshi; Francesca Spezzano; Mayson Green; Elijah Hill",
+      "year": "2020",
+      "doi": "10.1145/3366423.3380055",
+      "doi_url": "https://doi.org/10.1145/3366423.3380055",
+      "topics": [
+        "covert_advertising"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "Proceedings of The Web Conference 2020",
+      "title": "Multimodal Post Attentive Profiling for Influencer Marketing",
+      "authors": "Seungbae Kim; Jyun-Yu Jiang; Masaki Nakada; Jinyoung Han; Wei Wang",
+      "year": "2020",
+      "doi": "10.1145/3366423.3380052",
+      "doi_url": "https://doi.org/10.1145/3366423.3380052",
+      "topics": [
+        "covert_advertising",
+        "creator_history",
+        "multimodal"
+      ],
+      "query": "influencer advertising disclosure",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "The World Wide Web Conference",
+      "title": "Auditing Offline Data Brokers via Facebook's Advertising Platform",
+      "authors": "Giridhari Venkatadri; Piotr Sapiezynski; Elissa M. Redmiles; Alan Mislove; Oana Goga; Michelle Mazurek; Krishna P. Gummadi",
+      "year": "2019",
+      "doi": "10.1145/3308558.3313666",
+      "doi_url": "https://doi.org/10.1145/3308558.3313666",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "The World Wide Web Conference",
+      "title": "Dealing with Interdependencies and Uncertainty in Multi-Channel Advertising Campaigns Optimization",
+      "authors": "Alessandro Nuara; Nicola Sosio; Francesco TrovÃ; Maria Chiara Zaccardi; Nicola Gatti; Marcello Restelli",
+      "year": "2019",
+      "doi": "10.1145/3308558.3313470",
+      "doi_url": "https://doi.org/10.1145/3308558.3313470",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "The World Wide Web Conference",
+      "title": "Domain-Constrained Advertising Keyword Generation",
+      "authors": "Hao Zhou; Minlie Huang; Yishun Mao; Changlei Zhu; Peng Shu; Xiaoyan Zhu",
+      "year": "2019",
+      "doi": "10.1145/3308558.3313570",
+      "doi_url": "https://doi.org/10.1145/3308558.3313570",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "The World Wide Web Conference",
+      "title": "Revisiting Mobile Advertising Threats with MAdLife",
+      "authors": "Gong Chen; Wei Meng; John Copeland",
+      "year": "2019",
+      "doi": "10.1145/3308558.3313549",
+      "doi_url": "https://doi.org/10.1145/3308558.3313549",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    },
+    {
+      "venue_key": "www",
+      "venue": "The World Wide Web Conference",
+      "title": "Shapley Meets Uniform: An Axiomatic Framework for Attribution in Online Advertising",
+      "authors": "Raghav Singal; Omar Besbes; Antoine Desir; Vineet Goyal; Garud Iyengar",
+      "year": "2019",
+      "doi": "10.1145/3308558.3313731",
+      "doi_url": "https://doi.org/10.1145/3308558.3313731",
+      "topics": [
+        "ad_detection"
+      ],
+      "query": "implicit advertising undisclosed sponsorship",
+      "source": "crossref"
+    }
+  ]
+}

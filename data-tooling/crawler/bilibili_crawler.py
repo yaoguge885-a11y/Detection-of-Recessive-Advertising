@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import random
 import re
@@ -40,6 +41,162 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+
+# ═══════════════════════════════════════════════════════════════
+# 模拟真人：UA 池 + 浏览器指纹 + 人类行为 + Cookie 预热
+# ═══════════════════════════════════════════════════════════════
+
+# 真实 Chrome 版本池（随机轮换避免单一 UA 被识别）
+CHROME_VERSIONS = ["123", "124", "125", "126"]
+
+
+def _pick_browser_profile() -> Dict:
+    """随机选一组真实 Chrome 指纹参数（UA + Client Hints 版本一致）。"""
+    ver = random.choice(CHROME_VERSIONS)
+    major = ver.split(".")[0]
+    ua = (f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+          f"(KHTML, like Gecko) Chrome/{ver}.0.0.0 Safari/537.36")
+    sec_ch_ua = f'"Chromium";v="{major}", "Not/A=Brand";v="24", "Google Chrome";v="{major}"'
+    return {"ua": ua, "sec_ch_ua": sec_ch_ua, "major": major}
+
+
+def _browser_extra_headers(profile: Dict) -> Dict:
+    """真实浏览器请求头（含 sec-ch-ua Client Hints）。"""
+    return {
+        "Referer": "https://www.bilibili.com/",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "Sec-CH-UA": profile["sec_ch_ua"],
+        "Sec-CH-UA-Platform": '"Windows"',
+        "Sec-CH-UA-Mobile": "?0",
+    }
+
+
+def _build_fingerprint_script(profile: Dict) -> str:
+    """生成完整浏览器指纹伪造脚本（B 层）：补齐 userAgentData/deviceMemory/Canvas 等。"""
+    major = profile["major"]
+    return (
+        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"
+        "Object.defineProperty(navigator, 'userAgentData', {get: () => ({"
+        f"brands: [{{brand:'Chromium',version:'{major}'}},{{brand:'Not/A=Brand',version:'24'}},"
+        f"{{brand:'Google Chrome',version:'{major}'}}],"
+        "mobile: false, platform: 'Windows'}));"
+        "Object.defineProperty(navigator, 'deviceMemory', {get: () => 8});"
+        "Object.defineProperty(navigator, 'platform', {get: () => 'Win32'});"
+        "Object.defineProperty(navigator, 'maxTouchPoints', {get: () => 0});"
+        "Object.defineProperty(navigator, 'hardwareConcurrency', {get: () => 8});"
+        "Object.defineProperty(navigator, 'languages', {get: () => ['zh-CN','zh','en']});"
+        "Object.defineProperty(navigator, 'plugins', {get: () => [1,2,3,4,5]});"
+        "delete window.__playwright__binding__; delete window.__pwInitScripts;"
+        "window.chrome = {runtime: {}};"
+        "const _oq = window.navigator.permissions.query;"
+        "window.navigator.permissions.query = (p) => (p.name==='notifications' "
+        "? Promise.resolve({state: Notification.permission}) : _oq(p));"
+        "Object.defineProperty(window, 'outerWidth', {get: () => window.innerWidth + 16});"
+        "Object.defineProperty(window, 'outerHeight', {get: () => window.innerHeight + 90});"
+        "const _oc = HTMLCanvasElement.prototype.toDataURL;"
+        "HTMLCanvasElement.prototype.toDataURL = function(){ "
+        "if(Math.random()<0.1){ return _oc.apply(this,arguments).replace(/[0-9a-f]{5}/,'0ffff'); } "
+        "return _oc.apply(this,arguments); };"
+    )
+
+
+def _human_delay(min_ms: float, max_ms: float) -> float:
+    """随机人类延迟（毫秒 → 秒）。"""
+    return random.uniform(min_ms, max_ms) / 1000.0
+
+
+def _human_scroll(page, target_steps: int = 8, base_step: int = 300,
+                  min_delay: float = 350, max_delay: float = 1100):
+    """模拟人类滚动（C 层）：随机步长、忽快忽慢、小幅回滚、阅读暂停、PageDown 混合。"""
+    done = 0
+    while done < target_steps:
+        step = int(base_step * random.uniform(0.5, 1.6))
+        try:
+            page.evaluate(f"window.scrollBy(0, {step})")
+        except Exception:
+            return
+        time.sleep(_human_delay(min_delay, max_delay))
+        done += 1
+        if random.random() < 0.22:  # 偶尔小幅回滚
+            try:
+                page.evaluate(f"window.scrollBy(0, -{int(base_step * random.uniform(0.1, 0.3))})")
+            except Exception:
+                pass
+            time.sleep(_human_delay(150, 450))
+        if random.random() < 0.15:  # 偶尔阅读暂停
+            time.sleep(_human_delay(1200, 3000))
+        if random.random() < 0.15:  # 偶尔键盘 PageDown
+            try:
+                page.keyboard.press("PageDown")
+            except Exception:
+                pass
+            time.sleep(_human_delay(300, 800))
+
+
+def _human_mouse_activity(page, width: int, height: int):
+    """随机鼠标移动（缓动轨迹）+ 悬停（C 层）。"""
+    try:
+        sx = width * random.uniform(0.3, 0.7)
+        sy = height * random.uniform(0.3, 0.7)
+        ex = width * random.uniform(0.2, 0.9)
+        ey = height * random.uniform(0.2, 0.9)
+        page.mouse.move(sx, sy)
+        time.sleep(_human_delay(120, 400))
+        steps = random.randint(6, 14)
+        for i in range(1, steps + 1):
+            t = i / steps
+            eased = t * t * (3 - 2 * t)  # smoothstep
+            x = sx + (ex - sx) * eased
+            y = sy + (ey - sy) * eased + math.sin(t * math.pi) * random.uniform(-8, 8)
+            page.mouse.move(x, y)
+            time.sleep(random.uniform(0.012, 0.045))
+    except Exception:
+        pass
+
+
+def _human_think(min_s: float = 0.8, max_s: float = 2.5):
+    """动作前随机思考停顿（C 层）。"""
+    time.sleep(random.uniform(min_s, max_s))
+
+
+def prewarm_bilibili_cookie(proxy: Optional[str] = None,
+                            profile: Optional[Dict] = None) -> Dict:
+    """浏览器提前访问 B 站官网，自动获取 buvid3/b_nut 等 Cookie（A 层）。
+
+    仅用真实浏览器环境自然访问 B 站主页建立身份，不注入本机 Cookie。
+    返回可复用的 storage_state（cookies + origins）。
+    """
+    from playwright.sync_api import sync_playwright
+    profile = profile or _pick_browser_profile()
+    print("[PREWARM] 预热: 访问 bilibili.com 主页获取 Cookie...")
+    state: Dict = {"cookies": [], "origins": []}
+    with sync_playwright() as p:
+        browser = p.chromium.launch(**_build_launch_args(proxy))
+        vw, vh = random.randint(1360, 1600), random.randint(760, 900)
+        context = browser.new_context(
+            user_agent=profile["ua"],
+            viewport={"width": vw, "height": vh},
+            locale="zh-CN",
+            timezone_id="Asia/Shanghai",
+        )
+        context.add_init_script(_build_fingerprint_script(profile))
+        page = context.new_page()
+        page.set_extra_http_headers(_browser_extra_headers(profile))
+        try:
+            page.goto("https://www.bilibili.com", wait_until="domcontentloaded", timeout=40000)
+            page.wait_for_timeout(random.randint(2500, 4500))
+            _human_mouse_activity(page, vw, vh)
+            _human_scroll(page, target_steps=random.randint(2, 4), base_step=200)
+            page.wait_for_timeout(random.randint(1500, 3000))
+        except Exception as e:
+            print(f"  [PREWARM] 预热访问异常: {e}")
+        state = context.storage_state()
+        browser.close()
+    n_cookies = len(state.get("cookies", []))
+    has_buvid = any("buvid" in c.get("name", "") for c in state.get("cookies", []))
+    print(f"  [PREWARM] 完成: {n_cookies} 个 Cookie (buvid={has_buvid})")
+    return state
+
 
 # 动态导入共享模块（避免循环依赖）
 _crawler_dir = Path(__file__).resolve().parent
@@ -131,15 +288,28 @@ def discover_bilibili_posts(
     space_url: str,
     max_items: int = 80,
     proxy: Optional[str] = None,
+    content_types: Optional[List[str]] = None,
+    storage_state: Optional[Dict] = None,
+    profile: Optional[Dict] = None,
 ) -> List[Dict]:
     """从 B站作者空间发现内容列表。
 
     核心策略：通过 Playwright 加载 B站空间子页面（/video, /article, /dynamic），
     拦截前端自动发起的 API 响应获取内容列表。利用真实浏览器环境稳定绕过风控。
 
+    Args:
+        space_url: 作者空间 URL
+        max_items: 最大条数
+        proxy: 可选代理
+        content_types: 内容类型过滤，如 ["opus"] 只返回动态；None 返回全部
+        storage_state: 预热获得的 Cookie（cookies+origins），复用身份
+        profile: 随机浏览器指纹参数（UA/sec-ch-ua）
+
     Returns: [{url, title, content_type, published_at, author_name, author_mid}, ...]
     """
     from playwright.sync_api import sync_playwright
+
+    profile = profile or _pick_browser_profile()
 
     mid = _extract_mid_from_url(space_url)
     if not mid:
@@ -154,34 +324,16 @@ def discover_bilibili_posts(
         vw = random.randint(1200, 1500)
         vh = random.randint(700, 900)
         context = browser.new_context(
-            user_agent=USER_AGENT,
+            user_agent=profile["ua"],
             viewport={"width": vw, "height": vh},
             locale="zh-CN",
             timezone_id="Asia/Shanghai",
+            storage_state=storage_state,
         )
-        # 强化反检测
-        context.add_init_script("""
-            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
-            Object.defineProperty(navigator, 'languages', {get: () => ['zh-CN', 'zh', 'en']});
-            Object.defineProperty(navigator, 'hardwareConcurrency', {get: () => 4});
-            delete window.__playwright__binding__;
-            delete window.__pwInitScripts;
-            // 伪造 chrome 对象
-            window.chrome = { runtime: {} };
-            // 伪造权限
-            const originalQuery = window.navigator.permissions.query;
-            window.navigator.permissions.query = (parameters) => (
-                parameters.name === 'notifications' ?
-                Promise.resolve({ state: Notification.permission }) :
-                originalQuery(parameters)
-            );
-        """)
+        # 强化反检测：完整指纹伪造（B 层）
+        context.add_init_script(_build_fingerprint_script(profile))
         page = context.new_page()
-        page.set_extra_http_headers({
-            "Referer": "https://www.bilibili.com",
-            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-        })
+        page.set_extra_http_headers(_browser_extra_headers(profile))
 
         # 注册全局响应拦截
         video_items = []
@@ -239,12 +391,12 @@ def discover_bilibili_posts(
 
         page.on("response", _on_resp)
 
-        # ── 慢速滚动辅助函数：逐像素滚动模拟真人 ──
+        # ── 人类滚动/鼠标（C 层）：随机步长、回滚、阅读暂停、鼠标轨迹 ──
         def _slow_scroll(page, steps=8, step_px=300, delay_ms=600):
-            """慢速逐段滚动，触发B站懒加载。"""
-            for s in range(steps):
-                page.evaluate(f"window.scrollBy(0, {step_px})")
-                page.wait_for_timeout(delay_ms + random.randint(0, 300))
+            """模拟人类滚动，触发B站懒加载。"""
+            _human_mouse_activity(page, vw, vh)
+            _human_scroll(page, target_steps=steps, base_step=step_px,
+                          min_delay=delay_ms * 0.6, max_delay=delay_ms * 1.2)
 
         # ── 1. 视频列表：渐进式重试 + DOM回退 ──
         print("  发现视频列表...")
@@ -258,6 +410,8 @@ def discover_bilibili_posts(
         ]
 
         for attempt in range(len(retry_delays) + 1):
+            if content_types and "video" not in content_types:
+                break  # 只抓其他类型时跳过视频发现
             if len(video_items) >= 5:
                 break
             url_idx = attempt % len(video_urls)
@@ -279,7 +433,7 @@ def discover_bilibili_posts(
                 print(f"    视频页异常: {e}")
 
         # DOM回退：API全封时从HTML提取（保底至少得5-10条）
-        if len(video_items) < 5:
+        if not (content_types and "video" not in content_types) and len(video_items) < 5:
             print(f"    API仅获{len(video_items)}条，启动 DOM 深度回退...")
             try:
                 from bs4 import BeautifulSoup
@@ -315,6 +469,8 @@ def discover_bilibili_posts(
         print("  发现专栏列表...")
         article_retry_delays = [2, 4, 7]
         for attempt in range(len(article_retry_delays) + 1):
+            if content_types and "article" not in content_types:
+                break  # 只抓其他类型时跳过专栏发现
             if len(article_items) >= 3:
                 break
             try:
@@ -332,7 +488,7 @@ def discover_bilibili_posts(
         print(f"    专栏API: {len(article_items)} 条")
 
         # DOM回退专栏
-        if len(article_items) < 3:
+        if not (content_types and "article" not in content_types) and len(article_items) < 3:
             print("    尝试 DOM 回退提取专栏...")
             try:
                 from bs4 import BeautifulSoup
@@ -386,7 +542,7 @@ def discover_bilibili_posts(
 
         # ── 3. 动态/opus列表：渐进式重试 + DOM回退 ──
         print("  发现动态列表...")
-        dyn_retry_delays = [2, 5, 8, 12]
+        dyn_retry_delays = [2, 5, 8, 12, 20]
         dyn_urls = [
             f"https://space.bilibili.com/{mid}/dynamic",
             f"https://space.bilibili.com/{mid}?from=dynamic",
@@ -462,6 +618,11 @@ def discover_bilibili_posts(
             seen.add(item["url"])
             unique.append(item)
 
+    # ── 内容类型过滤（如只抓动态） ──
+    if content_types:
+        ct_set = set(content_types)
+        unique = [x for x in unique if x.get("content_type") in ct_set]
+
     # ── 优先级截取：动态占 1/2，其余视频+专栏填满 ──
     opus_items = [x for x in unique if x.get("content_type") == "opus"]
     other_items = [x for x in unique if x.get("content_type") != "opus"]
@@ -478,6 +639,19 @@ def discover_bilibili_posts(
     opus_got = sum(1 for x in result if x.get("content_type") == "opus")
     print(f"  [OK] 总计 {len(unique)} 条 (视频{len(other_items)} + 动态{len(opus_items)}), 截取 {len(result)} 条 (动态{opus_got}/{opus_target}) (作者: {author_name})")
     return result
+
+
+def _normalize_bilibili_url(url: str) -> str:
+    """规范化 B 站 URL：去除跟踪参数、统一 opus 格式，用于跨批次对比去重。"""
+    u = (url or "").strip()
+    if "?" in u:
+        u = u.split("?", 1)[0]
+    u = u.rstrip("/")
+    # 旧版动态链接 t.bilibili.com/{id} → 统一为 /opus/{id}
+    m = re.search(r"t\.bilibili\.com/(\d+)", u)
+    if m:
+        return f"https://www.bilibili.com/opus/{m.group(1)}"
+    return u
 
 
 def _extract_mid_from_url(url: str) -> Optional[str]:
@@ -757,6 +931,10 @@ def fetch_bilibili_comments(
 # 单条内容抓取
 # ═══════════════════════════════════════════════════════════════
 
+class BilibiliGarbagePageError(ValueError):
+    """页面异常（登录墙 / 页面源码 / 空内容），不应写入数据集。"""
+
+
 def crawl_one_bilibili_post(
     item: Dict,
     media_base_dir: Path,
@@ -764,6 +942,9 @@ def crawl_one_bilibili_post(
     collector: str,
     session: requests.Session,
     max_comments: int = 50,
+    proxy: Optional[str] = None,
+    storage_state: Optional[Dict] = None,
+    profile: Optional[Dict] = None,
 ) -> Dict:
     """抓取单条B站内容，构建标准化记录。
 
@@ -775,6 +956,8 @@ def crawl_one_bilibili_post(
         build_post_record, download_images, download_comment_images,
         stable_hash, platform_from_url,
     )
+
+    profile = profile or _pick_browser_profile()
 
     url = item["url"]
     content_type = item.get("content_type", "video")
@@ -790,10 +973,16 @@ def crawl_one_bilibili_post(
         from playwright.sync_api import sync_playwright
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(**_build_launch_args())
-                ctx = browser.new_context(user_agent=USER_AGENT, viewport={"width":1366,"height":768}, locale="zh-CN")
-                ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
+                browser = p.chromium.launch(**_build_launch_args(proxy))
+                ctx = browser.new_context(
+                    user_agent=profile["ua"],
+                    viewport={"width": random.randint(1360, 1560), "height": random.randint(760, 900)},
+                    locale="zh-CN", timezone_id="Asia/Shanghai",
+                    storage_state=storage_state,
+                )
+                ctx.add_init_script(_build_fingerprint_script(profile))
                 page = ctx.new_page()
+                page.set_extra_http_headers(_browser_extra_headers(profile))
 
                 def _on_opus_resp(resp):
                     nonlocal opus_detail_data
@@ -808,8 +997,11 @@ def crawl_one_bilibili_post(
                         except Exception:
                             pass
                 page.on("response", _on_opus_resp)
-                page.goto(url, wait_until="networkidle", timeout=30000)
-                page.wait_for_timeout(3000)
+                page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                _human_think()
+                _human_mouse_activity(page, 1400, 800)
+                _human_scroll(page, target_steps=random.randint(2, 4), base_step=250)
+                page.wait_for_timeout(random.randint(1000, 2500))
                 html = page.content()
                 browser.close()
         except Exception as e:
@@ -817,7 +1009,7 @@ def crawl_one_bilibili_post(
             return _error_record(url, author_name, author_mid, str(e), salt, collector)
     else:
         try:
-            html = _fetch_page_playwright(url)
+            html = _fetch_page_playwright(url, proxy=proxy, storage_state=storage_state, profile=profile)
         except Exception as e:
             print(f"    [ERR] 页面获取失败: {e}")
             return _error_record(url, author_name, author_mid, str(e), salt, collector)
@@ -841,6 +1033,12 @@ def crawl_one_bilibili_post(
                 author_name = extracted.get("author_name") or ""
     except Exception as e:
         print(f"    [ERR] BS4提取失败: {e}")
+
+    # ── 2.5 异常格式检测：登录墙 / 页面源码 / 空内容 → 跳过不保存 ──
+    if extracted and extracted.get("is_garbage"):
+        reason = extracted.get("garbage_reason", "unknown")
+        print(f"    [GARBAGE] 页面异常({reason})，跳过: {url}")
+        raise BilibiliGarbagePageError(f"页面异常({reason}): {url}")
 
     # ── 3. 图片下载 ──
     media_records = []
@@ -969,29 +1167,34 @@ def _get_oid(item: Dict, extracted: Dict, content_type: str, session: requests.S
     return None
 
 
-def _fetch_page_playwright(url: str, timeout: int = 30000) -> str:
-    """Playwright获取页面HTML。"""
+def _fetch_page_playwright(url: str, timeout: int = 30000,
+                           proxy: Optional[str] = None,
+                           storage_state: Optional[Dict] = None,
+                           profile: Optional[Dict] = None) -> str:
+    """Playwright获取页面HTML（含模拟真人：指纹+代理+Cookie+人类行为）。"""
     from playwright.sync_api import sync_playwright
 
+    profile = profile or _pick_browser_profile()
+
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"],
-        )
+        browser = p.chromium.launch(**_build_launch_args(proxy))
+        vw, vh = random.randint(1360, 1560), random.randint(760, 900)
         context = browser.new_context(
-            user_agent=USER_AGENT,
-            viewport={"width": 1366, "height": 768},
+            user_agent=profile["ua"],
+            viewport={"width": vw, "height": vh},
             locale="zh-CN",
             timezone_id="Asia/Shanghai",
+            storage_state=storage_state,
         )
-        context.add_init_script("""
-            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-        """)
+        context.add_init_script(_build_fingerprint_script(profile))
         page = context.new_page()
-        page.set_extra_http_headers({"Referer": "https://www.bilibili.com"})
+        page.set_extra_http_headers(_browser_extra_headers(profile))
 
-        page.goto(url, wait_until="load", timeout=timeout)
-        page.wait_for_timeout(random.randint(800, 2000))
+        page.goto(url, wait_until="domcontentloaded", timeout=timeout)
+        _human_think(0.8, 2.2)
+        _human_mouse_activity(page, vw, vh)
+        _human_scroll(page, target_steps=random.randint(1, 3), base_step=200)
+        page.wait_for_timeout(random.randint(600, 1800))
         content = page.content()
         browser.close()
     return content
@@ -1027,9 +1230,15 @@ def main() -> int:
     parser.add_argument("--no-comments", action="store_true", help="跳过评论抓取")
     parser.add_argument("--terms-checked-at", default=None, help="条款检查日期")
     parser.add_argument("--proxy", default=None, help="HTTP/HTTPS代理地址 (如 http://127.0.0.1:7890)")
+    parser.add_argument("--content-type", default=None,
+                        help="只抓指定内容类型，逗号分隔，如 opus 只抓动态（video/article/opus）")
+    parser.add_argument("--skip-existing", default=None,
+                        help="现有数据集 JSONL 路径；已存在于其中的 URL（按 _collected.source_url 对比）不再抓取")
     parser.add_argument("--delay-min", type=float, default=2.0, help="抓取间隔最小秒数 (默认2.0)")
     parser.add_argument("--delay-max", type=float, default=5.0, help="抓取间隔最大秒数 (默认5.0)")
     parser.add_argument("--retry-rounds", type=int, default=3, help="失败重试轮数 (默认3轮)")
+    parser.add_argument("--no-prewarm", action="store_true",
+                        help="跳过 Cookie 预热（默认抓取前访问 bilibili 官网自动获取 Cookie）")
     args = parser.parse_args()
 
     if not args.url and not args.input:
@@ -1041,6 +1250,12 @@ def main() -> int:
     from crawler_utils import get_salt, stable_hash, DEFAULT_OUTPUT_ROOT
 
     salt = get_salt()
+
+    # ── 模拟真人：选随机指纹 + Cookie 预热（A 层，仅访问 B 站官网自动获取，不用本机 Cookie）──
+    profile = _pick_browser_profile()
+    storage_state = None
+    if not args.no_prewarm:
+        storage_state = prewarm_bilibili_cookie(proxy=args.proxy, profile=profile)
 
     # ── 自动生成输出路径 ──
     ts_str = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1093,12 +1308,21 @@ def main() -> int:
         space_urls = [args.url]
 
     # ── 展开空间页（支持多轮重试）──
+    content_types = None
+    if args.content_type:
+        content_types = [c.strip() for c in args.content_type.split(",") if c.strip()]
+        print(f"[FILTER] 仅抓取内容类型: {content_types}")
+
     def expand_spaces(urls, round_label=""):
         items = []
         for u in urls:
             print(f"  [EXPAND{round_label}] {u}")
             try:
-                expanded = discover_bilibili_posts(u, max_items=args.max_items, proxy=args.proxy)
+                expanded = discover_bilibili_posts(
+                    u, max_items=args.max_items, proxy=args.proxy,
+                    content_types=content_types,
+                    storage_state=storage_state, profile=profile,
+                )
                 items.extend(expanded)
                 print(f"    -> {len(expanded)} 条")
             except Exception as e:
@@ -1106,6 +1330,35 @@ def main() -> int:
         return items
 
     items = expand_spaces(space_urls) + single_items
+
+    # ── 增量去重：跳过已在现有数据集中的 URL（按 _collected.source_url 对比）──
+    if args.skip_existing:
+        existing_path = Path(args.skip_existing)
+        if existing_path.exists():
+            try:
+                import json as _json
+                _dec = _json.JSONDecoder()
+                _raw = existing_path.read_text(encoding="utf-8-sig")
+                _pos = 0
+                existing_urls = set()
+                while _pos < len(_raw):
+                    while _pos < len(_raw) and _raw[_pos].isspace():
+                        _pos += 1
+                    if _pos >= len(_raw):
+                        break
+                    _obj, _pos = _dec.raw_decode(_raw, _pos)
+                    _su = (_obj.get("_collected") or {}).get("source_url")
+                    if _su:
+                        existing_urls.add(_normalize_bilibili_url(str(_su)))
+                before = len(items)
+                items = [it for it in items
+                         if _normalize_bilibili_url(it["url"]) not in existing_urls]
+                print(f"[SKIP-EXISTING] 数据集 {len(existing_urls)} 个 URL；"
+                      f"发现 {before} -> 过滤后 {len(items)} 条待抓")
+            except Exception as e:
+                print(f"[SKIP-EXISTING] 读取数据集失败（不启用跳过）: {e}")
+        else:
+            print(f"[SKIP-EXISTING] 数据集不存在，跳过去重: {existing_path}")
 
     if not items:
         print("未发现任何内容，退出。")
@@ -1124,6 +1377,7 @@ def main() -> int:
     total_items = len(items)
     records_written = 0
     failed_items = list(items)  # 初始所有待抓（dict列表）
+    skipped_garbage = []        # 页面异常跳过（登录墙/页面源码/空内容）
     seen_urls = set()
 
     for round_num in range(1, args.retry_rounds + 1):
@@ -1146,6 +1400,7 @@ def main() -> int:
                 record = crawl_one_bilibili_post(
                     item, media_base_dir, salt, args.collector, session,
                     max_comments=0 if args.no_comments else args.max_comments_per_post,
+                    proxy=args.proxy, storage_state=storage_state, profile=profile,
                 )
                 with output_path.open("a", encoding="utf-8") as f:
                     if records_written > 0:
@@ -1155,6 +1410,11 @@ def main() -> int:
                 records_written += 1
                 seen_urls.add(item["url"])
                 print(f"  [OK] 已保存 (总{records_written})")
+            except BilibiliGarbagePageError as ge:
+                # 页面异常（登录墙/页面源码/空内容）：跳过，不再重试
+                skipped_garbage.append(item)
+                seen_urls.add(item["url"])
+                print(f"  [SKIP] {str(ge)[:80]}")
             except Exception as e:
                 new_failed.append(item)
                 print(f"  [ERR] {str(e)[:80]}")
@@ -1198,6 +1458,13 @@ def main() -> int:
     error_count = len(failed_items)
     print(f"\n{'='*60}")
     print(f"[DONE] 成功: {records_written}, 失败: {error_count}, 总计: {total_items}")
+    if skipped_garbage:
+        print(f"[GARBAGE] 页面异常跳过: {len(skipped_garbage)} 条（登录墙/页面源码/空内容）")
+        garbage_urls = run_dir / "skipped_garbage_urls.txt"
+        with garbage_urls.open("w", encoding="utf-8") as gf:
+            for it in skipped_garbage:
+                gf.write(f"{it['url']}\t{it.get('title', '')}\n")
+        print(f"  已记录跳过清单: {garbage_urls}")
     print(f"  输出: {output_path}")
     print(f"  运行目录: {run_dir}")
 

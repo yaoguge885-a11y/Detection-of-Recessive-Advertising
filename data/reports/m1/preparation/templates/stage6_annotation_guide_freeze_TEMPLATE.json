@@ -1,0 +1,12 @@
+{
+  "status": "preparation_only_not_formal",
+  "guide_path": "docs/annotation_guide_v1.md",
+  "guide_sha256": null,
+  "round1_agreement_sha256": null,
+  "change_summary": null,
+  "frozen_by_A": null,
+  "frozen_by_B": null,
+  "recorded_by_C": null,
+  "frozen_at": null,
+  "instructions": "Round 1 双方完成、解盲和指南修订结束后，复制到 data/reports/m1/annotation_guide_freeze_receipt.json；正式 status 必须为 frozen。"
+}
