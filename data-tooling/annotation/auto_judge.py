@@ -386,13 +386,17 @@ def determine_media_evidence_status(
     return "provided"
 
 
-def summarize_comments(comments: Any, max_chars: int = 4000) -> str:
+def summarize_comments(
+    comments: Any,
+    max_chars: int = 4000,
+    max_comments: int = 30,
+) -> str:
     """把已采集评论整理为可追踪的 Prompt 片段，并限制总长度。"""
     if not isinstance(comments, list) or not comments:
         return "无已提供评论（不代表评论区已完整采集）"
     lines: List[str] = []
     used = 0
-    for index, comment in enumerate(comments[:30], 1):
+    for index, comment in enumerate(comments[:max_comments], 1):
         if isinstance(comment, dict):
             text = str(comment.get("text") or "").strip()
         else:
@@ -424,6 +428,7 @@ def build_user_prompt(
     guide_sha256: str = "",
     media_evidence_status: str = "unknown",
     collection_complete: Any = None,
+    comment_limit: int = 30,
 ) -> str:
     title = (post.get("title") or "").strip() or "(无标题)"
     blogger = (post.get("blogger_id") or "?").strip()
@@ -434,7 +439,10 @@ def build_user_prompt(
 
     weights = keyword_weights or compute_keyword_weights_for_post(text)
     kw_summary = summarize_keyword_weights(weights)
-    comments_summary = summarize_comments(post.get("comments"))
+    comments_summary = summarize_comments(
+        post.get("comments"),
+        max_comments=comment_limit,
+    )
     guide_hash = guide_sha256 or sha256_text(guide_text)
     collection_state = normalize_collection_complete(collection_complete)
     media_count = len(post.get("media") or [])
@@ -558,6 +566,9 @@ def run_ollama_judge(
     media_analysis_requested: Optional[bool] = None,
     collection_complete: Any = None,
     num_ctx: int = OLLAMA_NUM_CTX,
+    num_predict: int = 1024,
+    thinking: bool = False,
+    comment_limit: int = 30,
 ) -> Dict[str, Any]:
     """调用 Ollama /api/chat 对单条帖子做综合判定。
 
@@ -610,6 +621,7 @@ def run_ollama_judge(
         guide_sha256=resolved_guide_hash,
         media_evidence_status=media_status,
         collection_complete=collection_value,
+        comment_limit=comment_limit,
     )
 
     # Qwen3.5 默认开启 thinking 会消耗上千 token、每帖 30-50s。
@@ -617,7 +629,7 @@ def run_ollama_judge(
     # （放进 options 里不生效）。禁用后每帖约 2-5 秒。
     options: Dict[str, Any] = {
         "temperature": 0.0,
-        "num_predict": 1536,
+        "num_predict": int(num_predict),
         "num_ctx": int(num_ctx),
     }
 
@@ -631,11 +643,8 @@ def run_ollama_judge(
         "stream": False,
         "keep_alive": keep_alive or OLLAMA_KEEP_ALIVE,
         "options": options,
+        "think": bool(thinking),
     }
-    if OLLAMA_DISABLE_THINKING:
-        # 顶层参数：禁用思考（Qwen3 在 Ollama 0.32.5 下验证有效，
-        # 每帖从 ~30-50s 降到 ~2-5s；放进 options 里不生效）
-        payload["think"] = False
 
     resp = requests.post(
         f"{url.rstrip('/')}/api/chat",
@@ -644,7 +653,13 @@ def run_ollama_judge(
     )
     resp.raise_for_status()
     body = resp.json()
-    content = (body.get("message") or {}).get("content") or ""
+    message = body.get("message") or {}
+    content = message.get("content") or ""
+    if not content and message.get("thinking"):
+        raise ValueError(
+            "Ollama returned no final content after thinking; "
+            f"done_reason={body.get('done_reason', 'unknown')}"
+        )
     parsed = _extract_json_content(content)
     if parsed is None:
         raise ValueError(f"Ollama 返回非 JSON 内容: {content[:200]!r}")
@@ -957,6 +972,9 @@ def run_auto_judge(
     media_analysis_requested: Optional[bool] = None,
     collection_complete: Any = None,
     num_ctx: int = OLLAMA_NUM_CTX,
+    num_predict: int = 1024,
+    thinking: bool = False,
+    comment_limit: int = 30,
 ) -> Dict[str, Any]:
     """完整自动判断管线：Ollama 判定 → 失败回退 → 三级分类。
 
@@ -994,6 +1012,9 @@ def run_auto_judge(
             media_analysis_requested=media_analysis_requested,
             collection_complete=collection_value,
             num_ctx=num_ctx,
+            num_predict=num_predict,
+            thinking=thinking,
+            comment_limit=comment_limit,
         )
     except SuggestionContractError as exc:
         error = str(exc)[:300]

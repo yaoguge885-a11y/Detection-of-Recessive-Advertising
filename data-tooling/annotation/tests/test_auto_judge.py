@@ -193,6 +193,20 @@ class TestPromptBuilding:
         assert "## 关键词特征向量" in prompt
         assert "周末爬山" in prompt
 
+    def test_user_prompt_limits_comments_without_reordering_them(self):
+        post = {
+            **LIFE_POST,
+            "comments": [{"text": f"评论{i}"} for i in range(1, 5)],
+        }
+        prompt = build_user_prompt(
+            post,
+            "无图片分析结果",
+            comment_limit=3,
+        )
+        assert "评论1" in prompt
+        assert "评论3" in prompt
+        assert "评论4" not in prompt
+
     def test_image_summary(self):
         analyses = {
             0: {"detected_elements": {"has_logo": True}, "visual_evidence_codes": ["V"],
@@ -351,13 +365,72 @@ class TestM1GuideAndEvidenceContract:
             guide_text=DIAGNOSTIC_GUIDE,
             media_analysis_requested=False,
             num_ctx=32768,
+            num_predict=2048,
         )
         assert captured["json"]["options"]["num_ctx"] == 32768
-        assert captured["json"]["options"]["num_predict"] == 1536
+        assert captured["json"]["options"]["num_predict"] == 2048
         assert captured["json"]["format"]["required"] == [
             "label", "confidence", "evidence_codes", "evidence", "reasoning",
             "uncertain_reason", "information_gaps",
         ]
+
+    @pytest.mark.parametrize("thinking", [False, True])
+    def test_request_sets_thinking_mode_and_comment_limit(
+        self,
+        monkeypatch,
+        thinking,
+    ):
+        captured = {}
+        post = {
+            **EVIDENCE_GAP_POST,
+            "media": [],
+            "collection_complete": "complete",
+            "comments": [{"text": f"评论{i}"} for i in range(1, 5)],
+        }
+
+        def fake_post(*args, **kwargs):
+            captured.update(kwargs)
+            return _FakeResponse(
+                '{"label":"非广","confidence":0.8,'
+                '"evidence_codes":[],"evidence":[],"reasoning":"合成"}'
+            )
+
+        monkeypatch.setattr("auto_judge.requests.post", fake_post)
+        run_ollama_judge(
+            post,
+            thinking=thinking,
+            comment_limit=3,
+            collection_complete="complete",
+        )
+
+        payload = captured["json"]
+        assert payload["think"] is thinking
+        assert "评论3" in payload["messages"][1]["content"]
+        assert "评论4" not in payload["messages"][1]["content"]
+
+    def test_thinking_token_exhaustion_is_reported_without_raw_trace(
+        self,
+        monkeypatch,
+    ):
+        class ThinkingOnlyResponse(_FakeResponse):
+            def json(self):
+                return {
+                    "message": {"content": "", "thinking": "private trace"},
+                    "done": True,
+                    "done_reason": "length",
+                }
+
+        monkeypatch.setattr(
+            "auto_judge.requests.post",
+            lambda *args, **kwargs: ThinkingOnlyResponse(""),
+        )
+        with pytest.raises(ValueError, match="no final content after thinking"):
+            run_ollama_judge(
+                EVIDENCE_GAP_POST,
+                thinking=True,
+                num_predict=256,
+                media_analysis_requested=False,
+            )
 
     def test_incomplete_disclosure_evidence_cannot_hard_label_anguang(self, monkeypatch):
         monkeypatch.setattr(

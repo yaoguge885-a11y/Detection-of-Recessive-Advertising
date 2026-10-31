@@ -53,6 +53,20 @@ ACM 官方模板页说明，会议论文通常使用 `acmart` 的 `sigconf` proc
 - [CHI EA 2026 论文集](https://dl.acm.org/doi/proceedings/10.1145/3772363)
 - 这是 Extended Abstract，不应与常规 CHI full paper 或 WWW Resource Paper 混为一谈。适合观察如何用有限篇幅说明设计问题、研究视角与相关依据。
 
+## 五篇短稿结构样例
+
+以下五篇均来自 ACM/IEEE SenSys 2026，ACM DL 论文题名明确标注为 **Short Paper**，发布时间在近一年窗口内。ACM DL 页面提供摘要、正文目录和部分全文/补充材料，可直接用来观察结构。请注意这些实例的页数并不相同：ACM 的 short-paper 标签不等于统一页数；页数必须按具体会议、track 和最终 PDF 分别判断。
+
+| # | 论文 | 页码 | 结构类型 | 建议重点 |
+| --- | --- | ---: | --- | --- |
+| 1 | [The Starlink Robot: A Platform and Dataset for Mobile Satellite Communication](https://dl.acm.org/doi/10.1145/3774906.3800503) | 683-689 | 平台/数据集；7 页 | 引言把研究缺口、平台和数据贡献连起来；随后依次写相关工作、系统设计、数据集、初步发现、研究机会与结论。适合看资源稿如何把工具描述和初步实证压在同一篇短稿中。 |
+| 2 | [Short Paper: EarSleeve: Transforming Everyday Earphones into a 12-Lead ECG Sensing Platform](https://dl.acm.org/doi/10.1145/3774906.3802785) | 615-621 | 系统/硬件与用户评估；7 页 | 目录为 Introduction → ECG Background → Design → Evaluation → Related Work → Conclusion。重点看如何先给出设计原理，再解释硬件和用户研究，并在讨论中收紧适用边界。 |
+| 3 | [Short Paper: Towards Real-Time ECG and EMG Modeling on μNPUs](https://dl.acm.org/doi/10.1145/3774906.3802787) | 636-645 | 算法/嵌入式系统；10 页 | Introduction → Related Work/Background → Design → Experimental Setup → Results → Conclusion，附消融与参数配置。适合观察方法贡献如何同时用任务指标和硬件延迟/内存/功耗支撑。 |
+| 4 | [Short Paper: Simulation-Based Performance Characterization of Common NOR Flash File Systems](https://dl.acm.org/doi/10.1145/3774906.3802793) | 1171-1178 | 工具/基准与性能研究；8 页 | Introduction → 系统背景 → 模拟器 → 多维评估 → Related Work → Discussion/Conclusion。重点看验证模拟器、说明工作负载、报告异常发现和限制如何形成连贯证据链。 |
+| 5 | [Short Paper: Towards Algorithmically Grounded Embedded AI Models](https://dl.acm.org/doi/10.1145/3774906.3800495) | 478-487 | 概念框架/方法与案例；10 页 | 先定义框架和挑战，再用两个案例分别说明构建与评估，之后讨论、相关工作、结论和未来问题。适合观察概念稿怎样避免只提出口号，而用具体任务和失败定位示例支撑主张。 |
+
+**阅读顺序建议：** 先读 1（资源/平台），再读 2 或 3（系统/方法），最后读 4（仿真与比较评估）和 5（概念框架）。第一轮先读摘要、引言末尾贡献点、各级标题、结果图表和讨论/结论；第二轮再读实验设计与局限。ACM DL 可用在线阅读器或页面所列开放版本阅读，本文档不复制论文正文。
+
 ## 写作提炼
 
 1. **先给单一贡献主张。** 开头尽快交代资源/系统解决什么问题、面向谁、为什么现有资源不够；避免用短稿篇幅铺很长的领域史。

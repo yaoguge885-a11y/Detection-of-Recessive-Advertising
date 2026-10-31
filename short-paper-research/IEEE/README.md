@@ -55,6 +55,22 @@ IEEE VIS 2026 官方 CFP 当前列出的样例用于展示类别边界。样例�
 - [海报 PDF](https://ieeevis.b-cdn.net/vis_2023/posters/v-vis-posters-1089.pdf)
 - 这是海报，不是 short paper，也不在近一年窗口。它适合观察如何用一页视觉叙事呈现设计空间；不要把海报版式当作论文模板。
 
+## 五篇 IEEE VIS Short Paper 结构样例
+
+下面五篇由 IEEE VIS 2026 官方 Short Paper CFP 按贡献类型列为范例，覆盖其常见类型。**这些不是近一年出版清单**：官方 CFP 的示例主要来自 2021、2024 等届，2026 届会议尚未举行，最终论文集尚不能作为样例。这里选它们是为了看不同短稿类型如何组织贡献。每个 DOI 均可从官方 CFP 点击；部分出版商页可能需要机构访问。
+
+| # | 论文 | 类型 | 建议重点 |
+| --- | --- | --- | --- |
+| 1 | [PyGWalker: On-the-fly Assistant for Exploratory Visual Data Analysis](https://doi.org/10.1109/VIS55277.2024.00009) | System or Tool；VIS Short Papers 2024 Best Paper | 看系统稿如何说明目标用户、交互方式、工具价值与可访问性；正文应把系统设计和实际使用证据对齐。 |
+| 2 | [Exact Analytical Parallel Vectors](https://doi.org/10.1109/VIS49827.2021.9623310) | Technique or Algorithm；VIS Short Papers 2021 Honorable Mention | 看技术稿如何从具体可视化问题导出方法、给出算法/技术描述，再用结果和对比展示准确性或性能。 |
+| 3 | [PRAGMA: Interactively Constructing Functional Brain Parcellations](https://doi.org/10.1109/VIS47514.2020.00016) | Application or Design Study；VIS Short Papers 2020 Honorable Mention | 看应用/设计研究如何交代领域任务与专家需求，解释设计过程，并从使用场景中提炼对可视化研究可迁移的经验。 |
+| 4 | [Semantic Resizing of Charts Through Generalization: A Case Study with Line Charts](https://doi.org/10.1109/VIS49827.2021.9623306) | Empirical Study；VIS Short Papers 2021 Honorable Mention | 看实证稿如何限定研究问题与图表任务，呈现研究设计、测量指标、主要结果和有效性边界。 |
+| 5 | [Jurassic Mark: Inattentional Blindness for a Datasaurus Reveals that Visualizations are Explored, not Seen](https://doi.org/10.1109/VIS49827.2021.9623273) | Theory or Model（官方 CFP 分类）；VIS Short Papers 2021 Best Paper | 论文内容涉及视觉注意/认知的实证研究。看反直觉主张如何通过清楚的问题设定、实验/观察证据和对可视化设计的含义来支撑；结论需限定在研究条件内。 |
+
+VIS 官方 CFP 还列有 2025 Best Paper **Toward a Logic of Generalization about Visualization as a Decision Aid**，可读 [arXiv 公开稿](https://arxiv.org/abs/2508.06751)。arXiv 记录首稿发表于 2025-08-08，早于本调研滚动近一年窗口，因此不计入上述五篇；若想看最近一届的理论型稿件，可额外阅读它。
+
+**阅读顺序建议：** 先读 1-2，比较工具贡献和技术贡献；再读 3-5，观察应用设计、实证和理论/认知论证需要什么类型的证据。每篇先记下核心主张、贡献类别、正文各节功能、最关键图表、结果支撑和限制，再回看全文。不要用 2026 full paper 的 9+2 页限制衡量这些 short papers；当届 Short Paper CFP 的上限是正文 4 页加最多 1 页参考文献。
+
 ## IEEE 格式资源
 
 - [VGTC Conference Formatting Guidelines](https://tc.computer.org/vgtc/publications/conference/)：IEEE VIS 短论文和 poster 摘要要求的会议双栏版式入口。

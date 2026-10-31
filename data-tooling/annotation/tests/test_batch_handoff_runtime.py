@@ -87,12 +87,16 @@ def test_batch_cli_propagates_guide_context_and_audits_manual_results(tmp_path, 
 
     monkeypatch.setattr(batch, 'run_auto_judge', fake_judge)
     args = ['--input', str(source), '--guide', str(guide), '--output-dir', str(tmp_path / 'out'),
-            '--no-images', '--no-warmup', '--num-parallel', '2', '--num-ctx', '8192']
+            '--no-images', '--no-warmup', '--num-parallel', '2', '--num-ctx', '8192',
+            '--num-predict', '2048', '--thinking', '--max-comments', '3']
     assert batch.main(args) == 0
     assert batch.main(args + ['--resume']) == 0
     assert len(seen) == 1
     assert seen[0]['guide_text'] == 'Synthetic guide'
     assert seen[0]['num_ctx'] == 8192
+    assert seen[0]['thinking'] is True
+    assert seen[0]['num_predict'] == 2048
+    assert seen[0]['comment_limit'] == 3
     assert seen[0]['media_analysis_requested'] is False
     audit = next((tmp_path / 'out').glob('audit_*.jsonl'))
     row = json.loads(audit.read_text())

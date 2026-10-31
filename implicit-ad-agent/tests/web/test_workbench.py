@@ -175,7 +175,16 @@ def test_built_wheel_contains_workbench_assets(tmp_path):
         "impad/web/index.html",
         "impad/web/workbench.css",
         "impad/web/workbench.js",
+        "impad/web/app/index.html",
     } <= packaged_files
+    assert any(
+        name.startswith("impad/web/app/assets/") and name.endswith(".js")
+        for name in packaged_files
+    )
+    assert any(
+        name.startswith("impad/web/app/assets/") and name.endswith(".css")
+        for name in packaged_files
+    )
 
 
 def test_workbench_has_all_input_and_result_landmarks(tmp_path):

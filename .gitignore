@@ -102,6 +102,12 @@ data/*_urls*.txt
 data/*_authors*.txt
 data/annotations/cli_test_*.json
 data/annotations/preannotated/
+# Local HTML workbench: one directory per dataset/batch/annotator, never committed
+data/annotations/workbench/
+
+# Downloaded paper PDFs are local reference copies; keep them out of Git
+short-paper-research/**/*.pdf
+docs/literature/**/*.pdf
 
 # Editors and notebooks
 .idea/

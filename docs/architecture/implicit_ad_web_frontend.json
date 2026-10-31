@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "隐性广告分析网页 · 前端架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1380,
+      760
+    ],
+    "views": [
+      {
+        "id": "main-path",
+        "label": "主分析路径",
+        "focus": [
+          "user",
+          "browser",
+          "pages",
+          "api",
+          "gateway",
+          "orchestrator",
+          "agent",
+          "store"
+        ],
+        "note": "从提交一条帖子到生成可审计证据报告的同步主路径。"
+      },
+      {
+        "id": "evidence-surface",
+        "label": "证据阅读面",
+        "focus": [
+          "pages",
+          "workspace",
+          "viz",
+          "store"
+        ],
+        "note": "报告页只读展示证据、创作者时间线和图表，不重新计算结论。"
+      },
+      {
+        "id": "trust-boundary",
+        "label": "边界与降级",
+        "focus": [
+          "browser",
+          "api",
+          "gateway",
+          "agent",
+          "store"
+        ],
+        "note": "浏览器与后端同源；后端不可用时显示错误并保留上次成功结果。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "研究者 / 审核员",
+      "sublabel": "桌面浏览器",
+      "pos": [
+        30,
+        120
+      ],
+      "size": [
+        120,
+        64
+      ]
+    },
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "浏览器 SPA",
+      "sublabel": "React 19 + Vite",
+      "tag": "同源静态",
+      "pos": [
+        230,
+        100
+      ],
+      "size": [
+        150,
+        110
+      ]
+    },
+    {
+      "id": "pages",
+      "type": "frontend",
+      "label": "页面模块",
+      "sublabel": "分析 · 批量 · 报告 · 历史",
+      "tag": "React Router",
+      "pos": [
+        450,
+        95
+      ],
+      "size": [
+        180,
+        125
+      ]
+    },
+    {
+      "id": "workspace",
+      "type": "frontend",
+      "label": "证据工作区",
+      "sublabel": "证据画布 · 创作者时间线",
+      "tag": "只读渲染",
+      "pos": [
+        450,
+        285
+      ],
+      "size": [
+        180,
+        115
+      ]
+    },
+    {
+      "id": "api",
+      "type": "frontend",
+      "label": "API Client",
+      "sublabel": "TanStack Query + Zod",
+      "tag": "取消 / 重试",
+      "pos": [
+        690,
+        100
+      ],
+      "size": [
+        150,
+        105
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "backend",
+      "label": "FastAPI 网关",
+      "sublabel": "/api/v1 · 同步 + 批量",
+      "tag": "同源",
+      "pos": [
+        920,
+        100
+      ],
+      "size": [
+        165,
+        110
+      ]
+    },
+    {
+      "id": "orchestrator",
+      "type": "backend",
+      "label": "Run 编排器",
+      "sublabel": "服务内编排 · run 记录",
+      "tag": "run_id",
+      "pos": [
+        920,
+        270
+      ],
+      "size": [
+        165,
+        110
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "分析 Agent",
+      "sublabel": "工具调用 · 判定 · 引用",
+      "tag": "可追溯",
+      "pos": [
+        920,
+        440
+      ],
+      "size": [
+        165,
+        110
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "运行与证据库",
+      "sublabel": "run · evidence · audit",
+      "tag": "SQLite → PG",
+      "pos": [
+        1130,
+        440
+      ],
+      "size": [
+        165,
+        100
+      ]
+    },
+    {
+      "id": "viz",
+      "type": "frontend",
+      "label": "可视化组件",
+      "sublabel": "雷达 · 关系图 · 热力图",
+      "tag": "按需加载",
+      "pos": [
+        465,
+        450
+      ],
+      "size": [
+        150,
+        100
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "浏览器 SPA（静态资源）",
+      "wraps": [
+        "browser",
+        "pages",
+        "workspace",
+        "viz",
+        "api"
+      ],
+      "pad": 26
+    },
+    {
+      "kind": "security-group",
+      "label": "127.0.0.1 · 本机服务边界",
+      "wraps": [
+        "gateway",
+        "orchestrator",
+        "agent",
+        "store"
+      ],
+      "pad": 26
+    }
+  ],
+  "connections": [
+    {
+      "id": "user-to-browser",
+      "from": "user",
+      "to": "browser",
+      "label": "本地访问",
+      "variant": "emphasis"
+    },
+    {
+      "id": "browser-to-pages",
+      "from": "browser",
+      "to": "pages",
+      "label": "路由"
+    },
+    {
+      "id": "pages-to-api",
+      "from": "pages",
+      "to": "api",
+      "label": "提交/查询",
+      "labelDy": 32
+    },
+    {
+      "id": "pages-to-workspace",
+      "from": "pages",
+      "to": "workspace",
+      "label": "选中 run",
+      "labelDy": 50
+    },
+    {
+      "id": "workspace-to-viz",
+      "from": "workspace",
+      "to": "viz",
+      "label": "图数据",
+      "route": "orthogonal-v",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        540,
+        424
+      ]
+    },
+    {
+      "id": "api-to-gateway",
+      "from": "api",
+      "to": "gateway",
+      "label": "JSON",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gateway-to-orchestrator",
+      "from": "gateway",
+      "to": "orchestrator",
+      "label": "create run",
+      "labelDy": 40
+    },
+    {
+      "id": "orchestrator-to-agent",
+      "from": "orchestrator",
+      "to": "agent",
+      "label": "执行",
+      "labelDy": 45
+    },
+    {
+      "id": "agent-to-store",
+      "from": "agent",
+      "to": "store",
+      "label": "写证据",
+      "variant": "dashed",
+      "labelDy": 28
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "页面与数据契约",
+      "items": [
+        "POST /analyze 与 /analyze/batch 共用服务；GET /runs/{id} 恢复报告",
+        "页面只读报告；OpenAPI → TypeScript，Zod 运行时校验",
+        "evidence bundle 只读；失败保留 last-good，不覆盖旧结果"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "边界与取舍",
+      "items": [
+        "仅 127.0.0.1 同源；文本走 textContent，媒体经同源代理",
+        "URL 先 preview 再 confirm；502 或超时明确报错，不伪造分数",
+        "参考 EchoBreak 的仪表盘语言，不复制社区、后台、登录"
+      ]
+    }
+  ]
+}

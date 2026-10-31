@@ -226,8 +226,13 @@ def main(argv=None) -> int:
     parser.add_argument('--auto-threshold', type=float, default=DEFAULT_AUTO_THRESHOLD)
     parser.add_argument('--keep-alive', default=OLLAMA_KEEP_ALIVE)
     parser.add_argument('--num-ctx', type=int, default=OLLAMA_NUM_CTX)
+    parser.add_argument('--num-predict', type=int, default=1024)
     parser.add_argument('--no-warmup', action='store_true')
     parser.add_argument('--no-images', action='store_true')
+    parser.add_argument('--thinking', action='store_true',
+                        help='enable the Ollama model thinking mode')
+    parser.add_argument('--max-comments', type=int, default=30,
+                        help='maximum number of comments passed to the model')
     parser.add_argument('--media-base', default='data')
     parser.add_argument('--limit', '-n', type=int, default=0)
     parser.add_argument('--annotator-id', default='system')
@@ -237,14 +242,16 @@ def main(argv=None) -> int:
     parser.add_argument('--resume', nargs='?', const='latest', default=None,
                         help='resume a version-bound batch (optional batch ID)')
     args = parser.parse_args(argv)
-    if min(args.num_ctx, args.num_parallel, args.image_workers) < 1:
-        parser.error('context and worker counts must be positive')
+    if min(args.num_ctx, args.num_predict, args.num_parallel, args.image_workers) < 1:
+        parser.error('context, output-token and worker counts must be positive')
     if not math.isfinite(args.timeout) or args.timeout <= 0:
         parser.error('timeout must be positive and finite')
     if not math.isfinite(args.auto_threshold) or not 0 <= args.auto_threshold <= 1:
         parser.error('auto-threshold must be between 0 and 1')
     if args.limit < 0:
         parser.error('limit must be nonnegative')
+    if args.max_comments < 0:
+        parser.error('max-comments must be nonnegative')
     try:
         input_path = Path(args.input).resolve()
         guide_path = Path(args.guide).resolve()
@@ -323,7 +330,9 @@ def main(argv=None) -> int:
                     timeout=args.timeout, auto_threshold=args.auto_threshold,
                     keep_alive=args.keep_alive, guide_text=guide_text, guide_version=GUIDE_VERSION,
                     guide_sha256=guide_sha, media_analysis_requested=not args.no_images,
-                    collection_complete=post.get('collection_complete'), num_ctx=args.num_ctx)
+                    collection_complete=post.get('collection_complete'), num_ctx=args.num_ctx,
+                    num_predict=args.num_predict,
+                    thinking=args.thinking, comment_limit=args.max_comments)
                 latency = round(time.perf_counter() - start, 3)
                 suggestion = result.get('suggestion')
                 audit = {
@@ -339,7 +348,10 @@ def main(argv=None) -> int:
                     'media_evidence_status': result.get('media_evidence_status', 'unknown'),
                     'image_analysis_count': len(image_analyses or {}),
                     'collection_complete': result.get('collection_complete', 'unknown'),
-                    'num_ctx': args.num_ctx, 'latency_sec': latency, 'suggestion': suggestion,
+                    'num_ctx': args.num_ctx, 'thinking': args.thinking,
+                    'num_predict': args.num_predict,
+                    'max_comments': args.max_comments,
+                    'latency_sec': latency, 'suggestion': suggestion,
                 }
                 auto = None
                 suggested = None
@@ -379,6 +391,8 @@ def main(argv=None) -> int:
                 'raw_normalized_difference_count': sum(a['label_raw'] is not None and
                     str(a['label_raw']) != str(a['label_normalized']) for a in audits),
                 'ollama_model': args.ollama_model, 'ollama_url': args.ollama_url, 'num_ctx': args.num_ctx,
+                'num_predict': args.num_predict, 'thinking': args.thinking,
+                'max_comments': args.max_comments,
                 'auto_threshold': args.auto_threshold, 'media_analysis_requested': not args.no_images,
                 'media_base': str(media_base), 'keep_alive': args.keep_alive,
                 'warmup_ok': warmup_ok, 'warmup_duration_sec': warmup_sec, 'latency_sec': latencies,
