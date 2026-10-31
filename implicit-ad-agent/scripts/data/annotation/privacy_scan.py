@@ -160,7 +160,7 @@ def scan_record(record: Dict) -> List[Dict[str, Any]]:
     if title:
         _scan_text(title, "title", findings)
 
-    # 检查 media
+    # 规范化媒体路径不按密钥扫描；其他引用仍按自由文本检查。
     for i, m in enumerate(record.get("media", [])):
         if isinstance(m, dict):
             ref = str(m.get("ref", ""))
@@ -223,8 +223,9 @@ def _scan_text(text: str, field: str, findings: List[Dict]) -> None:
                 "severity": "high",
             })
 
-    # 4. 全局高熵检测
-    if len(text) > 30:
+    # 4. 全局高熵检测只适用于无空白的 ASCII token。对整段自然语言
+    # 计算熵会把长中文正文和评论系统性误报为“疑似编码/加密内容”。
+    if len(text) > 30 and re.fullmatch(r"[A-Za-z0-9_+/.=-]+", text):
         entropy = shannon_entropy(text)
         if entropy > 5.5:
             findings.append({

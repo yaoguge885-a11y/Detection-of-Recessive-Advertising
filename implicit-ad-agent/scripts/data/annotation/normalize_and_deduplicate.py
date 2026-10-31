@@ -16,6 +16,7 @@
 import hashlib
 import json
 import re
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Tuple
@@ -118,16 +119,48 @@ def deduplicate(records: Iterable[Dict]) -> Tuple[List[Dict], Dict]:
     1. 精确去重（文本指纹相同）
     2. 近重复标记（相似但不完全相同），不删除但标记
     """
+    records = list(records)
+    by_post_id: Dict[str, Dict] = {}
+    without_post_id: List[Dict] = []
+    duplicate_post_ids_removed = 0
+
+    def completeness_key(record: Dict) -> Tuple[int, int, int, int, int, str]:
+        media = record.get("media") or []
+        comments = record.get("comments") or []
+        canonical = json.dumps(record, ensure_ascii=False, sort_keys=True)
+        return (
+            len(normalize_text(record.get("text") or "")),
+            len(media) if isinstance(media, list) else 0,
+            len(comments) if isinstance(comments, list) else 0,
+            int(bool(record.get("title"))),
+            int(bool(record.get("published_at"))),
+            canonical,
+        )
+
+    for record in records:
+        post_id = str(record.get("post_id") or "")
+        if not post_id:
+            without_post_id.append(record)
+            continue
+        existing = by_post_id.get(post_id)
+        if existing is None:
+            by_post_id[post_id] = record
+            continue
+        duplicate_post_ids_removed += 1
+        if completeness_key(record) > completeness_key(existing):
+            by_post_id[post_id] = record
+
+    canonical_records = list(by_post_id.values()) + without_post_id
     seen_fingerprints: Set[str] = set()
     deduped: List[Dict] = []
-    duplicates_removed = 0
+    exact_duplicates_removed = 0
     near_duplicates = 0
 
     # 第一遍：精确去重
-    for record in records:
+    for record in canonical_records:
         fp = record_text_fingerprint(record)
         if fp in seen_fingerprints:
-            duplicates_removed += 1
+            exact_duplicates_removed += 1
             continue
         seen_fingerprints.add(fp)
         record["text"] = normalize_text(record.get("text", ""))
@@ -147,9 +180,11 @@ def deduplicate(records: Iterable[Dict]) -> Tuple[List[Dict], Dict]:
                 near_duplicates += 1
 
     stats = {
-        "original_count": len(list(records)) if hasattr(records, '__len__') else 0,
+        "original_count": len(records),
         "deduped_count": len(deduped),
-        "duplicates_removed": duplicates_removed,
+        "duplicates_removed": duplicate_post_ids_removed + exact_duplicates_removed,
+        "duplicate_post_ids_removed": duplicate_post_ids_removed,
+        "exact_content_duplicates_removed": exact_duplicates_removed,
         "near_duplicates_detected": near_duplicates,
     }
 
@@ -190,6 +225,11 @@ def write_jsonl(records: Iterable[Dict], path: Path) -> None:
 
 def main(input_path: str, output_path: str, report_path: Optional[str] = None,
          content_group_threshold: float = 0.85) -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
+
     src = Path(input_path)
     dst = Path(output_path)
     records = list(load_jsonl(src))
@@ -213,6 +253,7 @@ def main(input_path: str, output_path: str, report_path: Optional[str] = None,
     print(f"   原始记录:   {original_count}")
     print(f"   去重后:     {len(deduped)}")
     print(f"   精确重复:   {dedup_stats['duplicates_removed']} 条已移除")
+    print(f"   重复 ID:    {dedup_stats['duplicate_post_ids_removed']} 条已移除")
     print(f"   近重复:     {dedup_stats['near_duplicates_detected']} 对已检测")
     print(f"   content_group: {content_group_count} 组已标记")
 
@@ -228,6 +269,8 @@ def main(input_path: str, output_path: str, report_path: Optional[str] = None,
             "original_count": original_count,
             "deduped_count": len(deduped),
             "exact_duplicates_removed": dedup_stats["duplicates_removed"],
+            "duplicate_post_ids_removed": dedup_stats["duplicate_post_ids_removed"],
+            "exact_content_duplicates_removed": dedup_stats["exact_content_duplicates_removed"],
             "near_duplicate_pairs": dedup_stats["near_duplicates_detected"],
             "content_groups_assigned": content_group_count,
             "platform_distribution": dict(platform_dist),

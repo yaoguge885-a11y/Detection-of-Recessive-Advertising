@@ -353,6 +353,11 @@ class TestM1GuideAndEvidenceContract:
             num_ctx=32768,
         )
         assert captured["json"]["options"]["num_ctx"] == 32768
+        assert captured["json"]["options"]["num_predict"] == 1536
+        assert captured["json"]["format"]["required"] == [
+            "label", "confidence", "evidence_codes", "evidence", "reasoning",
+            "uncertain_reason", "information_gaps",
+        ]
 
     def test_incomplete_disclosure_evidence_cannot_hard_label_anguang(self, monkeypatch):
         monkeypatch.setattr(

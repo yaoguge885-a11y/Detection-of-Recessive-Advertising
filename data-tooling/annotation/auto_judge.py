@@ -99,6 +99,43 @@ EVIDENCE_CODES = {
     "M": "评论异常（置顶导流、格式化赞美）",
 }
 
+OLLAMA_RESPONSE_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "label": {"type": "string", "enum": list(VALID_LABELS)},
+        "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "evidence_codes": {
+            "type": "array",
+            "maxItems": len(EVIDENCE_CODES),
+            "items": {"type": "string", "enum": list(EVIDENCE_CODES)},
+        },
+        "evidence": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {"type": "string", "maxLength": 240},
+        },
+        "reasoning": {"type": "string", "maxLength": 300},
+        "uncertain_reason": {
+            "anyOf": [{"type": "string", "maxLength": 300}, {"type": "null"}],
+        },
+        "information_gaps": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {"type": "string", "maxLength": 240},
+        },
+    },
+    "required": [
+        "label",
+        "confidence",
+        "evidence_codes",
+        "evidence",
+        "reasoning",
+        "uncertain_reason",
+        "information_gaps",
+    ],
+    "additionalProperties": False,
+}
+
 GUIDE_VERSION = "1.0"
 
 # ════════════════════════════════════════════════════════════════════
@@ -580,7 +617,7 @@ def run_ollama_judge(
     # （放进 options 里不生效）。禁用后每帖约 2-5 秒。
     options: Dict[str, Any] = {
         "temperature": 0.0,
-        "num_predict": 1024,
+        "num_predict": 1536,
         "num_ctx": int(num_ctx),
     }
 
@@ -590,7 +627,7 @@ def run_ollama_judge(
             {"role": "system", "content": OLLAMA_SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
         ],
-        "format": "json",
+        "format": OLLAMA_RESPONSE_SCHEMA,
         "stream": False,
         "keep_alive": keep_alive or OLLAMA_KEEP_ALIVE,
         "options": options,

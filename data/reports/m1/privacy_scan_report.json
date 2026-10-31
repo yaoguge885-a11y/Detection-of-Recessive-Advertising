@@ -1,0 +1,2183 @@
+{
+  "scan_time": "2026-08-10T11:38:50.210493+08:00",
+  "input_file": "D:\\Computer Science\\projects\\implicit-ad-agent\\data\\interim\\m1_candidates_3312_terms_checked.jsonl",
+  "total_records": 3312,
+  "total_findings": 260,
+  "layer_distribution": {
+    "raw": 3,
+    "interim": 3309,
+    "public": 0
+  },
+  "severity_distribution": {
+    "high": 204,
+    "medium": 53,
+    "critical": 3
+  },
+  "finding_types": {
+    "邮箱地址": 112,
+    "物理地址": 92,
+    "Base64 长字符串（疑似密钥）": 37,
+    "十六进制长字符串（疑似哈希/密钥）": 11,
+    "固定电话": 5,
+    "银行卡号（疑似）": 3
+  },
+  "public_allowlist_count": 0,
+  "detailed_findings": {
+    "post_0ac293aa5fbd4e85ae42d81062cfae9e": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "cec4c89cf3ed43696545186b1ae57483344bbe4bd95a9c16438e4bbd2306d336",
+        "match_length": 53
+      }
+    ],
+    "post_2728b86b560d00bfca0b0b7601adc09c": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "95af6b4e34c6160a3771901777577f60f07a78958bdda05e1a1af11c03edd663",
+        "match_length": 44
+      }
+    ],
+    "post_d374136828eda02d0db744b497f1c439": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2532fea86e691375ee23e4bede03194942c225d94b1ceda92200799e9470283d",
+        "match_length": 54
+      }
+    ],
+    "post_2f10ceee64c97cedc3195dac93dd3a58": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "ccef12d48e4fe9845024332c801295a7998028b54c8ae3e75a619e2d80431b29",
+        "match_length": 32
+      }
+    ],
+    "post_039971a0415e00060200fa740989a054": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "a422c1967adaa9414b8cddcaff02621f811ec4a0433ac45c78a44db4e36f85e3",
+        "match_length": 9
+      }
+    ],
+    "post_8e388fb914f437df2e4f0c9192fa8609": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "a422c1967adaa9414b8cddcaff02621f811ec4a0433ac45c78a44db4e36f85e3",
+        "match_length": 9
+      }
+    ],
+    "post_8a62375935b0aa050faf8f380df4144d": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "8e6f1b6cf270a09c2e130b1fb735d52c5a8b664e235e392e28204b83d4ae5935",
+        "match_length": 53
+      }
+    ],
+    "post_e9b0a40aae100e77a23613a0a690118b": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "354182f27da68063dd53e4efdbdb03b8f525393e93dc2e8efb676fd6387ef5e9",
+        "match_length": 40
+      }
+    ],
+    "post_fc912903d9a9907ff527c13d7d325423": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "95ce2b7a92b2f81c5633e6ed086e69dd3b5c3de8e48061410cdd16cf61a96602",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "34e245443a1bde8c3c9b2b4b5988cea7c8680b49b655082f1d4b9e198bf15903",
+        "match_length": 54
+      }
+    ],
+    "post_e2d4d97e33e6e92a3825e6c0fa7ee219": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "0acd44a0a736e14217e4fef5436fe03e36488eff1d3a18675758cd27d50962fa",
+        "match_length": 53
+      }
+    ],
+    "post_683121c080a422316ba2b8c6a797a45c": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "3f65f56c443f058edd11c5df4d1cc397fde627a4719c43e69ace43049982ae8c",
+        "match_length": 54
+      }
+    ],
+    "post_297c4c28fbc99d7a34add5fd8479d0db": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "2c368010abe763eac3700e7106cf047146866dd067c47c0ea7e4f0a76381608b",
+        "match_length": 9
+      }
+    ],
+    "post_c1e51e56e91a0c709a9cdae778040b59": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "098a51c836b2f421b25a7486e6c2df1f6ed706b445f23a5bbe5d13dd22959633",
+        "match_length": 40
+      }
+    ],
+    "post_88488ea2556c5254f628af7814fec5f9": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "6318b7bd26cd38f366e03039337edfd68342aca4b0d777720b84233feb435168",
+        "match_length": 53
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "4a88008287d8d0c50cc2708150b740d6c1a27cc44fbb582a637b8733eb1000ff",
+        "match_length": 52
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "6d8f9c0f5b4968cfe6fe24597203bf00d252e8154807dda762324975a2c82dfc",
+        "match_length": 54
+      }
+    ],
+    "post_c25ced7b4568c7280be619d77744643e": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "6318b7bd26cd38f366e03039337edfd68342aca4b0d777720b84233feb435168",
+        "match_length": 53
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "6d8f9c0f5b4968cfe6fe24597203bf00d252e8154807dda762324975a2c82dfc",
+        "match_length": 54
+      }
+    ],
+    "post_2451c435065c991bcaf700d10977f063": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "5f77d085a27847e5cc67e84bd7721379e94fbf7c33a8d52903454b43fea9e621",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "efd58b120988f0c6823427f7c231a9b730498c1b6899dcdf1f5c6e29aa314866",
+        "match_length": 54
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "4784e4e4ae5c24692e227b642e7dbf5eae78e1e9f2078f4394191c7e532a60ce",
+        "match_length": 54
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "08dc60583ac0af36bd01b453bb93ce2815261464e095bafe74648bdfe36ffa2c",
+        "match_length": 54
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f4b458827fdc22d537cc86e701744438d6ea979f6abad7281b127321f4fb2bd4",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "8e574fb127a182a0feada9d37e0610a35cdc4d1a2cf4e8ac9949480525ba9ce0",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "9ba052045a5735a1f072767506ca8023a29300b5426176911f78346184572f21",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f90da0bf5d41ea55caea6a6ec45bb0c05f9c8a4c857b090b53e394541ea744aa",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "7ade6da0ca497be425f151729527bbd4c3eb5cf63fc71047da1ed435ccd7dfdd",
+        "match_length": 40
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "fc476662936c2694aa757a892117d0d91b2b8779c5349c400dce44a49a215cfa",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "e359a65298e51e381128aa2f1ca72a419295a0729e70a56e891b043fdba626b7",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "c1d9a3389cbbc4f24f2c598b0b9fb9c4ba00a8e174bba52bdc68142f34ad39b4",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f8855ecca9897e5035c5b26881e29f5902f31afadff7a6fcb3a8176d55984b66",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "6b379ac336c0471d717af4269b537d75b74c41f58e5e4af14d35d822b775cb13",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "72b2b7762252798ea6a0dabc45309cd67268c201afd8469a780c8c61694700ee",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "ea724e32eeb03a68395b730f468d29682ec55e8f45ac342eb722277d7a14518d",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "6cc3c42247e159676fc7658850f5407ec3c27e7ab2be71122b2391caeed7d154",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "af28435b3ae4df614a35678e2d24230f1fb52df463f58aa1b95151f921ca5ce3",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "cbee96933ab28fa0f90e5899534861342bdccb785c9dd5ab03c52eee4d480634",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "0a17a626166bc878c1557c52b77d53cdc603829a0d934cdccec13d5c3c066396",
+        "match_length": 55
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2b8e1b7666cd68190c7ca57bd49e7093075b69cea878a8a034fb7b589b6628a0",
+        "match_length": 55
+      }
+    ],
+    "post_dce3a1eef14cebb236b9b59c6237fe29": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "1756d7b84145238fda48ec720941ab0b3d445d4d936a695dffd296920fad71e1",
+        "match_length": 54
+      }
+    ],
+    "post_0ac1321f6dd6d492bfb337a23a145027": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "605baf3a7c59e358d05ac26727badd66a5390829cf1e415435ff166c2d6d2af3",
+        "match_length": 32
+      }
+    ],
+    "post_92be6827a4f5c05b97ec2811ce8f3fec": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "986bbe61f1c988abef4390f996fe28d61f05304801938e48dad4227d35d0f67c",
+        "match_length": 35
+      },
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "5218472dc32829e741f7f4c6ccbc0826beacd9d126f5a84ceb949dd3ecc46072",
+        "match_length": 38
+      }
+    ],
+    "post_8119d0234d918bddb18d291f76bab671": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "2c368010abe763eac3700e7106cf047146866dd067c47c0ea7e4f0a76381608b",
+        "match_length": 9
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2127ac714cb9787a9da8406d000a43a467bbbe4bbb595fd6dd48e0d414785b5a",
+        "match_length": 14
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "9dc7e7da47f9422eb49ed9018533f9078422fdb1d3a891340bc4750899651749",
+        "match_length": 54
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "8785a07d6a619987059662e909c4647b232b6e4291d98ec230e20566a3789c41",
+        "match_length": 54
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "fed511f6aa9a4794abfac5bf2eb89b6dbde839c42e7f23edbb55d7955264d7ec",
+        "match_length": 8
+      }
+    ],
+    "post_9f6be8bb76262183d996e1f879c618c8": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "e9398e657c3626445fe76e1e5cd5ee5271d3b9b7c3303e97bc4edd6d15340c9b",
+        "match_length": 47
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "44e33f74932a08ce836b5cffe8a46dfdfb9dfe53c2a9688c0815b9997110233f",
+        "match_length": 26
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "bc699a3b3457034b7933faadc9bc8b6e016c305fa4a36afef89476a64fdb0ecc",
+        "match_length": 41
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "21ef48371f0912b7b5a4458a96d76e9200a3c46a926405be6d96a59a89ade19a",
+        "match_length": 26
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "5eed64f037b9227929bf07954d9665db6d2b26cf04cda17248f5fe09321985e0",
+        "match_length": 48
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f67083cfdd6c0134bace3893ce0c8c4ac5609e05ac806d7f2e7679253981f03d",
+        "match_length": 37
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f3fe6759307bff1b196ec3ef45d44f34194e6ea371bffcf669ffd65b762306cf",
+        "match_length": 43
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "fd712e4a0021e9047b4f19c3a6cb0241173474c4db4063392a6601564271ab6e",
+        "match_length": 38
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "61e325a9045cfa8a7d1e0fb01bbf2256eda0bcc3ea8f5bfea1fa491a6fcc3c48",
+        "match_length": 42
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "e4af675f090e1ce1014ec5eb5fb679d777114ded56b1db8014db044e6e4a9a51",
+        "match_length": 42
+      }
+    ],
+    "post_49e9a9fc677080757b7563ef082dace6": [
+      {
+        "field": "text",
+        "type": "固定电话",
+        "severity": "medium",
+        "match_hash": "8b153e0aacad7a60b19bd65ce6a37294b01a31158676b01ea36f2f211eed313d",
+        "match_length": 11
+      }
+    ],
+    "post_db4a9621a743e4c432d99121bd3d8786": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "d042496340d132a8a544fd11da10fdce6f74040088e23786c551b13e3404d1fe",
+        "match_length": 44
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f7c7016c334f2baea8f00dc980384638105743c491d291b08c2144c56c977776",
+        "match_length": 54
+      }
+    ],
+    "post_cbd51c1120306b066d28a9c6ca2df52c": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "8dfad3b779d7530aa852dafb352f3afdb98c7eb15a9f4cde3041ccda6a294971",
+        "match_length": 54
+      }
+    ],
+    "post_8f9d8265909d1c5a16dfbece6e57658b": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "afc472c5e825f4c43dc4916104c4d874dc98b814e6882b429c5fe5e30b415614",
+        "match_length": 40
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "76cf90f7f75dcc20c71a497861a462dd2fb28631b8a90c790f6fce1b6277f861",
+        "match_length": 13
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "76cf90f7f75dcc20c71a497861a462dd2fb28631b8a90c790f6fce1b6277f861",
+        "match_length": 13
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "76cf90f7f75dcc20c71a497861a462dd2fb28631b8a90c790f6fce1b6277f861",
+        "match_length": 13
+      }
+    ],
+    "post_9f1ed3a85b62a1df66fb5536367cbe9b": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "b8c36a3093fa2f10a5f05a2edf55f457ec0329eefc415e393ad0bb01153f14ba",
+        "match_length": 31
+      }
+    ],
+    "post_951964a09ea3b484d0d15ccb2dca2b87": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f2bb81b6ca43563f912a4b784d9a7ee92c6a81bb691d151c8ae51fdbbb43e08a",
+        "match_length": 17
+      }
+    ],
+    "post_c9517206d55491bef5f363e0128d6b61": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "d6b8f52de5810378ec897cdb3c81d73926d550f9bd161906e466a18029310c24",
+        "match_length": 15
+      }
+    ],
+    "post_7d20673f950116d176dfd0cc7c9f455f": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "62e50a779ab38a4cb08cb38b1314aadcdaf64ad1daef58c5cef7961a4acf38a8",
+        "match_length": 16
+      }
+    ],
+    "post_43aa92f74913b1aba72ea01b2e0717d6": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "19439efefde33b0972c908b6a03e3e703dfc890bdcac63375b9ace84cc615b30",
+        "match_length": 26
+      }
+    ],
+    "post_c74f0c55c6679513b478c9e2f2e374ad": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "c735e58529222344c0a1ab59b0c88a7ff8b3e6adb4e3bbbdb163d2ada2b8ea58",
+        "match_length": 28
+      }
+    ],
+    "post_3745f33e21ce9ac8c32fc9d08c69a254": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "92b9d5227d6d660e21916e9d9db2d4f07d376cbc885e110c465d6c99b6d2da7b",
+        "match_length": 18
+      }
+    ],
+    "post_52d7fcdd14f698f88589935ca23cb5b6": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "ac66aec76a5aa6a934c7552dfde6c4e2c67a5a904e07a2830d4ecd16a89ea71e",
+        "match_length": 17
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2181983a4da51192298dc803be2bf82041886999ae8e961fc1a0724ec44b9a6b",
+        "match_length": 18
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "e3882b484afe51bf9aa778a99b6ef4891f6423fb2b68976d60e8db033aa96089",
+        "match_length": 17
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2661976ee853b19d71582fcb7185a945c2d1787bc041c605ab9c46e09e60284c",
+        "match_length": 12
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "1419ff2c0897b702ecbbedce9d841c013fea9ce19f691b3bec97f38e1ace7c46",
+        "match_length": 15
+      }
+    ],
+    "post_af5760ffa2e3f8adc85acdcf4035ab52": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "0bd66a2338658cdb2be5eb8a9ceda9afe2113a1916533d4e8636b8f8dd84268d",
+        "match_length": 30
+      }
+    ],
+    "post_57cd4afb40beca265cb6edda52f11508": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "be6b612a7a886e75e32655967a2ec5295b481e151e784a103d490147dde6ee1d",
+        "match_length": 22
+      }
+    ],
+    "post_c7377f312cc08b58fb02d378ff42c41a": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_1770983a6a47f6e1a30a01f61f94da17": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_e1ab0e1b3153d5267449827dc87d9c66": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_5430a1df6d14d68a737b75564968974b": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_21c42c1a490c71d07f24f1ee0e9d5c43": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_e9640235ce56cfa3f2a6eceb43951302": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_91bf9abf5562ca462118361df57ba63f": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_6e827917b93bb73bd29d0fdbda522888": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0f7c6effe9a8fd620bd56e32dd65e054c4d796cad5b4caf786e23d9da7cbf35a",
+        "match_length": 19
+      }
+    ],
+    "post_4c1bb89e014db1d4bf60f89c7d0c9f1a": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "f84d54b844a5ecf685ce478dc3bd7efda4a11f5540cb238bcf7a0c54e820de40",
+        "match_length": 27
+      }
+    ],
+    "post_00e86b8366a01c53fd70999473f3077a": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2303e583676891742ca0aa8cdc5d38a4b66adbaeed5e8157572728c8be9e15cb",
+        "match_length": 29
+      }
+    ],
+    "post_f4eb4a47547f7b445ab83240220857de": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "b6a393aa1f49229d228625188b688d58c30d8c98f411bf7b99300ee67a5fb37b",
+        "match_length": 14
+      }
+    ],
+    "post_3e6c9cfc6eff6345d44278913a06008f": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      }
+    ],
+    "post_495082c9956af25846f789444a640426": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "d123e90dc8ab9f5cf519a6a98db964de994dca16347d2b0c175c505414999812",
+        "match_length": 8
+      }
+    ],
+    "post_71dee673c8d56143a1c8b7295c84bd73": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e91167b9e86134dff98ff0b9ea8150be1f1018319adbe9d9dd8fe4f4d030bd6d",
+        "match_length": 8
+      }
+    ],
+    "post_8a6d8608f545c712be4148424ece5c01": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      }
+    ],
+    "post_6de11e94545883a7361cfe957d146e77": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      }
+    ],
+    "post_165f5ca32e3e1df3fb5494a023e8abe0": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "b4d345ac12c88203dbb89a39cece53be1049f3e2241e5d25128597e3f753838a",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "b4d345ac12c88203dbb89a39cece53be1049f3e2241e5d25128597e3f753838a",
+        "match_length": 8
+      }
+    ],
+    "post_b2785a46bd5d60c47486091d14516160": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      }
+    ],
+    "post_8d977fd89ae4e68b400c731f18d4ecc4": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      }
+    ],
+    "post_0c0a68c02e52dd9f50ec1c6f4b7a05b8": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "afaf919913841cc661497c9aab01ad40486318a4b9e7889a375d05c86565d268",
+        "match_length": 8
+      }
+    ],
+    "post_18e6591bc0ccde12a32ab9c74ad3b092": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      }
+    ],
+    "post_eb85328d48c86e899166b8d82203ba5a": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "afaf919913841cc661497c9aab01ad40486318a4b9e7889a375d05c86565d268",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "afaf919913841cc661497c9aab01ad40486318a4b9e7889a375d05c86565d268",
+        "match_length": 8
+      }
+    ],
+    "post_160281cd766258693a95d8ff8223b097": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "d6a228a9aa2151f577dc774d3ee914412c676a30d2057478b81d879264fb6990",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "d6a228a9aa2151f577dc774d3ee914412c676a30d2057478b81d879264fb6990",
+        "match_length": 8
+      }
+    ],
+    "post_e98c2f46ba871755ecdbfd8b9906523d": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "aef0f7e242015c96f4d914bad357ad949aef3980b2c5f3189596468b4cf3cb02",
+        "match_length": 8
+      }
+    ],
+    "post_bb1c3f3bdd3daa285e230a827483242a": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_d26e90511271e05cc5840bf8cc744f88": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_8eeeeb2f990095e38a4daf25375aa62f": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_aa81b2885ed8491641323c223f8164cb": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_1944b5d54ba965ffca76b4d9aaf8c4cd": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e91167b9e86134dff98ff0b9ea8150be1f1018319adbe9d9dd8fe4f4d030bd6d",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e91167b9e86134dff98ff0b9ea8150be1f1018319adbe9d9dd8fe4f4d030bd6d",
+        "match_length": 8
+      }
+    ],
+    "post_048f255fcbc8b41a75fc0d53f25c722b": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_4ec5be1c8d9cece2dc3cfd614e9a4a53": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_b913ab5ceea7392d8d1d00b63a4c0e8d": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_b6d3146a700d49b11564501602324e82": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "a7983e3d50b73380ee05613c2c62f01728bf47817a4fd632f3e6284c548635a9",
+        "match_length": 15
+      }
+    ],
+    "post_a31b98597520625c6352aaf8cd77cc73": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "d6a228a9aa2151f577dc774d3ee914412c676a30d2057478b81d879264fb6990",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "d6a228a9aa2151f577dc774d3ee914412c676a30d2057478b81d879264fb6990",
+        "match_length": 8
+      }
+    ],
+    "post_46def88a2ab88fa706fcdce96c0b089f": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "aef0f7e242015c96f4d914bad357ad949aef3980b2c5f3189596468b4cf3cb02",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "aef0f7e242015c96f4d914bad357ad949aef3980b2c5f3189596468b4cf3cb02",
+        "match_length": 8
+      }
+    ],
+    "post_239e1be9f66c7639f7f6a8ff4c4685d7": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e262b06f533e9d850caa3d1f21453de73be4b4b66cd4bf55441051ec10723f2f",
+        "match_length": 8
+      }
+    ],
+    "post_69e797d5debdc1f1236bab6385031fe6": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "c4269e00d30c2701d69d8b2a591f472313d17909ecef19406050eefd2c4f3d37",
+        "match_length": 8
+      }
+    ],
+    "post_c155cc0c921efba066ae06f6fa68dc04": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "b4d345ac12c88203dbb89a39cece53be1049f3e2241e5d25128597e3f753838a",
+        "match_length": 8
+      }
+    ],
+    "post_6ee65dad51817c1d56feb4623c263723": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "b1ccfec246200c0973af4f1facdd9798690bfba53b0764add88ec694ddd3fcba",
+        "match_length": 11
+      }
+    ],
+    "post_adb997ae08cebd4f1a2bc82fcae19cb4": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "f31a88083d52639f0a0198af12bfba9f8a9a47b6b670f291eff83d57f0b0a59c",
+        "match_length": 11
+      }
+    ],
+    "post_4cae401971d9de4ed7a4c3a9ae951769": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "d90792ae6497a5bf8d896b682ef35141f47d20b28036dcb58435a163a8860a90",
+        "match_length": 25
+      }
+    ],
+    "post_bebca8dcd6e1d0014a44623ad558dc43": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "f31a88083d52639f0a0198af12bfba9f8a9a47b6b670f291eff83d57f0b0a59c",
+        "match_length": 11
+      },
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "7ec845326fabd2262ebd3c2f2ea66ea38fdd600b1ccf8cbeabf3aaac9dabe283",
+        "match_length": 60
+      },
+      {
+        "field": "text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "b099ee22ec9854c3a5ca344d11ee4b092f37efe3ebd65f26129a0aaefc832777",
+        "match_length": 48
+      }
+    ],
+    "post_f2a59bdacc83ba7b30fa4e4b0e1fa81a": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "e44ef11bbff546c3fa296fa5ebc986a63535edee8535ab54fcbf5b91887b424d",
+        "match_length": 11
+      }
+    ],
+    "post_faf9a8aaa088b1e764cc7d889431345e": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "b1ccfec246200c0973af4f1facdd9798690bfba53b0764add88ec694ddd3fcba",
+        "match_length": 11
+      }
+    ],
+    "post_d1da582b026ecf1a0085d448839779bc": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "d6016b4d1109fd476759b9f54dc54f094d51a5050b380bd1c73e58d05aa6bbe3",
+        "match_length": 18
+      }
+    ],
+    "post_d57e628bf39123281b9f884d009b375b": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2e42efb7c20ed3f5b2b6bd16a5b815b93f69c7420b3a8c3ad06181a16e91c55f",
+        "match_length": 39
+      }
+    ],
+    "post_ad9dea61f89ba1c624c65b94a7ef801d": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "885e0ef4d1f3dff590997915becdf1822d73e92ba162c87a3063bd73204cffca",
+        "match_length": 12
+      }
+    ],
+    "post_5324e28a28cb60723bf86c947026be41": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "64da495b394d2068cbb6f94f523935af5f5826c26fdf69859f1f1381a4cc17bd",
+        "match_length": 12
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "a43fb6c49184c94a7772ed3b71c1980020e422495676b119cfefeb139b50420f",
+        "match_length": 27
+      }
+    ],
+    "post_066edd0861a691a1d21e07a145b5ff7e": [
+      {
+        "field": "text",
+        "type": "固定电话",
+        "severity": "medium",
+        "match_hash": "7d80870b860bd9d982baab0f63b54afd494c7a751c8ff3a282d36d6bc28fd83e",
+        "match_length": 12
+      },
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "23d56aa2929e500185c43d0f771907362261cc9c495addac9f9cdcfd301a370b",
+        "match_length": 9
+      }
+    ],
+    "post_fdc71b3546b45738769596b621b1d279": [
+      {
+        "field": "text",
+        "type": "固定电话",
+        "severity": "medium",
+        "match_hash": "85d49b3e1cd8c4163c4157cdcd89555ad909ab9937af761a759e2d20d59bf3a7",
+        "match_length": 11
+      }
+    ],
+    "post_a653144cc57a2ca9c87fcfb3af6bddea": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "92a58f58bc0464d3493061dbde8f9ddf4dda65a89a92d8a1b30b88ea6896f503",
+        "match_length": 54
+      }
+    ],
+    "post_7673a97461ebf396fda4eb5ddd6178bf": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "85c818f8eee80613a3bc8db85f9ca23a1f0c71b3b8c3f6ee042e56e8266fb73c",
+        "match_length": 36
+      }
+    ],
+    "post_6558d31088adcba92b9744a5b7d0f08a": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "5beaa5f6f5b07c1abe060d5cb98caa24d0a3a73c43bf35e16398eeb52f4e4194",
+        "match_length": 47
+      },
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "5beaa5f6f5b07c1abe060d5cb98caa24d0a3a73c43bf35e16398eeb52f4e4194",
+        "match_length": 47
+      }
+    ],
+    "post_c22ec91d0b7b46b69b0ec7d84e567e77": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "5beaa5f6f5b07c1abe060d5cb98caa24d0a3a73c43bf35e16398eeb52f4e4194",
+        "match_length": 47
+      }
+    ],
+    "post_0a241b2d1411296a259d3e176c3534f6": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "a5910374bda3e6bb6d7f1d11fc57d6329996c93b280521a1fad5ce589861b3e3",
+        "match_length": 32
+      }
+    ],
+    "post_ad3ef93c2ac52f8712b010794a91f731": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "e210539f67e960de867a0ded2f1fb2a1abfe5c3b873946d7378da1d85fd38510",
+        "match_length": 25
+      }
+    ],
+    "post_6afac394606894c1e5bc787637a368a6": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "e210539f67e960de867a0ded2f1fb2a1abfe5c3b873946d7378da1d85fd38510",
+        "match_length": 25
+      }
+    ],
+    "post_5d46275bb416f21ecb75d1394b7b6bec": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "e210539f67e960de867a0ded2f1fb2a1abfe5c3b873946d7378da1d85fd38510",
+        "match_length": 25
+      }
+    ],
+    "post_676e8da363a894a0d9315d1a9311ea2f": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "2befd440e8dbb526627cfa4ea2655bf6069376ec27e7809a9a26b2462a9f695f",
+        "match_length": 53
+      }
+    ],
+    "post_98674a069363f5efab55ff2230fc9ffe": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "5f766605f4766a89ca8f15aadb31be5d615b97af5144cf82c69898a4273dc7b0",
+        "match_length": 53
+      }
+    ],
+    "post_0265aa05bb0ea5d3205c4396489ad894": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "534de665946732e76ba976f349d20741f453f341905c50bbd0638395f493450c",
+        "match_length": 53
+      }
+    ],
+    "post_d071d26821d528dfbf2bc46faf0a39b9": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "aeffeedcefda53392406b82f2b8ccc683cc63f885026cedb3467607962b2ee1d",
+        "match_length": 35
+      }
+    ],
+    "post_f83b5b5bc5dcfd6d118cd354a1934fe9": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "ce2a5df048e55395bed54c158a34596e6e10568939d1ac1675e17784d09ae47a",
+        "match_length": 35
+      }
+    ],
+    "post_010053467d984cb05b3f1c3ee1e11f4d": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "abf433fe2f17618dee05c62e30cf241f788c5731ac5dcf7a527bd945e606f0bb",
+        "match_length": 35
+      }
+    ],
+    "post_4527a593095859e3557e40b69f716c81": [
+      {
+        "field": "comments[2].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "e335ac7de706e18e3056e34a1d8a6578b5714ed9853dfe1aab2cac98d68b83e8",
+        "match_length": 59
+      }
+    ],
+    "post_71ea57905f05125eda9992d910641bfd": [
+      {
+        "field": "comments[1].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "667c950876f3b3d7f9551fd04be4502809a654fd6bd4409d62210b3b645b1d92",
+        "match_length": 32
+      },
+      {
+        "field": "comments[1].text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "667c950876f3b3d7f9551fd04be4502809a654fd6bd4409d62210b3b645b1d92",
+        "match_length": 32
+      }
+    ],
+    "post_7777241b0a72eb85238f67804aeb823e": [
+      {
+        "field": "text",
+        "type": "固定电话",
+        "severity": "medium",
+        "match_hash": "f7e7805bd60ba7ece0926f8b2a8fc4e21e77fad0cecd36a41d1f826ff0c85553",
+        "match_length": 12
+      }
+    ],
+    "post_8d7fc7191a6f24e7779b6ed113a74731": [
+      {
+        "field": "comments[0].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "3dbfef2a0587604e203ccf8dfd6f3ceb9b5900d33e6fee63870b5f4939fdbe3d",
+        "match_length": 32
+      },
+      {
+        "field": "comments[0].text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "3dbfef2a0587604e203ccf8dfd6f3ceb9b5900d33e6fee63870b5f4939fdbe3d",
+        "match_length": 32
+      }
+    ],
+    "post_446fd54aceaca23cd4c5c79bc436aad0": [
+      {
+        "field": "comments[2].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "947037ce526100370016aa4f3c89ce739a115c6eb10f47fba111290a1da6ff0f",
+        "match_length": 38
+      },
+      {
+        "field": "comments[2].text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "5adc9b50f4e52f9bc146ea08a17a96e2abde4f0397c58879e826b37ee635928a",
+        "match_length": 32
+      }
+    ],
+    "post_afc7d49743b6324538b634e83830c959": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "1be6aaf29df9c06c7758bdee0d511c01faab94b4a022577201742dab743b7ec5",
+        "match_length": 11
+      }
+    ],
+    "post_01df8e6ac265d29106b0eeaa6f35c93d": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "a2f62460e75f8b1413b4bffd3adb81bcc6bb209066cffc65860ae024a2a2e859",
+        "match_length": 53
+      }
+    ],
+    "post_1ded150d088cca891e7be804ac07a4fd": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "a2f62460e75f8b1413b4bffd3adb81bcc6bb209066cffc65860ae024a2a2e859",
+        "match_length": 53
+      }
+    ],
+    "post_a3539fedb88c67ed63467018d372f52c": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "262853552db03c5995239edfb50875dcf0215f4d86fb01193426532670cb3d8a",
+        "match_length": 33
+      }
+    ],
+    "post_a64ebecd4b3f493bfe7786e691e83c16": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "6cc9d408c6054c4508dddc5b9e01206030094ebc010e5418c7a1c51ff65c1e59",
+        "match_length": 32
+      }
+    ],
+    "post_de1855431034f25947f0e3b36ee08855": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_4c01b808934cdd6a640d759aabd0b848": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_3eb609877daa75c9153cf5c725a2acaa": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_a6798db57b8ee7977b4320827ef14a47": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_cbfb3c3f46c07dc844c17bb433086c77": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_3b35bb59d48f6c187a5a8927a5528d46": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_11d336fc7b0236424afea520a57c75ff": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_d3f44d1eb10187eac5265af8f4100106": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_a3033421c8633a6d46e4e51665e11485": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_ee0e1dc4fc5076a879fd80a23566ef25": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_519a26bedd4804e4139cdb47151e542b": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_ef32f7213e64a0002e3377a82f492a4d": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_319c1f0a9c5322140727de92eca316d4": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_a0132ec5e8b9f05cf183e00c8fc232e7": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_8c802b25d377d6b91f9760bbc646b5e4": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_8b517b2d181a71621b05aecc02f64ee3": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_7c6e90e97bb82152e3212d4a97c8c6e4": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_f4a031d20bcab7d6f717942c726a2e28": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_adccd0217fca4b27d9cf4c662028ba0d": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_d53a171af9db07860113ffa702634200": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_7da7b11870f12eea0f6f99a41a4a460c": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_e81adf1bb7a6d6704d226d336dd7df41": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_15e11df260aa7cb040aa4f2985f6b2cd": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_24151541fa3a1a805e4ce6a9adcf9534": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_557cbc87a5efa781072ca1804a25ea34": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_cc2466d9a91c2175a01b7457283d9ad6": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_d88174f47021d2dd18aafd72f19f91b8": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_4f862f657a0bba2ae56d9d44d5f6c74f": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_a45b60e06c584ef4fe2fec7c7b755096": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_a7399ff5a51310a6b0b36e53c60d5df2": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_08b0fe2ebaea7603a4f8ac335353b92f": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_2534d09b79db8e95ce567ba078e04046": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_cafdc47737939ecb338b81ce688b7b60": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_2aaed5969bae86bb595b0f97dc127738": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_143798b36590707c42d97102c77ddbc7": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_3b13e58bc19114d616410053e3189df3": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      },
+      {
+        "field": "comments[0].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "27ef43e4018852bc8d3bbea9cf86feb9facae3e693984ba363bd926e4676ad86",
+        "match_length": 36
+      }
+    ],
+    "post_618104c35a53b9ed4cf9526a350a6751": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_fd3ada9469a687b9026c2c21a322fb7c": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_672f545d38c2f06f1a9086022f297aee": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_8b843e008d37965dd556ecdec7e6c378": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "0b0376c1d64fba374095d39d28e88b91293616d8412483086007d8b56bc763f0",
+        "match_length": 8
+      }
+    ],
+    "post_24a35a302a47672ad4896249f54bea92": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "371249a2c36dcdbcd893381aea2dd9be86778f42806f1b5397196e8b3ea7834c",
+        "match_length": 46
+      }
+    ],
+    "post_b392794f1ac9dcc1f3821387bfc62928": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "e5eb4901d62db56b62386e57b4a410d571ff35cb3d7fecf8936a9cff40d2cade",
+        "match_length": 49
+      }
+    ],
+    "post_ef187eac8b93aa0da0f25272c6127b10": [
+      {
+        "field": "text",
+        "type": "邮箱地址",
+        "severity": "high",
+        "match_hash": "f256dab2cf9af47282fa6b31cbcd7203bcf1e4d6f8168838ecc1090f4dcacca5",
+        "match_length": 11
+      }
+    ],
+    "post_fd9c93e9357d50e0dcbd6be9585c6bd7": [
+      {
+        "field": "comments[1].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "1fc44d6e26d3d910bd2fb8222792033c2b13449fc79b679c1a8ab9947101d3cb",
+        "match_length": 32
+      },
+      {
+        "field": "comments[1].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "bf1c0d529b15b0f69661078043c0ffdaf41fd89a427069ac10bb465832f08e49",
+        "match_length": 60
+      },
+      {
+        "field": "comments[1].text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "1fc44d6e26d3d910bd2fb8222792033c2b13449fc79b679c1a8ab9947101d3cb",
+        "match_length": 32
+      }
+    ],
+    "post_d9ae5517b4dfa9b100a140aab918176e": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "182aa87b39ae21729008c90dd64b6c394a45aaf692ead38174edfe6f563fdb10",
+        "match_length": 37
+      }
+    ],
+    "post_d9b6dd8da4613caea1efe98e50487aaa": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "c1fa283069cd290bbcf517d4eb8fc1e9d1299177fe88124a45228ff7978bdf22",
+        "match_length": 24
+      }
+    ],
+    "post_c3e52c5df065afba552875781e5d4a93": [
+      {
+        "field": "comments[2].text",
+        "type": "银行卡号（疑似）",
+        "severity": "critical",
+        "match_hash": "d7f54427b810158f01d09d4923adfbf2f64115ef682a605d62b0e870471f9218",
+        "match_length": 16
+      }
+    ],
+    "post_f6affbfb5a66fb7e1202fb43b0575276": [
+      {
+        "field": "comments[1].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "27c381f1d4767eb104c016fe0368da8bd5f1029d7215e6876b13dc4e6214877a",
+        "match_length": 59
+      }
+    ],
+    "post_bcdca9f04b5da6286951ba8739d42671": [
+      {
+        "field": "comments[1].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "a28bb10923848abea508366320ad010d7726f84b97b79f71ecdbb9d82d083fb8",
+        "match_length": 59
+      },
+      {
+        "field": "comments[2].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "82a646b14f20d05fac5e13c4fbccebfb1691a8991fa760d1bc509a1fbbffa17d",
+        "match_length": 32
+      }
+    ],
+    "post_a7258315625e8075ea7bd1837e2e2beb": [
+      {
+        "field": "comments[0].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "79c570375c29f5c135f79770701757679b080e2ccbd92c6bbe0dcfc1411b9fcc",
+        "match_length": 32
+      }
+    ],
+    "post_91de3a5b39aa0ad3894adf9fc5bbccc5": [
+      {
+        "field": "comments[1].text",
+        "type": "银行卡号（疑似）",
+        "severity": "critical",
+        "match_hash": "d7f54427b810158f01d09d4923adfbf2f64115ef682a605d62b0e870471f9218",
+        "match_length": 16
+      }
+    ],
+    "post_69db1e46dea2031c9d6bb80a3e278011": [
+      {
+        "field": "comments[0].text",
+        "type": "银行卡号（疑似）",
+        "severity": "critical",
+        "match_hash": "d7f54427b810158f01d09d4923adfbf2f64115ef682a605d62b0e870471f9218",
+        "match_length": 16
+      }
+    ],
+    "post_113721b4fa597b5500ea49f1dbcdb3d0": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "ec6e40f5c749d49a268b347072a830b08c5c0a1d8f5b9f46b890b2bc3168ab2e",
+        "match_length": 46
+      }
+    ],
+    "post_f238e64ecdf83a21194134f348d3a166": [
+      {
+        "field": "text",
+        "type": "物理地址",
+        "severity": "high",
+        "match_hash": "63a82000d56ee338b1636390e6b92298674e2e7e709198b04676be9f512023ca",
+        "match_length": 21
+      }
+    ],
+    "post_8a285104f6c9fce25103a19e23416f42": [
+      {
+        "field": "comments[0].text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "95d062059578bf496fb8e91f848ebb88e53f9f8b68258b73b0b34742ec5ebe1c",
+        "match_length": 32
+      },
+      {
+        "field": "comments[0].text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "95d062059578bf496fb8e91f848ebb88e53f9f8b68258b73b0b34742ec5ebe1c",
+        "match_length": 32
+      }
+    ],
+    "post_7a240f2aa9fcfe850da46a6b6c045a94": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "e01e336fa9d1bbed59e90052b7423716ed8002e1566647033b0f5222a5a76904",
+        "match_length": 32
+      },
+      {
+        "field": "text",
+        "type": "十六进制长字符串（疑似哈希/密钥）",
+        "severity": "medium",
+        "match_hash": "e01e336fa9d1bbed59e90052b7423716ed8002e1566647033b0f5222a5a76904",
+        "match_length": 32
+      }
+    ],
+    "post_57233e8f78f73b6908e6a22cbf191713": [
+      {
+        "field": "comments[2].text",
+        "type": "固定电话",
+        "severity": "medium",
+        "match_hash": "80f4c3576ee0b5d2c0ded6590013427af90555543f7a6ac5160e6e30d1a12065",
+        "match_length": 11
+      }
+    ],
+    "post_697e87416b45a32638f4b67b1a07b483": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "5586176410bbe59fa707abac1ad45065e9a28831126dd5802c2eaecf12bc3e97",
+        "match_length": 35
+      },
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "ddb4cbe12d56262d4e131c8847650a06b83272ebf21afbb56d3ca4fdfa0d005b",
+        "match_length": 36
+      }
+    ],
+    "post_5fc128f0cdbc68af57a9ab4231de356f": [
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "cbc453fadf45648375bba1f4e177bdbf01ac6e92842f05df9c1f06786932a143",
+        "match_length": 36
+      },
+      {
+        "field": "text",
+        "type": "Base64 长字符串（疑似密钥）",
+        "severity": "medium",
+        "match_hash": "5e5120684682d5b9c4a3669965a49d8ac6c8b545e9643f7a431669ebf35235d4",
+        "match_length": 36
+      }
+    ]
+  }
+}
