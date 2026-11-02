@@ -13,3 +13,14 @@
 - 依据：`docs/annotation_guide_v1.md`，含 24 个边界案例和证据码 `D/C/P/A/V/M/B`。
 - 已明确的执行边界：采集不完整只能导向 `uncertain`，不能据此认定“未披露”；CreatorShift/证据码 `B` 只作辅助证据，不能单独判定暗广。
 - 后续变更：待 A、B 达成书面共识后按“版本、原因、生效批次”追加记录。
+
+## v1.1 候选 — 2026-11-02（未生效）
+
+- 状态：`supplement_pending_formal_adoption`，**尚未形成 v1.1**，`docs/annotation_guide_v1.md` 保持冻结。
+- 依据：[标注规则补充（2026-11-02）](./annotation_rules_supplement_20261102.md)。
+- 三条候选规则：
+  1. S-1 爬虫采集失败的记录按 `invalid_capture_failed` 剔除，不计入标签分布与 Gold；
+  2. S-2 收藏集／数字周边／装扮类必须补记证据码 `A`；
+  3. S-3 游戏实况按更新形态区分：长期系列倾向 `非广`，单集作品实况倾向 `暗广`。
+- 生效批次：待定；`m1_gold_human_120` 仍按 v1.0 记录，不回写。
+
