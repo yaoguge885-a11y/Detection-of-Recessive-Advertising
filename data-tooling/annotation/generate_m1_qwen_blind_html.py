@@ -25,26 +25,38 @@ from typing import Any, Iterable, Mapping, Sequence
 from urllib.parse import quote, urlsplit, urlunsplit
 
 
-SCHEMA_VERSION = "m1_blind_html_delivery_v2"
-REVIEW_SCHEMA_VERSION = "m1_blind_human_review_v2"
+SCHEMA_VERSION = "m1_blind_html_delivery_v3"
+REVIEW_SCHEMA_VERSION = "m1_blind_human_review_v3"
+EVIDENCE_CODE_SCHEME = "annotation_guide_table_v1"
+EVIDENCE_CODE_ORDER = ("D", "C", "P", "A", "V", "M", "B")
 DEFAULT_ROLES = ("A", "B")
 _BILIBILI_VIDEO_PATH = re.compile(r"^/video/(BV[0-9A-Za-z]{8,20})/?$")
 LABELS = (
-    ("明广", "明广 — 明确商业/推广表达"),
-    ("暗广", "暗广 — 商业推广但表达较隐蔽"),
-    ("非广", "非广 — 当前证据不足以认定广告"),
+    ("明广", "明广 — 商业推广意图充分且有明确披露"),
+    ("暗广", "暗广 — 推广意图充分、披露采集完整且未发现明确披露"),
+    ("非广", "非广 — 没有足够证据支持商业推广意图"),
     ("uncertain", "uncertain — 证据不足或存在冲突"),
     ("out_of_scope", "out_of_scope — 不在本批任务范围"),
 )
-EVIDENCE_CODES = (
-    ("D", "披露/广告标识"),
-    ("C", "行动号召或转化路径"),
-    ("P", "价格、优惠或购买信息"),
-    ("A", "品牌/商品/服务指向"),
-    ("V", "媒体中的可见推广证据"),
-    ("M", "评论或互动中的推广证据"),
-    ("B", "账号/主体/背景证据"),
-)
+
+
+def evidence_code_contract(guide_text: str) -> dict[str, Any]:
+    """Read the fixed guide's table; never silently substitute another legend."""
+    found: dict[str, str] = {}
+    for match in re.finditer(r"^\s*\|\s*([A-Z])\s*\|\s*([^|]+?)\s*\|\s*$", guide_text, re.MULTILINE):
+        code, meaning = match.groups()
+        if code in found:
+            raise ValueError(f"duplicate evidence code in guide: {code}")
+        found[code] = meaning.strip()
+    if set(found) != set(EVIDENCE_CODE_ORDER):
+        raise ValueError("guide must define exactly D/C/P/A/V/M/B evidence codes in a Markdown table")
+    dictionary = [{"code": code, "meaning": found[code]} for code in EVIDENCE_CODE_ORDER]
+    encoded = json.dumps(dictionary, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {
+        "evidence_code_scheme": EVIDENCE_CODE_SCHEME,
+        "evidence_code_dictionary": dictionary,
+        "evidence_code_dictionary_sha256": hashlib.sha256(encoded).hexdigest().upper(),
+    }
 
 
 def _now_iso() -> str:
@@ -333,6 +345,8 @@ def _role_readme(
 
 这是同一仓库内的本地 HTML 人工标注入口。页面只展示固定清单中的原始证据、媒体和统一标注指南，不展示模型建议，也不展示另一位标注人的答案。
 
+本页导出格式为 `{REVIEW_SCHEMA_VERSION}`，证据代码直接取自本包指南表格，并绑定字典 SHA。旧 v1/v2 结果不得导入；旧批次继续使用原冻结页面，不迁移已填答案。
+
 ## 使用
 
 1. 先阅读 `../COORDINATOR/annotation_guide_v1.md`，确认页面顶部的独立性声明。
@@ -398,6 +412,11 @@ def _html_for_role(
     guide_text: str,
     metadata: Mapping[str, Any],
 ) -> str:
+    contract = evidence_code_contract(guide_text)
+    for key, value in contract.items():
+        if key in metadata and metadata[key] != value:
+            raise ValueError(f"guide/metadata evidence-code mismatch: {key}")
+    metadata = {**metadata, **contract, "review_schema_version": REVIEW_SCHEMA_VERSION}
     meta_json = _json_for_script(metadata)
     items_json = _json_for_script(items)
     guide_json = _json_for_script(guide_text)
@@ -405,7 +424,7 @@ def _html_for_role(
         [{"value": value, "text": text} for value, text in LABELS]
     )
     evidence_json = _json_for_script(
-        [{"value": value, "text": text} for value, text in EVIDENCE_CODES]
+        [{"value": entry["code"], "text": entry["meaning"]} for entry in contract["evidence_code_dictionary"]]
     )
     # The template is intentionally self-contained.  Runtime evidence is
     # either a local relative media path or a narrowly allowlisted HTTPS
@@ -434,7 +453,7 @@ def _html_for_role(
     <h1>M1 全新独立人工盲测 — 角色 __ROLE__</h1>
     <div class="sub">固定样本、固定指南、独立草稿。此页面不提供任何预填答案；完成后仅导出本角色 JSON。</div>
     <div class="toolbar">
-      <button id="saveBtn">保存草稿</button><button id="exportBtn" class="primary">校验并导出 JSON</button>
+      <button id="saveBtn">保存草稿</button><button id="draftExportBtn">导出未完成草稿</button><button id="exportBtn" class="primary">校验并导出 JSON</button>
       <label class="button">导入本角色 JSON<input id="importInput" type="file" accept="application/json" hidden></label>
       <button id="resetBtn" class="danger">清空本角色草稿</button>
       <label>筛选 <select id="filterSelect"><option value="all">全部</option><option value="todo">未完成</option><option value="done">已完成</option><option value="uncertain">uncertain</option></select></label>
@@ -482,7 +501,7 @@ def _html_for_role(
   const EVIDENCE_CODES=__EVIDENCE_JSON__;
   const ROLE=__ROLE_JSON__;
   const REVIEW_SCHEMA_VERSION=__REVIEW_SCHEMA_JSON__;
-  const STORAGE_KEY="m1_blind_review_v2:"+META.manifest_sha256+":"+ROLE;
+  const STORAGE_KEY="m1_blind_review_v3:"+META.manifest_sha256+":"+META.guide_sha256+":"+META.evidence_code_dictionary_sha256+":"+ROLE;
   const state={attestation:{reviewer_name:"",reviewer_id:"",read_guide:false,no_other_answers:false,independent:false,evidence_checked:false,media_gaps_ack:false},records:{}};
   let filter="all";let lightboxItem=null;let lightboxIndex=0;
   const $=id=>document.getElementById(id);
@@ -490,8 +509,10 @@ def _html_for_role(
   const itemKey=item=>item.post_id;
   function emptyRecord(){return {label:"",confidence:"",evidence_codes:[],evidence:"",uncertain_reason:"",reviewed:false,media_review_confirmed:false,viewed_media_refs:[],remote_media_statuses:{},remote_open_attempts:{},reviewed_at:""};}
   function ensureRecords(){ITEMS.forEach(item=>{if(!state.records[itemKey(item)])state.records[itemKey(item)]=emptyRecord();const r=state.records[itemKey(item)];if(!Array.isArray(r.viewed_media_refs))r.viewed_media_refs=[];if(!r.remote_media_statuses||typeof r.remote_media_statuses!=="object"||Array.isArray(r.remote_media_statuses))r.remote_media_statuses={};if(!r.remote_open_attempts||typeof r.remote_open_attempts!=="object"||Array.isArray(r.remote_open_attempts))r.remote_open_attempts={};});}
-  function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify({schema_version:REVIEW_SCHEMA_VERSION,role:ROLE,manifest_sha256:META.manifest_sha256,state}));setMessage("草稿已保存在本浏览器的本角色隔离空间。",false);renderNav();}
-  function load(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const parsed=JSON.parse(raw);if(parsed.role!==ROLE||parsed.manifest_sha256!==META.manifest_sha256)return;if(parsed.state&&typeof parsed.state==="object"){Object.assign(state,parsed.state);}}catch(error){setMessage("已有草稿无法读取，已使用空白草稿："+error,false);}ensureRecords();}
+  function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify({schema_version:REVIEW_SCHEMA_VERSION,role:ROLE,manifest_sha256:META.manifest_sha256,source_sha256:META.source_sha256,guide_sha256:META.guide_sha256,evidence_code_scheme:META.evidence_code_scheme,evidence_code_dictionary_sha256:META.evidence_code_dictionary_sha256,state}));setMessage("草稿已保存在本浏览器的本角色隔离空间。",false);renderNav();}
+  function draftMatchesContext(payload){return Boolean(payload&&payload.schema_version===REVIEW_SCHEMA_VERSION&&payload.role===ROLE&&payload.manifest_sha256===META.manifest_sha256&&payload.source_sha256===META.source_sha256&&payload.guide_sha256===META.guide_sha256&&payload.evidence_code_scheme===META.evidence_code_scheme&&payload.evidence_code_dictionary_sha256===META.evidence_code_dictionary_sha256);}
+  function assertReviewCompatibility(payload){if(!payload||payload.schema_version!==REVIEW_SCHEMA_VERSION)throw new Error("JSON 版本不匹配；旧版 v1/v2 不能导入 v3 页面");if(!draftMatchesContext(payload))throw new Error("角色、清单、输入、指南或证据代码字典不匹配");if(payload.annotation_method!=="human"||payload.qwen_visible!==false||payload.ai_assistance_disclosed===true||payload.independent_blind_review===false)throw new Error("AI 辅助或非人工结果不能导入独立盲测页面");}
+  function load(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const parsed=JSON.parse(raw);if(!draftMatchesContext(parsed)){setMessage("已有草稿的版本、指南或证据代码不匹配，未加载；请保留原文件并联系协调人。",true);return;}if(parsed.state&&typeof parsed.state==="object"){Object.assign(state,parsed.state);}}catch(error){setMessage("已有草稿无法读取，已使用空白草稿："+error,false);}ensureRecords();}
   function setMessage(message,bad=true){$("globalMessage").textContent=message||"";$("globalMessage").style.color=bad?"var(--bad)":"var(--ok)";}
   function recordFor(item){return state.records[itemKey(item)];}
   function fixedMediaMissing(item){return item.media.some(media=>!media.local_exists&&!media.remote_available);}
@@ -507,30 +528,32 @@ def _html_for_role(
   function mediaMarkup(item,r){if(!item.media.length)return `<p class="media-count">本条没有媒体记录；请仍在“媒体已检查”处确认没有媒体需要查看。</p>`;const local=item.media.filter(media=>media.local_exists);const remote=item.media.filter(media=>media.remote_available);const unavailable=item.media.filter(media=>!media.local_exists&&!media.remote_available);const localViewed=local.filter(media=>r.viewed_media_refs.includes(media.ref)).length;const remoteResolved=remote.filter(media=>Boolean(r.remote_media_statuses[media.remote_key])).length;return `<div class="media-count">本地已打开 ${localViewed}/${local.length} · 在线源视频已确认 ${remoteResolved}/${remote.length}${unavailable.length?` · 固定证据缺口 ${unavailable.length}`:""}</div><div class="media-grid">${item.media.map((media,index)=>{if(media.local_exists&&media.local_url){const viewed=r.viewed_media_refs.includes(media.ref);let body="";if(media.type==="video")body=`<video src="${esc(media.local_url)}" preload="metadata"></video>`;else if(media.type==="audio")body=`<audio controls src="${esc(media.local_url)}"></audio>`;else body=`<img src="${esc(media.local_url)}" alt="本地媒体 ${media.number}">`;return `<div class="media-card${viewed?" viewed":""}" data-post-id="${esc(item.post_id)}" data-media-ref="${esc(media.ref)}"><button class="media-open" data-action="media" data-index="${index}">${body}</button><div class="media-ref">#${media.number} · ${esc(media.type)} · ${esc(media.ref)}</div><div class="media-ref">${viewed?"已打开":"未打开"} · 本地固定媒体</div></div>`;}if(media.remote_available&&media.remote_url){const key=media.remote_key;const status=r.remote_media_statuses[key]||"";const attempted=r.remote_open_attempts[key]||"";const cls=status==="reviewed"?" viewed":status==="unavailable"?" missing":" remote";return `<div class="media-card${cls}" data-post-id="${esc(item.post_id)}" data-remote-key="${esc(key)}"><a class="remote-link" data-action="remote-open" data-index="${index}" href="${esc(media.remote_url)}" target="_blank" rel="noopener noreferrer">在新标签页打开源视频</a><div class="media-ref">#${media.number} · ${esc(media.type)} · 在线源视频（内容未本地固定）</div><div class="media-ref">${attempted?"已记录打开尝试："+esc(attempted):"尚未点击页面内入口"}</div><div class="remote-status"><label><input type="radio" name="remote_${esc(item.post_id)}_${esc(key)}" data-action="remote-status" data-key="${esc(key)}" value="reviewed" ${status==="reviewed"?"checked":""}> 已成功打开并检查视频</label><label><input type="radio" name="remote_${esc(item.post_id)}_${esc(key)}" data-action="remote-status" data-key="${esc(key)}" value="unavailable" ${status==="unavailable"?"checked":""}> 链接无法访问或内容不可用</label></div></div>`;}return `<div class="media-card missing" data-post-id="${esc(item.post_id)}"><div style="height:120px;display:grid;place-items:center;color:var(--bad)">媒体证据不可用</div><div class="media-ref">#${media.number} · ${esc(media.type)} · ${esc(media.ref||"无 ref")}</div><div class="media-ref">既无本地文件，也无允许的在线入口；需显式记录证据缺口</div></div>`;}).join("")}</div>`;}
   function itemMarkup(item){const r=recordFor(item);const comments=item.comments.length?`<div class="comments"><h3>评论（${item.comments.length}）</h3>${item.comments.map(c=>`<div class="comment"><span class="badge">${esc(c.comment_id)}</span> ${esc(c.text)}</div>`).join("")}</div>`:"<div class=\"comments\"><h3>评论</h3><p class=\"item-meta\">当前记录没有可见评论；集合完整性未知。</p></div>";return `<article class="item" id="item_${esc(item.post_id)}" data-post-id="${esc(item.post_id)}"><div class="item-head"><div><div class="item-title">#${item.ordinal} · ${esc(item.title||"（无标题）")}</div><div class="item-meta">post_id: ${esc(item.post_id)} · 平台: ${esc(item.platform||"未知")}${item.published_at?" · 发布时间: "+esc(item.published_at):""}</div></div><span class="badge ${isDone(item)?"":"warn"}">${isDone(item)?"已完成":"待完成"}</span></div><div class="evidence-warning">正文、评论、媒体和披露的采集完整性均为未知。请只根据页面实际可见证据判断；证据不足时选择 uncertain，不要补猜。</div><h3>正文</h3><div class="post-text">${esc(item.text||"（无正文）")}</div>${comments}<h3 style="margin-top:14px">媒体</h3>${mediaMarkup(item,r)}<div class="controls"><div><h3>标签</h3><div class="label-options">${labelOptions(item,r)}</div></div><label class="field">置信度（0–1）<input class="confidence" type="number" min="0" max="1" step="0.01" value="${esc(r.confidence)}" placeholder="例如 0.80"></label><div><h3>证据代码</h3><div class="code-options">${codeOptions(item,r)}</div></div><label class="field">证据说明（必填）<textarea class="evidence" placeholder="只写本条实际看到的证据、位置和判断边界">${esc(r.evidence)}</textarea></label><label class="field uncertain-field">uncertain 原因（选择 uncertain 时必填）<textarea class="uncertain-reason" placeholder="说明缺失、冲突或无法确认之处">${esc(r.uncertain_reason)}</textarea></label></div><div class="review-row"><label><input class="reviewed" type="checkbox" ${r.reviewed?"checked":""}> 我已逐条阅读并完成判断</label><label><input class="media-confirm" type="checkbox" ${r.media_review_confirmed?"checked":""} ${item.media.length===0?"checked":""}> 我已检查本条全部可用媒体（本地逐个打开，远程逐项确认；无媒体时也请确认）</label><span class="saved" data-saved></span></div><div class="errors" data-errors></div></article>`;}
   function renderItems(){const host=$("items");const visible=ITEMS.filter(item=>filter==="all"||filter==="todo"&&!isDone(item)||filter==="done"&&isDone(item)||filter==="uncertain"&&recordFor(item).label==="uncertain");host.innerHTML=visible.map(itemMarkup).join("");visible.forEach(bindItem);renderNav();}
-  function bindItem(item){const card=document.querySelector(`[data-post-id="${CSS.escape(item.post_id)}"]`);if(!card)return;const r=recordFor(item);card.querySelectorAll("input[type=radio][name^=label_]").forEach(input=>input.addEventListener("change",()=>{r.label=input.value;updateCard(item,card);}));card.querySelector(".confidence").addEventListener("input",event=>{r.confidence=event.target.value;updateCard(item,card);});card.querySelector(".evidence").addEventListener("input",event=>{r.evidence=event.target.value;});card.querySelector(".uncertain-reason").addEventListener("input",event=>{r.uncertain_reason=event.target.value;});card.querySelectorAll(".evidence-code").forEach(input=>input.addEventListener("change",()=>{r.evidence_codes=[...card.querySelectorAll(".evidence-code:checked")].map(x=>x.value);}));card.querySelector(".reviewed").addEventListener("change",event=>{r.reviewed=event.target.checked;r.reviewed_at=event.target.checked?new Date().toISOString():"";updateCard(item,card);});card.querySelector(".media-confirm").addEventListener("change",event=>{r.media_review_confirmed=event.target.checked;updateCard(item,card);});card.querySelectorAll("[data-action=media]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();const index=Number(button.dataset.index);markViewed(item,index);openLightbox(item,index);}));card.querySelectorAll("[data-action=remote-open]").forEach(link=>link.addEventListener("click",()=>{markRemoteOpened(item,Number(link.dataset.index));}));card.querySelectorAll("[data-action=remote-status]").forEach(input=>input.addEventListener("change",()=>{r.remote_media_statuses[input.dataset.key]=input.value;save();renderItems();document.querySelector(`[data-post-id="${CSS.escape(item.post_id)}"]`)?.scrollIntoView({block:"start"});}));}
+  function bindItem(item){const card=document.querySelector(`[data-post-id="${CSS.escape(item.post_id)}"]`);if(!card)return;const r=recordFor(item);card.querySelectorAll("input[type=radio][name^=label_]").forEach(input=>input.addEventListener("change",()=>{r.label=input.value;updateCard(item,card);}));card.querySelector(".confidence").addEventListener("input",event=>{r.confidence=event.target.value;updateCard(item,card);});card.querySelector(".evidence").addEventListener("input",event=>{r.evidence=event.target.value;updateCard(item,card);save();});card.querySelector(".uncertain-reason").addEventListener("input",event=>{r.uncertain_reason=event.target.value;updateCard(item,card);save();});card.querySelectorAll(".evidence-code").forEach(input=>input.addEventListener("change",()=>{r.evidence_codes=[...card.querySelectorAll(".evidence-code:checked")].map(x=>x.value);}));card.querySelector(".reviewed").addEventListener("change",event=>{r.reviewed=event.target.checked;r.reviewed_at=event.target.checked?new Date().toISOString():"";updateCard(item,card);});card.querySelector(".media-confirm").addEventListener("change",event=>{r.media_review_confirmed=event.target.checked;updateCard(item,card);});card.querySelectorAll("[data-action=media]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();const index=Number(button.dataset.index);markViewed(item,index);openLightbox(item,index);}));card.querySelectorAll("[data-action=remote-open]").forEach(link=>link.addEventListener("click",()=>{markRemoteOpened(item,Number(link.dataset.index));}));card.querySelectorAll("[data-action=remote-status]").forEach(input=>input.addEventListener("change",()=>{r.remote_media_statuses[input.dataset.key]=input.value;save();renderItems();document.querySelector(`[data-post-id="${CSS.escape(item.post_id)}"]`)?.scrollIntoView({block:"start"});}));}
   function updateCard(item,card){const r=recordFor(item);const badge=card.querySelector(".item-head .badge");badge.textContent=isDone(item)?"已完成":"待完成";badge.className="badge "+(isDone(item)?"":"warn");const errors=validateItem(item,r);card.querySelector("[data-errors]").textContent=errors.join("\n");renderNav();}
   function markViewed(item,index){const media=item.media[index];if(!media||!media.local_exists)return;const r=recordFor(item);if(!r.viewed_media_refs.includes(media.ref))r.viewed_media_refs.push(media.ref);renderItems();const card=document.querySelector(`[data-post-id="${CSS.escape(item.post_id)}"]`);if(card)card.scrollIntoView({block:"start"});save();}
   function markRemoteOpened(item,index){const media=item.media[index];if(!media||!media.remote_available||!media.remote_key)return;const r=recordFor(item);r.remote_open_attempts[media.remote_key]=new Date().toISOString();save();}
   function renderNav(){const done=ITEMS.filter(isDone).length;const mediaTotal=ITEMS.reduce((sum,item)=>sum+item.media.length,0);const mediaReviewed=ITEMS.reduce((sum,item)=>{const r=recordFor(item);const local=item.media.filter(media=>media.local_exists&&r.viewed_media_refs.includes(media.ref)).length;const remote=item.media.filter(media=>media.remote_available&&Boolean(r.remote_media_statuses[media.remote_key])).length;return sum+local+remote;},0);$("batchInfo").textContent=`${META.sample_count} 条 · 角色 ${ROLE}${META.remote_link_media_count>0?" · 在线源视频 "+META.remote_link_media_count:""}${META.missing_media_count>0?" · 固定证据缺口 "+META.missing_media_count:""}`;$("progressText").textContent=`完成 ${done}/${ITEMS.length}`;$("mediaText").textContent=`媒体已核验 ${mediaReviewed}/${mediaTotal}`;$("progressBar").style.width=(done/Math.max(1,ITEMS.length)*100)+"%";const rows=ITEMS.filter(item=>filter==="all"||filter==="todo"&&!isDone(item)||filter==="done"&&isDone(item)||filter==="uncertain"&&recordFor(item).label==="uncertain");$("navList").innerHTML=rows.map(item=>`<button class="nav-row ${isDone(item)?"done":""}" data-target="${esc(item.post_id)}"><span>#${item.ordinal}</span><span>${esc((item.title||"（无标题）").slice(0,28))}</span><span class="state">${isDone(item)?"✓":"·"}</span></button>`).join("");$("navList").querySelectorAll("[data-target]").forEach(button=>button.addEventListener("click",()=>{const target=document.querySelector(`[data-post-id="${CSS.escape(button.dataset.target)}"]`);if(target)target.scrollIntoView({behavior:"smooth",block:"start"});else{filter="all";$("filterSelect").value="all";renderItems();setTimeout(()=>document.querySelector(`[data-post-id="${CSS.escape(button.dataset.target)}"]`)?.scrollIntoView({behavior:"smooth",block:"start"}),0);}}));}
   function validateItem(item,r){const errors=[];if(!r.label)errors.push("请选择标签");const confidence=Number(r.confidence);if(r.confidence===""||!Number.isFinite(confidence)||confidence<0||confidence>1)errors.push("置信度必须是 0 到 1 之间的数字");if(!r.evidence.trim())errors.push("请填写证据说明");if(!r.reviewed)errors.push("请勾选已逐条阅读并完成判断");if(item.media.some(media=>media.local_exists)&&!allMediaViewed(item,r))errors.push("请逐个打开所有存在的本地媒体");item.media.filter(media=>media.remote_available).forEach(media=>{const status=r.remote_media_statuses[media.remote_key];if(!status)errors.push(`在线源视频 #${media.number} 必须选择查看结果`);else if(status==="reviewed"&&!r.remote_open_attempts[media.remote_key])errors.push(`在线源视频 #${media.number} 尚未通过页面入口打开，不能标记为已查看`);});if(item.media.length&&!r.media_review_confirmed)errors.push("请确认已检查本条全部可用媒体");if(r.label==="uncertain"&&!r.uncertain_reason.trim())errors.push("uncertain 必须填写原因");return errors;}
   function validateAll(){syncAttestation();const global=[];if(!state.attestation.reviewer_name)global.push("请填写标注人姓名/代号");if(!state.attestation.reviewer_id)global.push("请填写标注人 ID");if(!state.attestation.read_guide)global.push("请确认已阅读固定指南");if(!state.attestation.no_other_answers)global.push("请确认未查看另一位标注人的答案或模型建议");if(!state.attestation.independent)global.push("请确认标签由本人独立完成");if(!state.attestation.evidence_checked)global.push("请确认逐条检查了正文、评论和可用媒体");const remoteUnavailable=ITEMS.reduce((sum,item)=>sum+item.media.filter(media=>media.remote_available&&recordFor(item).remote_media_statuses[media.remote_key]==="unavailable").length,0);if((META.missing_media_count>0||remoteUnavailable>0)&&!state.attestation.media_gaps_ack)global.push(`本批当前有 ${META.missing_media_count+remoteUnavailable} 个媒体证据缺口，请逐条记录后勾选缺口声明`);const details=[];ITEMS.forEach(item=>{const errors=validateItem(item,recordFor(item));if(errors.length)details.push(`#${item.ordinal} ${item.post_id}: ${errors.join("；")}`);});return {global,details};}
+  function buildDraftSnapshot(){return {schema_version:"m1_blind_draft_snapshot_v2",review_schema_version:REVIEW_SCHEMA_VERSION,evidence_code_scheme:META.evidence_code_scheme,evidence_code_dictionary_sha256:META.evidence_code_dictionary_sha256,status:"draft_incomplete_or_unverified",formal_evidence:false,role:ROLE,manifest_sha256:META.manifest_sha256,source_sha256:META.source_sha256,guide_sha256:META.guide_sha256,exported_at:new Date().toISOString(),sample_count:ITEMS.length,ordered_post_ids:ITEMS.map(item=>item.post_id),state:JSON.parse(JSON.stringify(state))};}
+  function exportDraft(){syncAttestation();save();const payload=buildDraftSnapshot();const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`M1_Blind_Draft_${ROLE}_${new Date().toISOString().replace(/[:.]/g,"-")}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1000);setMessage("已导出未完成草稿；保留现有填写与查看状态，不表示完成标注，也不作为正式盲测结果。",false);}
   function exportJson(){
     const checked=validateAll();
     if(checked.global.length||checked.details.length){setMessage([...checked.global,...checked.details.slice(0,12)].join("\n"),true);if(checked.details.length){const first=checked.details[0].match(/post_[0-9a-z]+/i)?.[0];if(first){document.querySelector(`[data-post-id="${CSS.escape(first)}"]`)?.scrollIntoView({behavior:"smooth",block:"start"});}}return;}
     const exportedAt=new Date().toISOString();
     const hasDeclaredGap=META.missing_media_count>0||ITEMS.some(item=>remoteMediaGap(item,recordFor(item)));
     const status=hasDeclaredGap?"completed_with_declared_evidence_gaps":META.remote_link_media_count>0?"completed_with_remote_unpinned_media_evidence":"completed_independent_blind_human_review";
-    const payload={schema_version:REVIEW_SCHEMA_VERSION,status,role:ROLE,annotation_method:"human",annotator_id:state.attestation.reviewer_id,reviewer_id:state.attestation.reviewer_id,reviewer_name:state.attestation.reviewer_name,exported_at:exportedAt,qwen_visible:false,manifest_sha256:META.manifest_sha256,source_sha256:META.source_sha256,guide_sha256:META.guide_sha256,sample_count:ITEMS.length,media_evidence_summary:{local_media_ref_count:META.local_media_ref_count,remote_link_media_ref_count:META.remote_link_media_count,missing_media_ref_count:META.missing_media_count,remote_content_sha256_available:false},attestation:state.attestation,items:ITEMS.map(item=>{
+    const payload={schema_version:REVIEW_SCHEMA_VERSION,status,role:ROLE,annotation_method:"human",evidence_code_scheme:META.evidence_code_scheme,evidence_code_dictionary:META.evidence_code_dictionary,evidence_code_dictionary_sha256:META.evidence_code_dictionary_sha256,annotator_id:state.attestation.reviewer_id,reviewer_id:state.attestation.reviewer_id,reviewer_name:state.attestation.reviewer_name,exported_at:exportedAt,qwen_visible:false,manifest_sha256:META.manifest_sha256,source_sha256:META.source_sha256,guide_sha256:META.guide_sha256,sample_count:ITEMS.length,media_evidence_summary:{local_media_ref_count:META.local_media_ref_count,remote_link_media_ref_count:META.remote_link_media_count,missing_media_ref_count:META.missing_media_count,remote_content_sha256_available:false},attestation:state.attestation,items:ITEMS.map(item=>{
       const r=recordFor(item);const local=item.media.filter(media=>media.local_exists);const remote=item.media.filter(media=>media.remote_available);const missing=item.media.filter(media=>!media.local_exists&&!media.remote_available);const remoteLinks=remote.map(media=>({media_number:media.number,remote_key:media.remote_key,url:media.remote_url,status:r.remote_media_statuses[media.remote_key],open_attempted_at:r.remote_open_attempts[media.remote_key]||""}));
       return {ordinal:item.ordinal,number:item.ordinal,post_id:item.post_id,reviewed:true,notes:r.evidence.trim(),label:r.label,confidence:Number(r.confidence),evidence_codes:[...r.evidence_codes].sort(),evidence:r.evidence.trim(),uncertain_reason:r.uncertain_reason.trim(),reviewed_at:r.reviewed_at||exportedAt,media_review:{media_ref_count:item.media.length,local_media_ref_count:local.length,remote_link_media_ref_count:remote.length,missing_media_ref_count:missing.length,missing_media_refs:missing.map(media=>media.ref||("media_"+media.number+"_missing")),viewed_unique_media_count:r.viewed_media_refs.length,viewed_media_refs:[...r.viewed_media_refs],remote_media_statuses:{...r.remote_media_statuses},remote_open_attempts:{...r.remote_open_attempts},remote_links:remoteLinks,all_local_media_viewed:local.every(media=>r.viewed_media_refs.includes(media.ref)),all_remote_media_resolved:remote.every(media=>r.remote_media_statuses[media.remote_key]==="unavailable"||r.remote_media_statuses[media.remote_key]==="reviewed"&&Boolean(r.remote_open_attempts[media.remote_key])),media_gap_acknowledged:Boolean(state.attestation.media_gaps_ack),media_review_confirmed:Boolean(r.media_review_confirmed||item.media.length===0)},media_review_audit:{media_ref_count:item.media.length,opened_unique_media_count:r.viewed_media_refs.length+Object.keys(r.remote_open_attempts).length,opened_media_refs:[...r.viewed_media_refs],remote_links:remoteLinks,all_media_evidence_resolved:allMediaReviewed(item,r)}};
     })};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`M1_Blind_Human_Review_${ROLE}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1000);setMessage("校验通过，已导出本角色 JSON。在线源视频记录的是入口、点击时间和人工确认，不代表远程内容已被本地固定。请把文件路径和 SHA-256 交给协调人，不要与另一角色交换。",false);save();
   }
-  function importJson(file){const reader=new FileReader();reader.onload=()=>{try{const payload=JSON.parse(String(reader.result));if(payload.schema_version!==REVIEW_SCHEMA_VERSION)throw new Error("JSON 版本不匹配；v1 草稿不能导入远程媒体 v2 页面");if(payload.role!==ROLE||payload.manifest_sha256!==META.manifest_sha256)throw new Error("角色或 manifest SHA 不匹配");if(payload.guide_sha256!==META.guide_sha256||payload.source_sha256!==META.source_sha256)throw new Error("source/guide SHA 不匹配");if(!Array.isArray(payload.items)||payload.items.length!==ITEMS.length)throw new Error("样本数量不匹配");if(Object.keys(payload).some(key=>/model|suggestion|reasoning/i.test(key)))throw new Error("导入文件包含禁止的模型字段");const itemById=new Map(ITEMS.map(item=>[item.post_id,item]));const seen=new Set();const next={};payload.items.forEach(entry=>{const item=itemById.get(entry.post_id);if(!item||seen.has(entry.post_id))throw new Error("导入文件含未知或重复 post_id");seen.add(entry.post_id);const importedStatuses=entry.media_review?.remote_media_statuses||{};const importedAttempts=entry.media_review?.remote_open_attempts||{};const remote_media_statuses={};const remote_open_attempts={};item.media.filter(media=>media.remote_available).forEach(media=>{const status=importedStatuses[media.remote_key];if(status==="reviewed"||status==="unavailable")remote_media_statuses[media.remote_key]=status;const attempt=importedAttempts[media.remote_key];if(typeof attempt==="string"&&attempt)remote_open_attempts[media.remote_key]=attempt;});next[entry.post_id]={label:entry.label||"",confidence:entry.confidence===undefined?"":String(entry.confidence),evidence_codes:Array.isArray(entry.evidence_codes)?entry.evidence_codes:[],evidence:entry.evidence||"",uncertain_reason:entry.uncertain_reason||"",reviewed:Boolean(entry.reviewed),media_review_confirmed:Boolean(entry.media_review?.media_review_confirmed),viewed_media_refs:Array.isArray(entry.media_review?.viewed_media_refs)?entry.media_review.viewed_media_refs:[],remote_media_statuses,remote_open_attempts,reviewed_at:entry.reviewed_at||""};});Object.assign(state.records,next);if(payload.attestation&&typeof payload.attestation==="object")state.attestation=payload.attestation;ensureRecords();loadAttestation();save();renderItems();setMessage("已导入并重新渲染本角色 v2 草稿；请再次检查后导出。",false);}catch(error){setMessage("导入失败："+error.message,true);}};reader.readAsText(file,"utf-8");}
+  function importJson(file){const reader=new FileReader();reader.onload=()=>{try{const payload=JSON.parse(String(reader.result));assertReviewCompatibility(payload);if(!Array.isArray(payload.items)||payload.items.length!==ITEMS.length)throw new Error("样本数量不匹配");if(Object.keys(payload).some(key=>/model|suggestion|reasoning/i.test(key)))throw new Error("导入文件包含禁止的模型字段");const itemById=new Map(ITEMS.map(item=>[item.post_id,item]));const seen=new Set();const next={};payload.items.forEach(entry=>{const item=itemById.get(entry.post_id);if(!item||seen.has(entry.post_id))throw new Error("导入文件含未知或重复 post_id");seen.add(entry.post_id);const importedStatuses=entry.media_review?.remote_media_statuses||{};const importedAttempts=entry.media_review?.remote_open_attempts||{};const remote_media_statuses={};const remote_open_attempts={};item.media.filter(media=>media.remote_available).forEach(media=>{const status=importedStatuses[media.remote_key];if(status==="reviewed"||status==="unavailable")remote_media_statuses[media.remote_key]=status;const attempt=importedAttempts[media.remote_key];if(typeof attempt==="string"&&attempt)remote_open_attempts[media.remote_key]=attempt;});next[entry.post_id]={label:entry.label||"",confidence:entry.confidence===undefined?"":String(entry.confidence),evidence_codes:Array.isArray(entry.evidence_codes)?entry.evidence_codes:[],evidence:entry.evidence||"",uncertain_reason:entry.uncertain_reason||"",reviewed:Boolean(entry.reviewed),media_review_confirmed:Boolean(entry.media_review?.media_review_confirmed),viewed_media_refs:Array.isArray(entry.media_review?.viewed_media_refs)?entry.media_review.viewed_media_refs:[],remote_media_statuses,remote_open_attempts,reviewed_at:entry.reviewed_at||""};});Object.assign(state.records,next);if(payload.attestation&&typeof payload.attestation==="object")state.attestation=payload.attestation;ensureRecords();loadAttestation();save();renderItems();setMessage("已导入并重新渲染本角色 v3 草稿；请再次检查后导出。",false);}catch(error){setMessage("导入失败："+error.message,true);}};reader.readAsText(file,"utf-8");}
   function openLightbox(item,index){const media=item.media[index];if(!media||!media.local_exists)return;lightboxItem=item;lightboxIndex=index;const dialog=$("lightbox");const body=$("lightboxBody");const caption=$("lightboxCaption");if(media.type==="video")body.innerHTML=`<video controls autoplay src="${esc(media.local_url)}"></video>`;else if(media.type==="audio")body.innerHTML=`<audio controls autoplay src="${esc(media.local_url)}"></audio>`;else body.innerHTML=`<img src="${esc(media.local_url)}" alt="本地媒体 ${media.number}">`;caption.textContent=`#${item.ordinal} · 媒体 ${media.number} · ${media.ref}`;if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");}
   function moveLightbox(delta){if(!lightboxItem)return;const count=lightboxItem.media.length;let next=lightboxIndex+delta;for(let i=0;i<count;i++){next=(next+count)%count;if(lightboxItem.media[next].local_exists){markViewed(lightboxItem,next);openLightbox(lightboxItem,next);return;}next+=delta;}}
   function closeLightbox(){const dialog=$("lightbox");if(dialog.open)dialog.close();else dialog.removeAttribute("open");$("lightboxBody").innerHTML="";lightboxItem=null;}
-  $("guideText").textContent=GUIDE_TEXT;$("filterSelect").addEventListener("change",event=>{filter=event.target.value;renderItems();});$("saveBtn").addEventListener("click",()=>{syncAttestation();save();});$("exportBtn").addEventListener("click",exportJson);$("importInput").addEventListener("change",event=>{if(event.target.files?.[0])importJson(event.target.files[0]);event.target.value="";});$("resetBtn").addEventListener("click",()=>{if(confirm("确定清空本角色的本地草稿吗？此操作不会删除已导出的文件。")){localStorage.removeItem(STORAGE_KEY);Object.assign(state,{attestation:{reviewer_name:"",reviewer_id:"",read_guide:false,no_other_answers:false,independent:false,evidence_checked:false,media_gaps_ack:false},records:{}});ensureRecords();loadAttestation();renderItems();setMessage("本角色草稿已清空。",false);}});["reviewerName","reviewerId","attGuide","attNoAnswers","attIndependent","attEvidence","attMediaGaps"].forEach(id=>$(id).addEventListener("change",syncAttestation));$("lightboxClose").addEventListener("click",closeLightbox);$("lightboxPrev").addEventListener("click",()=>moveLightbox(-1));$("lightboxNext").addEventListener("click",()=>moveLightbox(1));$("lightbox").addEventListener("click",event=>{if(event.target.id==="lightbox")closeLightbox();});
+  $("guideText").textContent=GUIDE_TEXT;$("filterSelect").addEventListener("change",event=>{filter=event.target.value;renderItems();});$("saveBtn").addEventListener("click",()=>{syncAttestation();save();});$("draftExportBtn").addEventListener("click",exportDraft);$("exportBtn").addEventListener("click",exportJson);$("importInput").addEventListener("change",event=>{if(event.target.files?.[0])importJson(event.target.files[0]);event.target.value="";});$("resetBtn").addEventListener("click",()=>{if(confirm("确定清空本角色的本地草稿吗？此操作不会删除已导出的文件。")){localStorage.removeItem(STORAGE_KEY);Object.assign(state,{attestation:{reviewer_name:"",reviewer_id:"",read_guide:false,no_other_answers:false,independent:false,evidence_checked:false,media_gaps_ack:false},records:{}});ensureRecords();loadAttestation();renderItems();setMessage("本角色草稿已清空。",false);}});["reviewerName","reviewerId","attGuide","attNoAnswers","attIndependent","attEvidence","attMediaGaps"].forEach(id=>$(id).addEventListener("change",syncAttestation));$("lightboxClose").addEventListener("click",closeLightbox);$("lightboxPrev").addEventListener("click",()=>moveLightbox(-1));$("lightboxNext").addEventListener("click",()=>moveLightbox(1));$("lightbox").addEventListener("click",event=>{if(event.target.id==="lightbox")closeLightbox();});
   load();ensureRecords();loadAttestation();renderItems();
   </script>
 </body>
@@ -608,6 +631,11 @@ def generate_delivery(
     for required in (manifest_path, input_path, guide_path):
         if not required.exists():
             raise FileNotFoundError(required)
+    previous_manifest = output_root / "COORDINATOR" / "delivery_manifest.json"
+    if overwrite and previous_manifest.is_file():
+        previous = json.loads(previous_manifest.read_text(encoding="utf-8"))
+        if previous.get("schema_version") != SCHEMA_VERSION:
+            raise ValueError("refusing to overwrite a legacy delivery with a different schema; choose a new output directory")
     if output_root.exists() and any(output_root.iterdir()) and not overwrite:
         raise FileExistsError(f"output directory is not empty: {output_root}")
     output_root.mkdir(parents=True, exist_ok=True)
@@ -624,6 +652,7 @@ def generate_delivery(
     manifest_sha = sha256_file(manifest_path)
     guide_sha = sha256_file(guide_path)
     guide_text = guide_path.read_text(encoding="utf-8")
+    code_contract = evidence_code_contract(guide_text)
     source_rows = _read_jsonl(input_path)
 
     # Build each role against its own HTML parent so media links remain local
@@ -653,6 +682,8 @@ def generate_delivery(
         items = _prepare_items(manifest, source_rows, media_base, html_path.parent)
         metadata = {
             "schema_version": SCHEMA_VERSION,
+            "review_schema_version": REVIEW_SCHEMA_VERSION,
+            **code_contract,
             "role": role,
             "qwen_visible": False,
             "sample_count": len(items),
@@ -705,6 +736,8 @@ def generate_delivery(
     )
     delivery_manifest = {
         "schema_version": SCHEMA_VERSION,
+        "review_schema_version": REVIEW_SCHEMA_VERSION,
+        **code_contract,
         "status": "awaiting_A_B_blind_labels",
         "qwen_visible": False,
         "roles": list(normalized_roles),
@@ -791,11 +824,11 @@ def _parse_roles(value: str) -> tuple[str, ...]:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=_default_repo_root())
-    parser.add_argument("--manifest", type=Path, default=None)
-    parser.add_argument("--input", dest="input_path", type=Path, default=None)
+    parser.add_argument("--manifest", type=Path, required=True, help="explicit fixed manifest; no implicit reuse of an old batch")
+    parser.add_argument("--input", dest="input_path", type=Path, required=True)
     parser.add_argument("--guide", type=Path, default=None)
     parser.add_argument("--media-base", type=Path, default=None)
-    parser.add_argument("--output-root", type=Path, default=None)
+    parser.add_argument("--output-root", type=Path, required=True, help="new delivery directory; never overwrite a legacy batch")
     parser.add_argument("--roles", type=_parse_roles, default=DEFAULT_ROLES, help="A,B or all")
     parser.add_argument(
         "--force",
@@ -804,20 +837,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     root = args.repo_root.resolve()
-    blind_dir = (
-        root
-        / "data"
-        / "reports"
-        / "m1"
-        / "qwen_blind_test_20260827_remote_links_v2"
-    )
     paths = {
-        "manifest_path": args.manifest
-        or blind_dir / "blind_sample_manifest_remote_links_v2.json",
-        "input_path": args.input_path or root / "data" / "reports" / "m1" / "privacy" / "formal_3312_v2" / "formal_eligible_candidates.jsonl",
+        "manifest_path": args.manifest,
+        "input_path": args.input_path,
         "guide_path": args.guide or root / "docs" / "annotation_guide_v1.md",
         "media_base": args.media_base or root / "data" / "run_outputs" / "merged_20260728",
-        "output_root": args.output_root or blind_dir / "delivery",
+        "output_root": args.output_root,
     }
     try:
         result = generate_delivery(

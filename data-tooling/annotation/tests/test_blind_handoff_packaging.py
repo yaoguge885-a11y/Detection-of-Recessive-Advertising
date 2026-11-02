@@ -26,6 +26,9 @@ def test_portable_demo_has_valid_hashes_and_only_its_own_role(tmp_path):
         with zipfile.ZipFile(archive) as bundle:
             records_name = next(name for name in bundle.namelist() if name.endswith(f'{role}_PACKAGE_MANIFEST.json'))
             records = json.loads(bundle.read(records_name))
+            assert records['review_schema_version'] == 'm1_blind_human_review_v3'
+            assert records['evidence_code_scheme'] == 'annotation_guide_table_v1'
+            assert len(records['evidence_code_dictionary_sha256']) == 64
             for item in records['files_excluding_package_manifest_and_sha256s']:
                 assert hashlib.sha256(bundle.read(item['path'])).hexdigest().upper() == item['sha256']
             readme = bundle.read(next(name for name in bundle.namelist()

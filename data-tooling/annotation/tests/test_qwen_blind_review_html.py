@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import generate_m1_qwen_blind_html as generator
+import pytest
+
+GUIDE = (Path(__file__).resolve().parents[3] / "docs/annotation_guide_v1.md").read_text(encoding="utf-8")
 
 
 def _sha256(path: Path) -> str:
@@ -41,7 +45,7 @@ def test_blind_delivery_contains_no_model_suggestions_and_keeps_roles_isolated(t
         ],
     )
     guide = tmp_path / "guide.md"
-    guide.write_text("GUIDE_SENTINEL\nuncertain 必须保留", encoding="utf-8")
+    guide.write_text("GUIDE_SENTINEL\n" + GUIDE, encoding="utf-8")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -88,6 +92,16 @@ def test_blind_delivery_contains_no_model_suggestions_and_keeps_roles_isolated(t
     assert "M1_Blind_Human_Review_B.html" not in html_a
     assert (output_root / "COORDINATOR" / "delivery_manifest.json").is_file()
     assert (output_root / "COORDINATOR" / "SHA256SUMS.txt").is_file()
+    meta = json.loads(re.search(r"^\s*const META=(.*);$", html_b, re.MULTILINE).group(1))
+    displayed = json.loads(re.search(r"^\s*const EVIDENCE_CODES=(.*);$", html_b, re.MULTILINE).group(1))
+    contract = generator.evidence_code_contract(guide.read_text(encoding="utf-8"))
+    assert meta["review_schema_version"] == "m1_blind_human_review_v3"
+    assert meta["evidence_code_dictionary_sha256"] == contract["evidence_code_dictionary_sha256"]
+    assert {x["value"]: x["text"] for x in displayed} == {x["code"]: x["meaning"] for x in contract["evidence_code_dictionary"]}
+    assert next(x["text"] for x in displayed if x["value"] == "C") == "商业对象是内容核心"
+    assert "m1_blind_review_v3:" in html_b
+    assert "META.guide_sha256+\":\"+META.evidence_code_dictionary_sha256" in html_b
+    assert "evidence_code_dictionary:META.evidence_code_dictionary" in html_b
 
 
 def test_missing_media_is_explicitly_reported_without_external_fallback(tmp_path):
@@ -105,7 +119,7 @@ def test_missing_media_is_explicitly_reported_without_external_fallback(tmp_path
         ],
     )
     guide = tmp_path / "guide.md"
-    guide.write_text("GUIDE", encoding="utf-8")
+    guide.write_text(GUIDE, encoding="utf-8")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -161,7 +175,7 @@ def test_allowlisted_remote_video_link_requires_explicit_human_review_status(tmp
         ],
     )
     guide = tmp_path / "guide.md"
-    guide.write_text("GUIDE", encoding="utf-8")
+    guide.write_text(GUIDE, encoding="utf-8")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -228,7 +242,7 @@ def test_non_allowlisted_remote_url_remains_an_explicit_evidence_gap(tmp_path):
         ],
     )
     guide = tmp_path / "guide.md"
-    guide.write_text("GUIDE", encoding="utf-8")
+    guide.write_text(GUIDE, encoding="utf-8")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -260,3 +274,41 @@ def test_non_allowlisted_remote_url_remains_an_explicit_evidence_gap(tmp_path):
     assert result["missing_media_count"] == 1
     assert result["remote_link_media_count"] == 0
     assert unsafe_url not in html
+
+
+def test_evidence_dictionary_is_required_and_duplicate_codes_are_rejected():
+    with pytest.raises(ValueError, match="exactly"):
+        generator.evidence_code_contract("Guide without a dictionary")
+    with pytest.raises(ValueError, match="duplicate"):
+        generator.evidence_code_contract(GUIDE + "\n| C | Conflicting meaning |\n")
+
+
+def test_dictionary_changes_are_bound_to_a_new_hash_and_metadata_mismatch_fails():
+    original = generator.evidence_code_contract(GUIDE)
+    changed = generator.evidence_code_contract(GUIDE.replace("商业对象是内容核心", "商业对象是帖子核心内容"))
+    assert original["evidence_code_dictionary_sha256"] != changed["evidence_code_dictionary_sha256"]
+    with pytest.raises(ValueError, match="mismatch"):
+        generator._html_for_role("B", [], GUIDE, changed)
+
+
+def test_cli_requires_explicit_inputs_instead_of_reusing_an_old_batch():
+    with pytest.raises(SystemExit) as exc:
+        generator.main([])
+    assert exc.value.code == 2
+
+
+def test_force_does_not_overwrite_a_legacy_delivery(tmp_path):
+    source, guide, manifest = (tmp_path / name for name in ("source.jsonl", "guide.md", "manifest.json"))
+    source.write_text('{"post_id":"synthetic"}\n', encoding="utf-8")
+    guide.write_text(GUIDE, encoding="utf-8")
+    manifest.write_text('{}', encoding="utf-8")
+    output = tmp_path / "old_delivery"
+    coordinator = output / "COORDINATOR"
+    coordinator.mkdir(parents=True)
+    old = coordinator / "delivery_manifest.json"
+    old.write_text('{"schema_version":"m1_blind_html_delivery_v2"}', encoding="utf-8")
+    before = old.read_bytes()
+    with pytest.raises(ValueError, match="legacy"):
+        generator.generate_delivery(repo_root=tmp_path, manifest_path=manifest, input_path=source,
+                                    guide_path=guide, media_base=tmp_path, output_root=output, overwrite=True)
+    assert old.read_bytes() == before

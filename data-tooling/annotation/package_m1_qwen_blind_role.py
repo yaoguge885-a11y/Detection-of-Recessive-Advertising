@@ -40,7 +40,7 @@ def _role_package_readme(
 
 在线源视频的正确操作是：点击“在新标签页打开源视频” → 实际观看 → 返回标注页选择“已成功打开并检查视频”。如果打不开，选择“链接无法访问或内容不可用”并确认全局证据缺口。一次点击本身不等于已看完；不要搜索、下载或替换视频。
 
-这是全新的 v2 清单。不要导入旧 v1 JSON，也不要沿用 v1 浏览器草稿；请从 v2 页面重新独立完成。只使用本角色文件，不接触另一角色的入口或答案。
+以本包固定清单、指南和证据代码字典为准。不同 review schema、指南或字典哈希的 JSON 和浏览器草稿不能混用。只使用本角色文件，不接触另一角色的入口或答案。
 
 本包仅用于 Qwen 工程质量校准。在线内容未纳入本包 SHA，导出状态会保留这一限制；不得据此声称最终质量通过，不得写入正式 Gold、locked_batches、正式候选或其他正式 M1 证据。
 
@@ -231,6 +231,9 @@ def build_role_archive(
         )
         package_manifest = {
             "schema_version": PACKAGE_SCHEMA_VERSION,
+            "review_schema_version": delivery_manifest.get("review_schema_version", "m1_blind_human_review_v2"),
+            "evidence_code_scheme": delivery_manifest.get("evidence_code_scheme", "legacy_frozen_ui_v2"),
+            "evidence_code_dictionary_sha256": delivery_manifest.get("evidence_code_dictionary_sha256"),
             "role": role,
             "status": f"awaiting_{role}_blind_labels",
             "qwen_visible": False,

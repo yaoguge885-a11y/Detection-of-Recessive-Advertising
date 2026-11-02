@@ -40,21 +40,28 @@ def main() -> int:
     ]
     node = shutil.which('node')
     if node:
+        checks.append(('blind_review_behavior', ROOT, [node, '--test',
+            'data-tooling/annotation/tests/blind_review_input_behavior.test.cjs',
+            'data-tooling/annotation/tests/blind_review_contract_behavior.test.cjs']))
         checks.append(('web_behavior', ROOT, [node, '--test',
             'implicit-ad-agent/tests/web/workbench_behavior.test.cjs']))
     results = []
     for name, cwd, command in checks:
+        if name in {'annotation', 'baseline', 'agent'}:
+            command.extend(['-o', f'cache_dir={output / ("cache_" + name)}'])
         print(f'Running {name} ...', flush=True)
         log = output / f'{name}.log'
         with log.open('w', encoding='utf-8') as stream:
             completed = subprocess.run(command, cwd=cwd, env=environment,
-                                       stdout=stream, stderr=subprocess.STDOUT)
+                                       stdout=stream, stderr=subprocess.STDOUT,
+                                       creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
         results.append({'name': name, 'exit_code': completed.returncode,
                         'log': log.relative_to(ROOT).as_posix()})
         print(f'  exit={completed.returncode}: {log.relative_to(ROOT)}', flush=True)
     report = {'status': 'passed' if all(item['exit_code'] == 0 for item in results) else 'failed',
               'python': sys.version, 'formal_evidence': False, 'checks': results,
-              'optional_web_behavior': 'executed' if node else 'skipped: Node.js unavailable'}
+              'optional_web_behavior': 'executed' if node else 'skipped: Node.js unavailable',
+              'optional_blind_review_behavior': 'executed' if node else 'skipped: Node.js unavailable'}
     (output / 'verification.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps(report, indent=2))
     return 0 if report['status'] == 'passed' else 1
