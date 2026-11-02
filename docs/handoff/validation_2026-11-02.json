@@ -1,0 +1,79 @@
+{
+  "validated_code_commit": "eef04dc16390df8eb3537174152e30e774daa75e",
+  "clean_committed_tree": true,
+  "work_in_progress_excluded": true,
+  "status": "passed",
+  "check_groups": 12,
+  "python_test_counts": {
+    "annotation": {
+      "passed": 101,
+      "skipped": 0
+    },
+    "baseline": {
+      "passed": 54,
+      "skipped": 0
+    },
+    "agent": {
+      "passed": 408,
+      "skipped": 2
+    }
+  },
+  "python_total_passed": 563,
+  "python_total_skipped": 2,
+  "blind_js_tests_passed": 9,
+  "assisted_js_tests_passed": 8,
+  "checks": [
+    {
+      "name": "dependencies",
+      "exit_code": 0
+    },
+    {
+      "name": "annotation",
+      "exit_code": 0
+    },
+    {
+      "name": "baseline",
+      "exit_code": 0
+    },
+    {
+      "name": "agent",
+      "exit_code": 0
+    },
+    {
+      "name": "submission_assets",
+      "exit_code": 0
+    },
+    {
+      "name": "tooling_assets",
+      "exit_code": 0
+    },
+    {
+      "name": "blind_demo",
+      "exit_code": 0
+    },
+    {
+      "name": "assisted_demo",
+      "exit_code": 0
+    },
+    {
+      "name": "agent_demo",
+      "exit_code": 0
+    },
+    {
+      "name": "blind_review_behavior",
+      "exit_code": 0
+    },
+    {
+      "name": "assisted_review_behavior",
+      "exit_code": 0
+    },
+    {
+      "name": "web_behavior",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Synthetic demos and deterministic system checks; no new real-model accuracy claim.",
+    "Two optional vision tests remain skipped."
+  ]
+}

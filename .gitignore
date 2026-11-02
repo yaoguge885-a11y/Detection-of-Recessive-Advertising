@@ -37,6 +37,7 @@ chroma/
 data/raw/
 data/interim/
 data/reports/m1/private/
+data/private/
 data/run_outputs/
 /data/source_archives/
 /data/reports/m1/privacy/privacy_AI_pre_review_B.md
