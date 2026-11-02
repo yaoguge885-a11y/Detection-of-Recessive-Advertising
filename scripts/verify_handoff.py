@@ -36,6 +36,8 @@ def main() -> int:
         ('tooling_assets', ROOT, [python, '-X', 'utf8', 'data-tooling/validate_submission_assets.py']),
         ('blind_demo', ROOT, [python, '-X', 'utf8', 'scripts/demo_m1_handoff.py',
             '--output-root', str(output / 'blind_demo')]),
+        ('assisted_demo', ROOT, [python, '-X', 'utf8', 'scripts/demo_assisted_review.py',
+            '--output-root', str(output / 'assisted_demo')]),
         ('agent_demo', ROOT / 'implicit-ad-agent', [python, '-X', 'utf8', 'run_demo.py']),
     ]
     node = shutil.which('node')
@@ -43,6 +45,8 @@ def main() -> int:
         checks.append(('blind_review_behavior', ROOT, [node, '--test',
             'data-tooling/annotation/tests/blind_review_input_behavior.test.cjs',
             'data-tooling/annotation/tests/blind_review_contract_behavior.test.cjs']))
+        checks.append(('assisted_review_behavior', ROOT, [node, '--test',
+            'data-tooling/annotation/tests/assisted_review_behavior.test.cjs']))
         checks.append(('web_behavior', ROOT, [node, '--test',
             'implicit-ad-agent/tests/web/workbench_behavior.test.cjs']))
     results = []
@@ -62,6 +66,7 @@ def main() -> int:
               'python': sys.version, 'formal_evidence': False, 'checks': results,
               'optional_web_behavior': 'executed' if node else 'skipped: Node.js unavailable',
               'optional_blind_review_behavior': 'executed' if node else 'skipped: Node.js unavailable'}
+    report['optional_assisted_review_behavior'] = 'executed' if node else 'skipped: Node.js unavailable'
     (output / 'verification.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps(report, indent=2))
     return 0 if report['status'] == 'passed' else 1
