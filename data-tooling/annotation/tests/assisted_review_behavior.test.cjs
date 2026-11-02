@@ -36,6 +36,7 @@ test('unconfirmed AI suggestions cannot be exported as completed review',()=>{
 });
 test('editing after confirmation requires confirmation again',()=>{
   const seed=fixture(),state=API.createState(seed);
+  API.setReviewer(state,{reviewer_name:'Synthetic successor',reviewer_id:'B2'});
   API.setConfirmation(seed,state,'synthetic_2',true);
   API.setField(seed,state,'synthetic_2','evidence','Revised synthetic note');
   assert.equal(state.confirmations.synthetic_2,undefined);
@@ -57,10 +58,24 @@ test('uncertain requires a reason that can be added to the original blank field'
 });
 test('confirmed assisted review remains non-formal and does not imply media viewing',()=>{
   const seed=fixture(),state=API.createState(seed);
+  API.setReviewer(state,{reviewer_name:'Synthetic successor',reviewer_id:'B2'});
   API.setConfirmation(seed,state,'synthetic_2',true);
   const out=API.exportReview(seed,state,true);
   assert.equal(out.status,'user_confirmed_ai_additions');
   assert.equal(out.formal_evidence,false);
   assert.equal(out.items[1].record.media_review_confirmed,false);
   assert.equal(out.human_media_review_not_inferred_from_ai_confirmation,true);
+  assert.equal(out.reviewer.reviewer_id,'B2');
+  assert.equal(out.source_draft_reviewer.reviewer_id,'B');
+});
+test('successor identity is required and changing it invalidates prior confirmations',()=>{
+  const seed=fixture(),state=API.createState(seed);
+  assert.throws(()=>API.setConfirmation(seed,state,'synthetic_2',true),/当前复核人/);
+  API.setReviewer(state,{reviewer_name:'Synthetic successor',reviewer_id:'B2'});
+  API.setConfirmation(seed,state,'synthetic_2',true);
+  assert.equal(state.confirmations.synthetic_2.confirmed_by.reviewer_id,'B2');
+  API.setReviewer(state,{reviewer_name:'Another synthetic reviewer',reviewer_id:'B3'});
+  assert.deepEqual(state.confirmations,{});
+  assert.throws(()=>API.exportReview(seed,state,true),/未核对/);
+  assert.deepEqual(state.records.synthetic_1,seed.original_records.synthetic_1);
 });

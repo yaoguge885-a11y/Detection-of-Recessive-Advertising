@@ -11,6 +11,7 @@
 <h1>B 草稿接续与 AI 辅助复核</h1>
 <p>原来填写的字段保持不变。只有原空白字段会按提供的 AI 建议补齐，新增内容需要人工检查。</p>
 <p class="sub">原填写字段已锁定。新增标签、置信度和说明可直接修改；每核对一条，勾选“已核对本条新增内容”。</p>
+<div class="fields"><label class="field"><span class="field-label">当前复核人姓名或代号</span><input id="currentReviewerName" autocomplete="off" placeholder="请接手同学填写自己的身份"></label><label class="field"><span class="field-label">当前复核人 ID</span><input id="currentReviewerId" autocomplete="off" placeholder="例如 B2 或组内约定 ID"></label></div><p class="sub" id="sourceReviewer"></p>
 <div class="notice">本份结果记录为 <b>AI 辅助人工复核</b>，不能作为独立盲测、正式双人 κ 或 Gold。原草稿中的观看记录原样保留；确认 AI 建议不会自动变成“已观看视频”。</div>
 <details><summary>标签定义与证据代码</summary><p class="sub">新增代码按固定指南：D 明确披露，C 商业对象为核心，P 促销或强推荐，A 商业转化动作，V 画面商业证据，M 评论导流，B 可验证的创作者历史变化。原页面的代码文字与指南存在差异，因此旧代码原样保留并单独标明口径。</p><div class="guide" id="guide"></div></details>
 </section>
@@ -23,7 +24,7 @@
 <script>
 'use strict';
 const SEED=JSON.parse(document.getElementById('seed').textContent), API=window.AssistedReview;
-const KEY='m1_ai_assisted_v1:'+SEED.source_snapshot_sha256+':B';
+const KEY='m1_ai_assisted_successor_v1:'+SEED.source_snapshot_sha256+':B';
 const LABELS=['明广','暗广','非广','uncertain','out_of_scope'];
 const CODES={D:'明确披露',C:'商业对象为核心',P:'促销或强推荐',A:'商业转化动作',V:'画面商业证据',M:'评论导流',B:'历史变化证据'};
 let state=API.createState(SEED),filter='pending';
@@ -55,5 +56,5 @@ function render(){
 }
 function download(finalReview){try{const result=API.exportReview(SEED,state,finalReview);const blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(finalReview?'M1_AI_Assisted_Review_B_':'M1_AI_Assisted_Draft_B_')+new Date().toISOString().replace(/[:.]/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);persist();message(finalReview?'已导出 AI 辅助人工复核结果。':'已导出复核草稿，未确认项仍保留待核对状态。')}catch(e){message(e.message,true)}}
 try{const saved=localStorage.getItem(KEY);if(saved){const parsed=JSON.parse(saved);const errors=API.validatePreserved(SEED,parsed);if(!errors.length)state=parsed;else message('已有复核进度未通过来源或完整性检查，未覆盖它；请先导出或联系处理。',true)}}catch(e){message('无法读取本页面已存进度：'+e.message,true)}
-$('guide').textContent=SEED.guide_text;$('filter').addEventListener('change',e=>{filter=e.target.value;render()});$('save').addEventListener('click',persist);$('draft').addEventListener('click',()=>download(false));$('export').addEventListener('click',()=>download(true));render();
+$('currentReviewerName').value=state.reviewer.reviewer_name;$('currentReviewerId').value=state.reviewer.reviewer_id;$('sourceReviewer').textContent='原草稿归属：'+(SEED.reviewer.reviewer_name||SEED.reviewer.reviewer_id||'未提供')+'。原作者身份保留；新增确认记在当前复核人名下。更换复核人会清除新增项的确认状态。';['currentReviewerName','currentReviewerId'].forEach(id=>$(id).addEventListener('change',()=>{API.setReviewer(state,{reviewer_name:$('currentReviewerName').value,reviewer_id:$('currentReviewerId').value});persist();render()}));$('guide').textContent=SEED.guide_text;$('filter').addEventListener('change',e=>{filter=e.target.value;render()});$('save').addEventListener('click',persist);$('draft').addEventListener('click',()=>download(false));$('export').addEventListener('click',()=>download(true));render();
 </script></body></html>

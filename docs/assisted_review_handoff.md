@@ -27,6 +27,8 @@ python -X utf8 data-tooling/annotation/build_assisted_review.py --draft data/rep
 - `seed.json`：原记录、补齐记录、字段来源和媒体相对路径。
 - `preservation_report.json`：输入哈希、保留核验及补齐范围。
 
+接手同学须在页面顶部填写自己的姓名或代号及 ID。原稿归属保存在 source_draft_reviewer，新增确认记录 confirmed_by；更换当前复核人会清除新增项的确认状态，防止把接替者的确认记到原作者名下。原稿字段不受影响。
+
 部分编辑可以导出为 `m1_ai_assisted_review_draft_v1`；新增项经真实用户确认后导出为 `m1_ai_assisted_human_review_v1`。两者均明确 `annotation_method=ai_assisted_human_review`、`independent_blind_review=false`、`formal_evidence=false`，不计入正式 κ 或 Gold。确认 AI 文本不等于观看了视频，原媒体记录保持原样。
 
 **旧 v2 回件核验**

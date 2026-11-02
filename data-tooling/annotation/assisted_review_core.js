@@ -5,7 +5,15 @@
   const labels = ['明广', '暗广', '非广', 'uncertain', 'out_of_scope'];
   const itemFor = (seed, id) => seed.items.find(item => item.post_id === id);
   function createState(seed) {
-    return {source_snapshot_sha256: seed.source_snapshot_sha256, records: copy(seed.records), confirmations: {}, edit_log: []};
+    return {source_snapshot_sha256: seed.source_snapshot_sha256, records: copy(seed.records),
+      reviewer: {reviewer_name:'',reviewer_id:''}, confirmations: {}, edit_log: []};
+  }
+  function setReviewer(state, reviewer) {
+    const next={reviewer_name:String(reviewer.reviewer_name||'').trim(),reviewer_id:String(reviewer.reviewer_id||'').trim()};
+    if (!same(next,state.reviewer)) {
+      state.reviewer=next;state.confirmations={};
+      state.edit_log.push({field:'current_reviewer',edited_at:new Date().toISOString()});
+    }
   }
   function setField(seed, state, id, field, value) {
     const item = itemFor(seed, id);
@@ -32,7 +40,8 @@
     if (checked) {
       const errors = validateItem(seed, state, id);
       if (errors.length) throw new Error(errors.join('；'));
-      state.confirmations[id] = {confirmed: true, confirmed_at: new Date().toISOString(), scope: 'AI 新增或补齐字段；不代表观看了未查看的媒体'};
+      if (!state.reviewer?.reviewer_name || !state.reviewer?.reviewer_id) throw new Error('请先填写当前复核人的姓名或代号和 ID');
+      state.confirmations[id] = {confirmed: true, confirmed_at: new Date().toISOString(), confirmed_by:copy(state.reviewer), scope: 'AI 新增或补齐字段；不代表观看了未查看的媒体'};
     } else delete state.confirmations[id];
   }
   function validatePreserved(seed, state) {
@@ -40,6 +49,7 @@
     if (!state || state.source_snapshot_sha256 !== seed.source_snapshot_sha256) return ['草稿来源不匹配'];
     if (!state.records || Object.keys(state.records).length !== seed.items.length) return ['样本数量不匹配'];
     if (!state.confirmations || !Array.isArray(state.edit_log)) return ['复核状态结构不完整'];
+    if (!state.reviewer || typeof state.reviewer.reviewer_name !== 'string' || typeof state.reviewer.reviewer_id !== 'string') return ['缺少当前复核人记录'];
     for (const item of seed.items) {
       const record = state.records[item.post_id];
       if (!record || typeof record !== 'object') {errors.push('缺少样本 #' + item.ordinal);continue;}
@@ -62,6 +72,8 @@
     if (errors.length) throw new Error(errors.join('\n'));
     const pending = seed.items.filter(item => item.ai_filled_fields.length && !state.confirmations[item.post_id]?.confirmed);
     if (finalReview && pending.length) throw new Error('还有 ' + pending.length + ' 条新增内容未核对，请逐条确认，或使用“导出复核草稿”。');
+    if (finalReview && (!state.reviewer.reviewer_name || !state.reviewer.reviewer_id)) throw new Error('请填写当前复核人');
+    if (finalReview && seed.items.some(item=>item.ai_filled_fields.length&&!same(state.confirmations[item.post_id]?.confirmed_by,state.reviewer))) throw new Error('复核人已变化，请重新确认新增内容');
     return {
       schema_version: finalReview ? 'm1_ai_assisted_human_review_v1' : 'm1_ai_assisted_review_draft_v1',
       status: finalReview ? 'user_confirmed_ai_additions' : 'awaiting_user_review',
@@ -70,7 +82,8 @@
       formal_evidence: false, eligible_for_formal_kappa: false, eligible_for_formal_gold: false,
       source_snapshot_sha256: seed.source_snapshot_sha256,
       manifest_sha256: seed.manifest_sha256, guide_sha256: seed.guide_sha256,
-      source_sha256: seed.source_sha256, role: 'B', reviewer: copy(seed.reviewer),
+      source_sha256: seed.source_sha256, role: 'B', reviewer: copy(state.reviewer),
+      source_draft_reviewer: copy(seed.reviewer), reviewer_identity_contract:'source_and_current_v1',
       exported_at: new Date().toISOString(), sample_count: seed.items.length,
       original_user_record_flags_retained: true,
       human_media_review_not_inferred_from_ai_confirmation: true,
@@ -82,7 +95,7 @@
       edit_log: copy(state.edit_log), media_inspection: copy(seed.media_inspection)
     };
   }
-  const api = {copy, createState, setField, setConfirmation, validateItem, validatePreserved, validateState, exportReview};
+  const api = {copy, createState, setReviewer, setField, setConfirmation, validateItem, validatePreserved, validateState, exportReview};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.AssistedReview = api;
 })(typeof globalThis === 'undefined' ? this : globalThis);
