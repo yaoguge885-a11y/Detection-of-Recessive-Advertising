@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 import threading
 from collections import Counter
 import hashlib
@@ -63,6 +64,9 @@ from auto_judge import (  # type: ignore # noqa: E402
     OLLAMA_KEEP_ALIVE,
     OLLAMA_NUM_CTX,
     OLLAMA_WARMUP_TIMEOUT,
+    OPENAI_COMPAT_DEFAULT_MODEL,
+    OPENAI_COMPAT_DEFAULT_URL,
+    OPENAI_COMPAT_TIMEOUT,
     DEFAULT_AUTO_THRESHOLD,
     GUIDE_VERSION,
     SUGGESTION_LOWER_BOUND,
@@ -212,6 +216,23 @@ _vision_models = {"yolo": None, "ocr": None}
 _vision_lock = threading.Lock()
 _vision_error = None
 
+
+def _load_env_file(path: str) -> None:
+    """Fill missing environment variables from a dotenv file without overriding."""
+    env_path = Path(path)
+    if not env_path.is_file():
+        return
+    for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, epilog=(
         'Outputs: auto_*.jsonl, suggest_*.jsonl, audit_*.jsonl, progress_*.jsonl, '
@@ -239,6 +260,15 @@ def main(argv=None) -> int:
     parser.add_argument('--num-parallel', type=int, default=1,
                         help='bounded in-flight requests; defaults to 1 for calibration')
     parser.add_argument('--image-workers', type=int, default=1)
+    parser.add_argument('--backend', choices=('ollama', 'openai_compat'), default='ollama',
+                        help='judge backend: local Ollama or an OpenAI-compatible endpoint')
+    parser.add_argument('--api-base-url', default=OPENAI_COMPAT_DEFAULT_URL)
+    parser.add_argument('--api-model', default=OPENAI_COMPAT_DEFAULT_MODEL)
+    parser.add_argument('--api-key-env', default='OPENAI_API_KEY',
+                        help='environment variable holding the API key; never pass the key inline')
+    parser.add_argument('--api-timeout', type=float, default=OPENAI_COMPAT_TIMEOUT)
+    parser.add_argument('--env-file', default='.env',
+                        help='optional dotenv file used to fill the API key/base URL when unset')
     parser.add_argument('--resume', nargs='?', const='latest', default=None,
                         help='resume a version-bound batch (optional batch ID)')
     args = parser.parse_args(argv)
@@ -252,6 +282,18 @@ def main(argv=None) -> int:
         parser.error('limit must be nonnegative')
     if args.max_comments < 0:
         parser.error('max-comments must be nonnegative')
+    api_key = ''
+    if args.backend == 'openai_compat':
+        if not math.isfinite(args.api_timeout) or args.api_timeout <= 0:
+            parser.error('api-timeout must be positive and finite')
+        _load_env_file(args.env_file)
+        if os.environ.get('OPENAI_BASE_URL') and args.api_base_url == OPENAI_COMPAT_DEFAULT_URL:
+            args.api_base_url = os.environ['OPENAI_BASE_URL'].strip()
+        api_key = os.environ.get(args.api_key_env, '').strip()
+        if not api_key:
+            parser.error(f'{args.api_key_env} is not set; provide it via environment or --env-file')
+        if not args.api_model:
+            parser.error('api-model must be provided for the openai_compat backend')
     try:
         input_path = Path(args.input).resolve()
         guide_path = Path(args.guide).resolve()
@@ -311,12 +353,13 @@ def main(argv=None) -> int:
             prior_count = len(session.records)
             warmup_ok = None
             warmup_sec = 0.0
-            if not args.no_warmup and prior_count < len(posts):
+            if not args.no_warmup and prior_count < len(posts) and args.backend == 'ollama':
                 warmup_start = time.perf_counter()
                 warmup_ok = warm_up_model(model=args.ollama_model, url=args.ollama_url,
                     timeout=OLLAMA_WARMUP_TIMEOUT, keep_alive=args.keep_alive, num_ctx=args.num_ctx)
                 warmup_sec = round(time.perf_counter() - warmup_start, 3)
             image_slots = threading.BoundedSemaphore(args.image_workers)
+            judge_model = args.api_model if args.backend == 'openai_compat' else args.ollama_model
 
             def worker(post):
                 image_analyses = None
@@ -326,13 +369,17 @@ def main(argv=None) -> int:
                 weights = compute_keyword_weights_for_post(post.get('text') or '')
                 start = time.perf_counter()
                 result = run_auto_judge(post, image_analyses=image_analyses,
-                    keyword_weights=weights, model=args.ollama_model, url=args.ollama_url,
+                    keyword_weights=weights, model=judge_model, url=args.ollama_url,
                     timeout=args.timeout, auto_threshold=args.auto_threshold,
                     keep_alive=args.keep_alive, guide_text=guide_text, guide_version=GUIDE_VERSION,
                     guide_sha256=guide_sha, media_analysis_requested=not args.no_images,
                     collection_complete=post.get('collection_complete'), num_ctx=args.num_ctx,
                     num_predict=args.num_predict,
-                    thinking=args.thinking, comment_limit=args.max_comments)
+                    thinking=args.thinking, comment_limit=args.max_comments,
+                    backend=args.backend,
+                    api_base_url=args.api_base_url,
+                    api_key=api_key,
+                    api_timeout=args.api_timeout)
                 latency = round(time.perf_counter() - start, 3)
                 suggestion = result.get('suggestion')
                 audit = {
@@ -342,7 +389,7 @@ def main(argv=None) -> int:
                     'confidence': suggestion.get('confidence') if suggestion else None,
                     'confidence_raw': suggestion.get('confidence_raw') if suggestion else None,
                     'backend': result.get('backend', 'none'), 'fallback': bool(result.get('fallback')),
-                    'error': result.get('error'), 'model': args.ollama_model,
+                    'error': result.get('error'), 'model': judge_model,
                     'guide_version': GUIDE_VERSION, 'guide_sha256': guide_sha,
                     'media_analysis_requested': not args.no_images,
                     'media_evidence_status': result.get('media_evidence_status', 'unknown'),

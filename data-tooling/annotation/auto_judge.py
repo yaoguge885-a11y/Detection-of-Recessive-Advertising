@@ -682,6 +682,125 @@ def run_ollama_judge(
     )
 
 
+def run_openai_compat_judge(
+    post: Dict[str, Any],
+    image_analyses: Optional[Dict[int, Dict]] = None,
+    keyword_weights: Optional[Dict[str, float]] = None,
+    model: str = OPENAI_COMPAT_DEFAULT_MODEL,
+    base_url: str = OPENAI_COMPAT_DEFAULT_URL,
+    api_key: str = "",
+    timeout: float = OPENAI_COMPAT_TIMEOUT,
+    guide_text: str = "",
+    guide_version: str = GUIDE_VERSION,
+    guide_sha256: str = "",
+    media_analysis_requested: Optional[bool] = None,
+    collection_complete: Any = None,
+    num_predict: int = 1024,
+    comment_limit: int = 30,
+    temperature: float = 0.0,
+) -> Dict[str, Any]:
+    """调用 OpenAI 兼容端点（/chat/completions）对单条帖子做综合判定。
+
+    与 :func:`run_ollama_judge` 共用提示词、证据契约和标准化逻辑，区别只在
+    传输层。任何失败都抛出异常，由调用方失败关闭并转人工。``temperature``
+    固定为 0.0 以保证可复现。
+    """
+    if not api_key:
+        raise ValueError("缺少 API key：请通过环境变量提供，不要写入仓库")
+    if not base_url:
+        raise ValueError("缺少 API base_url")
+    text = post.get("text") or ""
+    media_status = determine_media_evidence_status(
+        post, image_analyses, media_analysis_requested
+    )
+    collection_value = (
+        post.get("collection_complete")
+        if collection_complete is None and "collection_complete" in post
+        else collection_complete
+    )
+    collection_state = normalize_collection_complete(collection_value)
+    resolved_guide_hash = guide_sha256 or sha256_text(guide_text)
+    img_summary = (
+        f"证据状态={media_status}\n{summarize_image_analyses(image_analyses)}"
+    )
+    weights = keyword_weights or compute_keyword_weights_for_post(text)
+    user_prompt = build_user_prompt(
+        post,
+        img_summary,
+        weights,
+        guide_text=guide_text,
+        guide_version=guide_version,
+        guide_sha256=resolved_guide_hash,
+        media_evidence_status=media_status,
+        collection_complete=collection_value,
+        comment_limit=comment_limit,
+    )
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": OLLAMA_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": float(temperature),
+        "max_tokens": int(num_predict),
+        "response_format": {"type": "json_object"},
+        "stream": False,
+    }
+    def _send(body_payload):
+        request_headers = {"Content-Type": "application/json"}
+        request_headers["Authorization"] = "Bearer " + api_key
+        return requests.post(
+            f"{base_url.rstrip('/')}/chat/completions",
+            json=body_payload,
+            headers=request_headers,
+            timeout=timeout,
+        )
+
+    resp = _send(payload)
+    if resp.status_code == 400 and "response_format" in (resp.text or ""):
+        # 部分厂商要求提示词中字面出现 json 才允许 json_object；
+        # 提示词本身已要求 JSON，因此降级为不使用该参数重试一次。
+        payload.pop("response_format", None)
+        resp = _send(payload)
+    if resp.status_code >= 400:
+        raise ValueError(f"HTTP {resp.status_code}: {(resp.text or '')[:300]}")
+    body = resp.json()
+    choices = body.get("choices") or []
+    finish_reason = (choices[0].get("finish_reason") if choices else "") or ""
+    message = (choices[0].get("message") or {}) if choices else {}
+    content = message.get("content") or ""
+    parsed = _extract_json_content(content)
+    if parsed is None and finish_reason == "length":
+        # 推理型模型会先消耗 token；被截断时提高上限重试一次，避免把截断当成解析失败。
+        payload["max_tokens"] = min(int(payload["max_tokens"]) * 2, 8192)
+        resp = _send(payload)
+        if resp.status_code >= 400:
+            raise ValueError(f"HTTP {resp.status_code}: {(resp.text or '')[:300]}")
+        body = resp.json()
+        choices = body.get("choices") or []
+        message = (choices[0].get("message") or {}) if choices else {}
+        content = message.get("content") or ""
+        parsed = _extract_json_content(content)
+    if parsed is None:
+        raise ValueError(f"端点返回非 JSON 内容: {content[:200]!r}")
+
+    raw_label = parsed.get("label", parsed.get("suggested_label"))
+    parsed["label_raw"] = raw_label
+    parsed["_model"] = model
+    parsed["_backend"] = "openai_compat"
+    parsed["_guide_version"] = guide_version or "unknown"
+    parsed["_guide_sha256"] = resolved_guide_hash or "unknown"
+    parsed["_media_evidence_status"] = media_status
+    parsed["_collection_complete"] = collection_state
+    normalized = normalize_suggestion(parsed)
+    return enforce_evidence_contract(
+        normalized,
+        post=post,
+        media_evidence_status=media_status,
+        collection_complete=collection_state,
+    )
+
+
 def warm_up_model(model: str = OLLAMA_DEFAULT_MODEL,
                   url: str = OLLAMA_DEFAULT_URL,
                   timeout: float = OLLAMA_WARMUP_TIMEOUT,
@@ -975,8 +1094,12 @@ def run_auto_judge(
     num_predict: int = 1024,
     thinking: bool = False,
     comment_limit: int = 30,
+    backend: str = "ollama",
+    api_base_url: str = OPENAI_COMPAT_DEFAULT_URL,
+    api_key: str = "",
+    api_timeout: float = OPENAI_COMPAT_TIMEOUT,
 ) -> Dict[str, Any]:
-    """完整自动判断管线：Ollama 判定 → 失败回退 → 三级分类。
+    """完整自动判断管线：判定后端 → 失败回退 → 三级分类。
 
     Returns:
         {
@@ -1003,19 +1126,33 @@ def run_auto_judge(
     resolved_guide_hash = guide_sha256 or sha256_text(guide_text) or "unknown"
 
     try:
-        suggestion = run_ollama_judge(
-            post, image_analyses, keyword_weights,
-            model=model, url=url, timeout=timeout, keep_alive=keep_alive,
-            guide_text=guide_text,
-            guide_version=guide_version,
-            guide_sha256=resolved_guide_hash,
-            media_analysis_requested=media_analysis_requested,
-            collection_complete=collection_value,
-            num_ctx=num_ctx,
-            num_predict=num_predict,
-            thinking=thinking,
-            comment_limit=comment_limit,
-        )
+        if backend == "openai_compat":
+            suggestion = run_openai_compat_judge(
+                post, image_analyses, keyword_weights,
+                model=model, base_url=api_base_url, api_key=api_key,
+                timeout=api_timeout,
+                guide_text=guide_text,
+                guide_version=guide_version,
+                guide_sha256=resolved_guide_hash,
+                media_analysis_requested=media_analysis_requested,
+                collection_complete=collection_value,
+                num_predict=num_predict,
+                comment_limit=comment_limit,
+            )
+        else:
+            suggestion = run_ollama_judge(
+                post, image_analyses, keyword_weights,
+                model=model, url=url, timeout=timeout, keep_alive=keep_alive,
+                guide_text=guide_text,
+                guide_version=guide_version,
+                guide_sha256=resolved_guide_hash,
+                media_analysis_requested=media_analysis_requested,
+                collection_complete=collection_value,
+                num_ctx=num_ctx,
+                num_predict=num_predict,
+                thinking=thinking,
+                comment_limit=comment_limit,
+            )
     except SuggestionContractError as exc:
         error = str(exc)[:300]
         suggestion = normalize_suggestion({

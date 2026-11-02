@@ -70,3 +70,75 @@ QC 产物位于 `data/annotations/workbench/m1_formal_3312_v2/m1_gold_human_120/
 - 若需要更大 Gold：`gold_control` 剩余 60 条、`gold_assisted_w1_320` 均可继续。
 - 规则补充（S-1/S-2/S-3）待形成 v1.1 并指定生效批次。
 - M1 总门禁仍为 `passed=false`：Gold 数量、切分、Dataset Card 均未满足。
+
+## 7. 外部 API 辅助通道（2026-11-02 晚间）
+
+### 7.1 授权与范围披露
+
+- 数据责任人 A 决定改用 OpenAI 兼容端点（DeepSeek）批量生成建议，用于 384 条待标 Gold。
+- **该操作超出 `privacy_approval.json` 中 `approved_for_internal_m1_formal_experiments_external_release_blocked` 的 internal-only 范围**：帖子正文与评论被发送到 `api.deepseek.com`。本次共 500 条，时间 2026-11-02 22:02–22:20（UTC+8）。
+- 该决定由 A 以数据责任人身份作出；后续对外发布、数据集再分发仍受限，模型端不保留用于再分发的数据。
+
+### 7.2 实现
+
+| 文件 | 改动 |
+| --- | --- |
+| `data-tooling/annotation/auto_judge.py` | 新增 `run_openai_compat_judge()`；`run_auto_judge(backend=...)` 分发；HTTP 错误带响应体；`finish_reason=length` 自动翻倍 `max_tokens` 重试；`response_format` 400 时降级重试 |
+| `data-tooling/annotation/batch_pre_annotate.py` | 新增 `--backend`、`--api-base-url`、`--api-model`、`--api-key-env`、`--api-timeout`、`--env-file`；API 模式跳过 Ollama 预热；审计记录实际模型名 |
+| `data-tooling/annotation/annotation_workbench/file_suggestions.py` | 新增离线建议源，页面读预跑结果，不再实时调用模型 |
+| `data-tooling/annotation/html_annotator.py` | 新增 `--suggestion-file` |
+| `scripts/start_m1_gold.ps1` | 新增 `human120`、`ai384` 波次；`ai384` 自动选取最新 `audit_*.jsonl` 作为离线建议 |
+
+联调中发现并修复的问题：`Authorization` 头被误写为常量、`--api-model` 未传入判定器、`max_tokens` 过小导致 JSON 截断、`.env` 中 `LLM_MODEL` 不是有效模型名（有效值为 `deepseek-flash` / `deepseek-v4-pro`）。
+
+### 7.3 500 条建议生成
+
+- 输入：`data/annotations/preannotated/input_gold_500.jsonl`（control 180 + assisted 320），SHA-256 `699BD39E…`
+- 模型：`deepseek-v4-pro`，温度 0，`max_tokens` 3072，并发 100，`--no-images`
+- 结果：500/500 完成，0 错误；`suggest` 380 条，`manual`（弃答或低置信）120 条，弃答率 24%
+- 产物：`data/annotations/preannotated/gold_ai_500_v4pro/`（Git 忽略）
+
+### 7.4 116 条对照结果
+
+以纯人工标注的 116 条有效样本为基准（见第 4 节）：
+
+| 指标 | 数值 |
+| --- | ---: |
+| 配对样本 | 116 |
+| 双方均为三分类 | 80 |
+| 一致率 | 91.25% |
+| Cohen's κ | **0.493** |
+| 模型弃答 | 25 条（21.6%） |
+
+混淆矩阵（行=人工，列=模型）：
+
+| 人工 \ 模型 | 非广 | 明广 | 暗广 | uncertain |
+| --- | ---: | ---: | ---: | ---: |
+| 非广 (82) | 69 | 2 | 0 | 11 |
+| 明广 (13) | 3 | 4 | 0 | 6 |
+| 暗广 (5) | 2 | 0 | 0 | 3 |
+| out_of_scope (12) | 7 | 0 | 0 | 3 |
+
+**关键结论：模型暗广召回为 0/5。** 与 2026-09 的 DeepSeek 评测方向一致（当时 recall 35%），说明暗广仍是当前模型的系统性短板。
+
+另有 4 条高置信度分歧（模型置信度 ≥0.8 但与人不同），其中 `post_79826a1dfac53` 模型以 0.85 判非广且**未给出任何证据码**，属无证据下结论。
+
+完整数据见 `gold_ai_500_v4pro/comparison_116.json`（Git 忽略）。
+
+### 7.5 创作者上下文缺失（研究相关）
+
+- 500 条记录中仅 128 条（26%）带 `blogger_history_refs`。
+- `auto_judge.py` 的提示词**从未传入创作者历史**，模型对博主身份与既往内容完全不可见。
+- 人工判为暗广的 5 条中有 4 条本身无任何历史记录，说明人的优势部分来自数据集之外的经验（对博主的既有印象），而非数据中的历史字段。
+
+由此产生两点后果：
+
+1. 支持 CreatorShift 假设：单帖证据不足时，创作者上下文对暗广判断有实质影响。
+2. 影响可复现性：依赖记忆的判定必须在证据字段写明理由，否则他人无法复现。指南 EC-14 亦规定创作者偏离（`B`）不能单独定暗广。
+
+### 7.6 明日待办
+
+1. 按分层口径标注 384 条：明广/非广参考建议，暗广独立判断（模型暗广召回为 0）。
+2. 标注时把"熟悉博主"类理由写入证据字段。
+3. 可选实验：将创作者历史加入提示词后重跑，量化暗广召回变化。
+4. 收尾质检、更新 Dataset Card，并重跑 M1 门禁（当前仍 `passed=false`）。

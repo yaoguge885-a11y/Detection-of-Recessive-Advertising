@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [string]$Dataset,
@@ -18,6 +18,8 @@ param(
 
     [ValidateSet("exploratory", "approved")]
     [string]$ManifestRole = "exploratory",
+
+    [string]$SuggestionFile = "",
 
     [string]$OutputRoot = "",
 
@@ -80,6 +82,7 @@ try {
     )
 
     if ($Manifest) { $cliArgs += @("--manifest", $Manifest) }
+    if ($SuggestionFile) { $cliArgs += @("--suggestion-file", $SuggestionFile) }
     if ($OutputRoot) { $cliArgs += @("--output-root", $OutputRoot) }
     if ($Guide) { $cliArgs += @("--guide", $Guide) }
     if ($NoAutoSuggest) { $cliArgs += "--no-auto-suggest" }

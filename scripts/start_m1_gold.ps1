@@ -5,7 +5,7 @@ param(
     [string]$Role,
 
     [Parameter(Mandatory = $true)]
-    [ValidateSet("kappa", "control", "assisted", "human120")]
+    [ValidateSet("kappa", "control", "assisted", "human120", "ai384")]
     [string]$Wave,
 
     [string]$AnnotatorName = "",
@@ -35,16 +35,32 @@ $waves = @{
     "control"  = @{ Dataset = "gold_control.jsonl"; Manifest = "waves\gold_control_180.json";   BatchId = "m1_gold_control_180";        AiAllowed = $false; Label = "Gold 无 AI 对照 180 条" }
     "assisted" = @{ Dataset = "gold_assisted.jsonl"; Manifest = "waves\gold_assisted_w1_320.json"; BatchId = "m1_gold_assisted_w1_320"; AiAllowed = $true;  Label = "Gold AI 辅助 320 条" }
     "human120" = @{ Dataset = "gold_control.jsonl"; Manifest = "waves\gold_human_120.json"; BatchId = "m1_gold_human_120"; AiAllowed = $false; Label = "单人人工金标 120 条（无 AI）" }
+    "ai384"    = @{ Dataset = "input_gold_remaining_384.jsonl"; DatasetRoot = "data\annotations\preannotated"; Manifest = "waves\gold_ai_384.json"; BatchId = "m1_gold_ai_384"; AiAllowed = $true; SuggestionDir = "data\annotations\preannotated\gold_ai_500_v4pro"; Label = "Gold AI 辅助 384 条（离线建议）" }
 }
 
 $config = $waves[$Wave]
-$datasetPath = Join-Path $LockedRoot $config.Dataset
+$datasetRoot = $LockedRoot
+if ($config.ContainsKey("DatasetRoot")) {
+    $datasetRoot = Join-Path $RepoRoot $config.DatasetRoot
+}
+$datasetPath = Join-Path $datasetRoot $config.Dataset
 $manifestPath = Join-Path $LockedRoot $config.Manifest
 
 foreach ($required in @($datasetPath, $manifestPath)) {
     if (-not (Test-Path -LiteralPath $required)) {
         throw "Required file missing: $required`nRun the batch lock first: python data-tooling\m1_lock_batches.py ..."
     }
+}
+
+$suggestionFile = ""
+if ($config.ContainsKey("SuggestionDir")) {
+    $suggestionRoot = Join-Path $RepoRoot $config.SuggestionDir
+    $audit = Get-ChildItem -LiteralPath $suggestionRoot -Filter 'audit_*.jsonl' -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($null -eq $audit) {
+        throw "No offline suggestion file found in $suggestionRoot`nRun the batch pre-annotation first."
+    }
+    $suggestionFile = $audit.FullName
 }
 
 $mediaRoot = Join-Path $RepoRoot "data\run_outputs\merged_20260728"
@@ -76,6 +92,11 @@ $launcherArgs = @{
     ManifestRole = "approved"
     Model       = $Model
     Port        = $Port
+}
+
+if ($suggestionFile) {
+    Write-Host "离线建议: $suggestionFile"
+    $launcherArgs["SuggestionFile"] = $suggestionFile
 }
 
 if ($effectiveNoAi) { $launcherArgs["NoAutoSuggest"] = $true }

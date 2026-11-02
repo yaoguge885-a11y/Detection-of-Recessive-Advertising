@@ -71,6 +71,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-auto-suggest", action="store_true",
         help="关闭模型建议，进入真正的独立盲标（/api/suggest 返回 403）",
     )
+    parser.add_argument(
+        "--suggestion-file", type=Path, default=None,
+        help="离线建议文件（batch_pre_annotate.py 生成的 suggest_*.jsonl）；"
+             "提供后建议直接从文件读取，不调用 Ollama",
+    )
     parser.add_argument("--port", type=int, default=8765, help="端口（0 表示随机空闲端口）")
     parser.add_argument("--check-only", action="store_true", help="只校验数据/清单/批次并打印摘要，不启动服务")
     return parser
@@ -123,15 +128,24 @@ def main(argv: list[str] | None = None) -> int:
             }
             print(json.dumps(summary, ensure_ascii=False, indent=2))
             return 0
-        bridge = OllamaBridge(
-            model=args.model,
-            url=args.ollama_url,
-            timeout=args.timeout,
-            guide_path=guide,
-            num_predict=args.num_predict,
-            comment_limit=args.comment_limit,
-            enabled=not args.no_auto_suggest,
-        )
+        if args.suggestion_file is not None and not args.no_auto_suggest:
+            from annotation_workbench.file_suggestions import FileSuggestionSource
+
+            bridge = FileSuggestionSource(
+                suggestion_path=args.suggestion_file.expanduser().resolve(),
+                guide_path=guide,
+                model=args.model if args.model and args.model != "qwen3.5:9b" else "",
+            )
+        else:
+            bridge = OllamaBridge(
+                model=args.model,
+                url=args.ollama_url,
+                timeout=args.timeout,
+                guide_path=guide,
+                num_predict=args.num_predict,
+                comment_limit=args.comment_limit,
+                enabled=not args.no_auto_suggest,
+            )
         store = AnnotationStore(prepared)
         app = WorkbenchApp(store, bridge, auto_suggest=not args.no_auto_suggest)
         run_server(app, port=args.port)
