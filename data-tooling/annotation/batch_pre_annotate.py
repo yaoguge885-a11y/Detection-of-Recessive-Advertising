@@ -217,6 +217,73 @@ _vision_lock = threading.Lock()
 _vision_error = None
 
 
+def build_creator_history_index(path: str, *, max_posts: int = 10) -> dict:
+    """Index same-blogger posts from a candidate pool for prompt-time history.
+
+    ``blogger_history_refs`` in the dataset are opaque 24-hex platform IDs that
+    resolve to nothing, so history is rebuilt from posts that are actually in
+    the pool: same ``blogger_id``, newest first, excluding the current post.
+    """
+    import json as _json
+    from collections import defaultdict
+
+    if not path:
+        return {}
+    pool_path = Path(path)
+    if not pool_path.is_file():
+        raise ValueError(f"creator history pool not found: {pool_path}")
+    by_blogger = defaultdict(list)
+    with pool_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            record = _json.loads(line)
+            blogger = record.get("blogger_id")
+            if not blogger:
+                continue
+            by_blogger[blogger].append(
+                {
+                    "post_id": record.get("post_id"),
+                    "published_at": record.get("published_at") or "",
+                    "title": (record.get("title") or "").strip(),
+                    "text": (record.get("text") or "").strip(),
+                }
+            )
+    index = {}
+    for blogger, items in by_blogger.items():
+        items.sort(key=lambda row: row["published_at"], reverse=True)
+        index[blogger] = items[: max_posts * 3]
+    return {"by_blogger": index, "max_posts": max_posts}
+
+
+def summarize_creator_history(history_index, post: dict) -> str:
+    """Render a compact, evidence-only creator history block for the prompt."""
+    if not history_index:
+        return ""
+    blogger = post.get("blogger_id")
+    entries = (history_index.get("by_blogger") or {}).get(blogger) or []
+    own_id = post.get("post_id")
+    max_posts = history_index.get("max_posts", 10)
+    selected = [row for row in entries if row.get("post_id") != own_id][:max_posts]
+    if not selected:
+        return ""
+    lines = [
+        f"同一博主（{blogger}）在当前候选池中共有 {len(entries)} 条记录，"
+        f"以下按时间倒序给出最近 {len(selected)} 条（不含当前帖）：",
+    ]
+    for row in selected:
+        date = (row.get("published_at") or "")[:10] or "日期未知"
+        title = row.get("title") or "(无标题)"
+        head = row.get("text")[:120].replace("\n", " ")
+        lines.append(f"- {date} | {title} | {head}")
+    lines.append(
+        "以上仅用于判断该博主的常态内容形态与既往商业合作迹象；"
+        "历史本身不能单独证明当前帖是暗广（指南 EC-14），仍需当前帖的商业意图证据。"
+    )
+    return "\n".join(lines)
+
+
 def _load_env_file(path: str) -> None:
     """Fill missing environment variables from a dotenv file without overriding."""
     env_path = Path(path)
@@ -267,6 +334,10 @@ def main(argv=None) -> int:
     parser.add_argument('--api-key-env', default='OPENAI_API_KEY',
                         help='environment variable holding the API key; never pass the key inline')
     parser.add_argument('--api-timeout', type=float, default=OPENAI_COMPAT_TIMEOUT)
+    parser.add_argument('--creator-history-pool', default='',
+                        help='candidate JSONL used to rebuild same-blogger history for the prompt')
+    parser.add_argument('--creator-history-max-posts', type=int, default=10,
+                        help='max same-blogger posts included per item')
     parser.add_argument('--env-file', default='.env',
                         help='optional dotenv file used to fill the API key/base URL when unset')
     parser.add_argument('--resume', nargs='?', const='latest', default=None,
@@ -360,6 +431,10 @@ def main(argv=None) -> int:
                 warmup_sec = round(time.perf_counter() - warmup_start, 3)
             image_slots = threading.BoundedSemaphore(args.image_workers)
             judge_model = args.api_model if args.backend == 'openai_compat' else args.ollama_model
+            history_index = build_creator_history_index(
+                args.creator_history_pool,
+                max_posts=args.creator_history_max_posts,
+            ) if args.creator_history_pool else {}
 
             def worker(post):
                 image_analyses = None
@@ -379,7 +454,8 @@ def main(argv=None) -> int:
                     backend=args.backend,
                     api_base_url=args.api_base_url,
                     api_key=api_key,
-                    api_timeout=args.api_timeout)
+                    api_timeout=args.api_timeout,
+                    creator_history_summary=summarize_creator_history(history_index, post))
                 latency = round(time.perf_counter() - start, 3)
                 suggestion = result.get('suggestion')
                 audit = {

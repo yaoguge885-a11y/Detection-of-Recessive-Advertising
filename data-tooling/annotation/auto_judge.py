@@ -429,6 +429,7 @@ def build_user_prompt(
     media_evidence_status: str = "unknown",
     collection_complete: Any = None,
     comment_limit: int = 30,
+    creator_history_summary: str = "",
 ) -> str:
     title = (post.get("title") or "").strip() or "(无标题)"
     blogger = (post.get("blogger_id") or "?").strip()
@@ -473,6 +474,9 @@ def build_user_prompt(
 
 ## 已提供评论
 {comments_summary}
+
+## 创作者历史（同博主其他帖子）
+{creator_history_summary.strip() or "（本批次未提供创作者历史；只能依据当前帖判断，不得因缺少历史而推断存在或不存在商业合作。）"}
 
 ## 关键词特征向量
 {kw_summary}
@@ -698,6 +702,7 @@ def run_openai_compat_judge(
     num_predict: int = 1024,
     comment_limit: int = 30,
     temperature: float = 0.0,
+    creator_history_summary: str = "",
 ) -> Dict[str, Any]:
     """调用 OpenAI 兼容端点（/chat/completions）对单条帖子做综合判定。
 
@@ -734,6 +739,7 @@ def run_openai_compat_judge(
         media_evidence_status=media_status,
         collection_complete=collection_value,
         comment_limit=comment_limit,
+        creator_history_summary=creator_history_summary,
     )
     payload = {
         "model": model,
@@ -1098,6 +1104,7 @@ def run_auto_judge(
     api_base_url: str = OPENAI_COMPAT_DEFAULT_URL,
     api_key: str = "",
     api_timeout: float = OPENAI_COMPAT_TIMEOUT,
+    creator_history_summary: str = "",
 ) -> Dict[str, Any]:
     """完整自动判断管线：判定后端 → 失败回退 → 三级分类。
 
@@ -1138,6 +1145,7 @@ def run_auto_judge(
                 collection_complete=collection_value,
                 num_predict=num_predict,
                 comment_limit=comment_limit,
+                creator_history_summary=creator_history_summary,
             )
         else:
             suggestion = run_ollama_judge(
