@@ -147,3 +147,4 @@ Desktop.ini
 ._zip_extract/Detection-of-Recessive-Advertising-main
 # Local workbench exports carry post content and human labels; never commit them
 data/workbench_*.json
+/data/reports/m1/gold/
