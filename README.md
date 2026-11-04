@@ -1,6 +1,6 @@
 # 隐性广告识别：证据驱动的多智能体分析系统
 
-> [当前交接与 M1 下一步](HANDOFF.md) · [11 月 3 日标注交付](docs/progress/2026-11-03-m1-annotation-delivery.md) · [B 侧接替交接](docs/handoff/B_HANDOFF_2026-11-02.md)
+> [当前交接与 M1 下一步](HANDOFF.md) · [M1 数据与交接索引](docs/handoff/M1_DATA_INVENTORY.md) · [B 侧接替交接](docs/handoff/B_HANDOFF_2026-11-02.md)
 
 本项目面向社交媒体内容，结合文本、图像、评论与创作者历史，判断帖子属于 **明广 / 暗广 / 非广**，并输出可以回溯到原始内容与法规来源的结构化证据链。
 
