@@ -1,0 +1,88 @@
+{
+  "scope": "new changes since 081de03 only",
+  "completed_modules_only": true,
+  "files": [
+    {
+      "path": "data-tooling/annotation/assisted_review_core.js",
+      "sha256": "f693283769d84e1900144abd75ea42d27e7fc5323a902070ff44d2bb30c7788d"
+    },
+    {
+      "path": "data-tooling/annotation/assisted_review_template.html",
+      "sha256": "09e59e90ab9a5a6fc851276d638d0220fcdd5462fcd8bc8eae4be84991496e09"
+    },
+    {
+      "path": "data-tooling/annotation/build_assisted_review.py",
+      "sha256": "1b7ec5e1bdf20b29dd5fc2aabee50b8c0582f7aed7f796e0fb9d398e1c20d712"
+    },
+    {
+      "path": "data-tooling/annotation/check_blind_returns_v2.py",
+      "sha256": "d777dd2aac216ee0a8b41acce3a46fceee5f49516f753df059f44b375eeb01cf"
+    },
+    {
+      "path": "data-tooling/annotation/generate_m1_qwen_blind_html.py",
+      "sha256": "bcbd4661a69ffdf46e8cf1058170b30ce7969af258d3ccfca23fac464c20ffb6"
+    },
+    {
+      "path": "data-tooling/annotation/package_m1_qwen_blind_role.py",
+      "sha256": "1d773bb68cff74fb2b5f83ec24e13197696f62c8d2a5ecdaccd798e05ec95ee4"
+    },
+    {
+      "path": "data-tooling/annotation/tests/assisted_review_behavior.test.cjs",
+      "sha256": "16195a1f1d811fcaf32e208617192b3da63bbb2612ad292d17c1bd57482cad69"
+    },
+    {
+      "path": "data-tooling/annotation/tests/blind_review_contract_behavior.test.cjs",
+      "sha256": "9dda765628e510bf7cffca159db2234d1a0a558d2007656a82d7fc5239104b41"
+    },
+    {
+      "path": "data-tooling/annotation/tests/blind_review_input_behavior.test.cjs",
+      "sha256": "dc3aa092b3c5bb7fb0e624ea5df3f162703f686d9530300ae9f76f3b2fd0c4e3"
+    },
+    {
+      "path": "data-tooling/annotation/tests/test_annotation_evidence_audit.py",
+      "sha256": "9c0c45d4be42c2c4fe3ad5af3681d112aee19697efd1e7a77cfc092ccb6ed0e0"
+    },
+    {
+      "path": "data-tooling/annotation/tests/test_assisted_review_packaging.py",
+      "sha256": "0ceed758cf583d5f0a365dca0cffe558bd66acb1df4ffc3dc40022b8ad43d918"
+    },
+    {
+      "path": "data-tooling/annotation/tests/test_blind_handoff_packaging.py",
+      "sha256": "1af5531773f0d89ca89344bef91883e1688696b23240bd7f1f294c9ae65af110"
+    },
+    {
+      "path": "data-tooling/annotation/tests/test_check_blind_returns_v2.py",
+      "sha256": "38db90e0e85a8ed197c366643bfab8885458883d508a6a8f4571a7e4e56bb642"
+    },
+    {
+      "path": "data-tooling/annotation/tests/test_qwen_blind_review_html.py",
+      "sha256": "ec5de51dad2624d945c91900f29976dcb8c262c2e88ecc98d6ed29248aace2b2"
+    },
+    {
+      "path": "data-tooling/audit_annotation_evidence.py",
+      "sha256": "1f93db611f37ae894fdc03fa9b3f74905bb52f01dab44b281fb6fe5ab171e314"
+    },
+    {
+      "path": "docs/annotation_ui_v3.md",
+      "sha256": "57e4c7f97940682897a52fda0d9c68d3eedeac8fa59f267ad906eec1e52d197d"
+    },
+    {
+      "path": "docs/assisted_review_handoff.md",
+      "sha256": "64ec1cc60bf7c9f6bbad872e1773f1fdb06ab9a4fc6a43ebe9dfd206211452b7"
+    },
+    {
+      "path": "docs/progress/2026-10-29-b-engineering.md",
+      "sha256": "1f1c47f1a7c3089a02251351d02314a233548e2dd4a3ef862d6df592a1738042"
+    },
+    {
+      "path": "scripts/demo_assisted_review.py",
+      "sha256": "d29e266dfa5abf73a54360384c8aa262284696f5cd8c4e3d5097ffa637f0bf88"
+    },
+    {
+      "path": "scripts/verify_handoff.py",
+      "sha256": "826568210c39d520e8775d6bd7c93eed3564d7cb29c9bfd41d513a8c4d8f798f"
+    }
+  ],
+  "privacy_scan_findings": [],
+  "excludes_final_handoff_documents": true
+}

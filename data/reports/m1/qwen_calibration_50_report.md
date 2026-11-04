@@ -33,11 +33,11 @@
 
 ## 产物与哈希
 
-- `data/run_outputs/m1_calibration_50/auto_20260806_235155.jsonl`  
+- `data/run_outputs/m1_calibration_50/auto_20260806_235155.jsonl`
   SHA-256：`7A3DDCCE2D672C8573986B08C38A22A24A60448F12F4AE341A737B23CF6BA216`
-- `data/run_outputs/m1_calibration_50/suggest_20260806_235155.jsonl`  
+- `data/run_outputs/m1_calibration_50/suggest_20260806_235155.jsonl`
   SHA-256：`7F2A4419A31CA31BD5C182B73A9A5097DF81E8DCEC460702BEE74AC4176CB27F`
-- `data/run_outputs/m1_calibration_50/stats_20260806_235155.json`  
+- `data/run_outputs/m1_calibration_50/stats_20260806_235155.json`
   SHA-256：`15E682EF0B2E9D6F88E6478571E05FFD46425555443D1918D865FD34C0066D1A`
 
 ## 尚需人工

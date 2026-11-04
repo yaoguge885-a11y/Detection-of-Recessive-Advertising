@@ -342,6 +342,35 @@ def _plan_for(*tool_names, call_budget=8, timeout=1.0):
     )
 
 
+class RecordingRunContextGateway(LocalToolGateway):
+    def __init__(self):
+        super().__init__()
+        self.runs = []
+
+    def call(self, name, arguments, run):
+        self.runs.append(run)
+        return super().call(name, arguments, run)
+
+
+def test_function_caller_passes_exact_allowed_set_to_gateway():
+    gateway = RecordingRunContextGateway()
+
+    RestrictedFunctionCaller(gateway=gateway).execute(
+        calls=[{
+            "id": "call_allowed_set",
+            "name": "analyze_text_intent",
+            "args": {"text": "品牌合作推广"},
+        }],
+        context=_text_context(),
+        run=RunContext(run_id="run_allowed_set"),
+        plan=_plan_for("analyze_text_intent"),
+    )
+
+    assert gateway.runs[0].allowed_tools == frozenset({
+        "analyze_text_intent",
+    })
+
+
 def test_capability_plan_call_budget_is_enforced():
     result = RestrictedFunctionCaller().execute(
         calls=[

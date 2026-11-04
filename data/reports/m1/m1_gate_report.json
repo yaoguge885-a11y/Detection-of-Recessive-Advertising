@@ -11,9 +11,9 @@
       "status": "passed"
     },
     "candidate_pool": {
-      "observed": 2901,
+      "observed": 3312,
       "required": 3000,
-      "status": "failed"
+      "status": "passed"
     },
     "compliance": {
       "observed": {

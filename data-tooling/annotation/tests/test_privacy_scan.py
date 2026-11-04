@@ -47,6 +47,16 @@ def test_bare_domain_url_path_is_not_base64_secret() -> None:
     assert "Base64 长字符串（疑似密钥）" not in types
 
 
+def test_network_address_is_not_physical_address() -> None:
+    types = finding_types("下载地址：https://example.com/files/package.zip")
+    assert "物理地址" not in types
+
+
+def test_real_location_is_still_detected() -> None:
+    types = finding_types("活动地点：北京市海淀区中关村大街27号")
+    assert "物理地址" in types
+
+
 def test_three_digit_media_index_is_safe() -> None:
     record = {
         "text": "普通正文",

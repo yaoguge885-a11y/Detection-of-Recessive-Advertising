@@ -13,14 +13,27 @@ from pydantic import (
 )
 
 
-CaptureState = Literal["complete", "partial", "missing", "not_applicable"]
+CaptureState = Literal[
+    "complete",
+    "partial",
+    "missing",
+    "unsupported",
+    "not_applicable",
+]
 CaptureModalityName = Literal[
     "text",
     "image",
     "comment",
+    "disclosure",
     "history",
     "metadata",
 ]
+DisclosureKind = Literal[
+    "platform_badge",
+    "hashtag",
+    "text_statement",
+]
+DisclosureSource = Literal["platform_metadata", "post_text"]
 
 
 class _StrictModel(BaseModel):
@@ -65,6 +78,14 @@ class CommentRecord(_StrictModel):
     created_at: datetime | None = None
 
 
+class DisclosureRecord(_StrictModel):
+    """One structured disclosure marker captured from the platform."""
+
+    kind: DisclosureKind
+    text: str = Field(min_length=1)
+    source: DisclosureSource
+
+
 class HistoryPost(_StrictModel):
     post_id: str = Field(min_length=1)
     creator_id: str = Field(min_length=1)
@@ -106,6 +127,7 @@ class PostRecord(_StrictModel):
     text: str
     media: list[MediaRecord] = Field(default_factory=list)
     comments: list[CommentRecord] = Field(default_factory=list)
+    disclosures: list[DisclosureRecord] = Field(default_factory=list)
     history_refs: list[str] = Field(default_factory=list)
     history: list[HistoryPost] = Field(default_factory=list)
     provenance: ProvenanceRecord = Field(default_factory=ProvenanceRecord)

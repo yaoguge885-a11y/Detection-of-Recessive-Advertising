@@ -38,8 +38,12 @@ playwright>=1.45            # 浏览器渲染: Sogou 回退 + 微信文章 (3 �
 # ---- 测试 ----
 pytest>=8.0                 # 冒烟测试框架 (tests/)
 
+# ---- 默认服务/开发者工作台必需（暂注释，避免首次安装过重）----
+# 等价于 pyproject 的 `pip install -e ".[rag]"`；缺失时 /workbench 页面可打开，
+# 但 /api/v1/capabilities 与 /api/v1/analyze 返回 500（默认服务要建离线法规库检索器）。
+# chromadb>=1.1,<2          # 向量库: 离线法规库检索 (impad/rag/chroma_retriever.py)
+
 # ---- 后续阶段按需再装（暂注释，避免首次安装过重）----
-# chromadb>=0.5             # 向量库: 情景记忆 / RAG 法规库
 # bertopic>=0.16            # 主题建模 / 主题漂移检测
 # scikit-learn>=1.5         # 评估指标 / 标注一致性 (Cohen's κ)
 # streamlit>=1.35           # 演示前端

@@ -1,0 +1,18 @@
+{
+  "status": "preparation_only_not_formal",
+  "batch": "gold_assisted",
+  "checkpoint_completed_count": null,
+  "checked_at": null,
+  "A_validation_report_sha256": null,
+  "B_validation_report_sha256": null,
+  "A_completed_count": null,
+  "B_completed_count": null,
+  "illegal_annotation_method_count": null,
+  "wrong_annotator_count": null,
+  "ollama_timeout_or_fallback_notes": null,
+  "label_distribution_shift_notes": null,
+  "media_view_process_confirmed_by_A": null,
+  "media_view_process_confirmed_by_B": null,
+  "continue_or_stop": null,
+  "decision_reason": null
+}

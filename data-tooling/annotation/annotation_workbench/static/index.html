@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>隐性广告人工标注工作台</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">
+      <h1>隐性广告人工标注工作台</h1>
+      <p class="subtle">本机运行 · 只监听 127.0.0.1 · 结果保存在 Git 忽略目录</p>
+    </div>
+    <div class="status-block">
+      <div class="meta-line">
+        <span id="meta-dataset" class="chip">数据集：—</span>
+        <span id="meta-batch" class="chip">批次：—</span>
+        <span id="meta-annotator" class="chip">标注人：—</span>
+        <span id="meta-mode" class="chip">模式：—</span>
+      </div>
+      <div class="progress-line">
+        <div class="progress-track" role="progressbar" aria-label="标注进度" aria-valuemin="0" aria-valuemax="100">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <span id="progress-text">0 / 0</span>
+      </div>
+      <div class="nav-buttons">
+        <button type="button" id="btn-prev">← 上一条</button>
+        <button type="button" id="btn-next">下一条 →</button>
+        <label class="jump">跳转
+          <input type="number" id="jump-input" min="1" step="1" inputmode="numeric" aria-label="跳转到第几条">
+        </label>
+        <button type="button" id="btn-jump">跳转</button>
+        <label class="check"><input type="checkbox" id="filter-unfinished"> 只看未完成</label>
+        <button type="button" id="btn-toggle-suggest">关闭自动建议</button>
+        <a id="export-json" class="button-link" href="#" download>导出 JSON</a>
+        <a id="export-jsonl" class="button-link" href="#" download>导出 JSONL</a>
+      </div>
+    </div>
+  </header>
+
+  <div id="banner-area" aria-live="polite"></div>
+
+  <main>
+    <section class="post-pane" aria-label="帖子内容">
+      <div class="post-heading">
+        <span id="post-position" class="position">—</span>
+        <span id="badge-collection" class="badge">采集状态未知</span>
+        <span id="badge-saved" class="badge" hidden>已保存</span>
+      </div>
+      <h2 id="post-title" class="post-title">正在加载…</h2>
+      <div class="meta-row">
+        <span>平台：<strong id="post-platform">—</strong></span>
+        <span>来源：<strong id="post-source">—</strong></span>
+        <span>博主：<strong id="post-blogger">—</strong></span>
+        <span>发布：<strong id="post-published">—</strong></span>
+      </div>
+
+      <section class="card" id="disclosure-card" aria-label="披露区域">
+        <h3>披露区域</h3>
+        <p id="disclosure-label" class="card-line">—</p>
+        <p id="disclosure-detail" class="card-detail" hidden></p>
+      </section>
+
+      <section class="body-section" aria-label="正文">
+        <h3>正文</h3>
+        <div id="post-text" class="post-text">—</div>
+        <p id="text-missing" class="missing-note" hidden>正文缺失：记录中没有正文，不能视为“没有推广内容”。</p>
+      </section>
+
+      <section aria-label="评论">
+        <h3>评论 <span id="comments-meta" class="subtle"></span></h3>
+        <div id="comments-list" class="comments"></div>
+      </section>
+
+      <section aria-label="本地媒体">
+        <h3>本地媒体 <span id="media-meta" class="subtle"></span></h3>
+        <div id="media-grid" class="media-grid"></div>
+      </section>
+    </section>
+
+    <aside class="annotation-pane" aria-label="人工标注">
+      <section class="card" id="advice-card">
+        <div class="card-heading">
+          <h3>模型建议</h3>
+          <span id="advice-badge" class="badge">未请求</span>
+        </div>
+        <p id="advice-status" class="card-line">打开帖子后会请求一次建议；不会自动保存。</p>
+        <div id="advice-body" hidden>
+          <p class="advice-label">建议标签：<strong id="advice-label">—</strong>
+            <span class="subtle">置信度 <span id="advice-confidence">—</span></span></p>
+          <p class="card-line">理由：<span id="advice-reasoning">—</span></p>
+          <p class="card-line">证据码：<span id="advice-codes">—</span></p>
+          <p class="card-line">证据：<span id="advice-evidence">—</span></p>
+          <p class="card-line">信息缺口：<span id="advice-gaps">—</span></p>
+          <p class="subtle" id="advice-latency"></p>
+          <button type="button" id="btn-use-advice" class="secondary">采用建议（仅填表，不保存）</button>
+        </div>
+      </section>
+
+      <form id="annotation-form" autocomplete="off">
+        <fieldset>
+          <legend>人工标签（必填）</legend>
+          <div id="label-buttons" class="label-buttons" role="radiogroup" aria-label="人工标签">
+            <button type="button" class="label-button" data-label="明广" role="radio" aria-checked="false">明广</button>
+            <button type="button" class="label-button" data-label="暗广" role="radio" aria-checked="false">暗广</button>
+            <button type="button" class="label-button" data-label="非广" role="radio" aria-checked="false">非广</button>
+            <button type="button" class="label-button" data-label="uncertain" role="radio" aria-checked="false">uncertain</button>
+            <button type="button" class="label-button" data-label="out_of_scope" role="radio" aria-checked="false">out_of_scope</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>置信度 <span class="subtle">0–1</span></legend>
+          <input type="number" id="confidence" min="0" max="1" step="0.05" inputmode="decimal" placeholder="例如 0.8" required>
+        </fieldset>
+
+        <fieldset>
+          <legend>证据代码</legend>
+          <div class="code-grid">
+            <label><input type="checkbox" value="D"> D 明确披露/平台标识</label>
+            <label><input type="checkbox" value="C"> C 商业合作/赞助</label>
+            <label><input type="checkbox" value="P"> P 推广话术/购买引导</label>
+            <label><input type="checkbox" value="A"> A 账号商业属性</label>
+            <label><input type="checkbox" value="V"> V 视觉/视频证据</label>
+            <label><input type="checkbox" value="M"> M 媒体/文本缺失</label>
+            <label><input type="checkbox" value="B" title="B 只能辅助，不能单独使用"> B 行为线索（仅辅助）</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>证据说明 <span class="subtle">一行一条</span></legend>
+          <textarea id="evidence" rows="3" placeholder="例：正文明确写“感谢品牌赞助”"></textarea>
+        </fieldset>
+
+        <fieldset>
+          <legend>不确定原因 <span class="subtle">uncertain 必填</span></legend>
+          <textarea id="uncertain-reason" rows="2" placeholder="例：披露区域未采集，无法判断是否存在披露"></textarea>
+        </fieldset>
+
+        <fieldset>
+          <legend>备注</legend>
+          <textarea id="notes" rows="2" placeholder="自由备注，可留空"></textarea>
+        </fieldset>
+
+        <label class="saw-advice">
+          <input type="checkbox" id="saw-advice">
+          我看过模型建议（保存为 human_assisted；现有 Gold/κ 工具会排除）
+        </label>
+
+        <p id="method-preview" class="method-preview">当前将保存为：human（独立人工）</p>
+        <div class="save-row">
+          <button type="submit" id="btn-save" class="primary">保存本条（Ctrl+Enter）</button>
+          <span id="save-status" class="save-status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </aside>
+  </main>
+
+  <footer>
+    <p>数据隔离：<code>dataset / batch / annotator</code> 各自目录；媒体只按帖子序号解析，路径越界会显示为红色缺失。
+      无固定 post_id 批准清单时，只能探索性试标，不能宣称正式 Gold。</p>
+  </footer>
+
+  <div id="loading" class="loading" hidden>加载中…</div>
+  <script src="/app.js"></script>
+</body>
+</html>

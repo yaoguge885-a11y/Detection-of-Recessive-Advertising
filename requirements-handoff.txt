@@ -1,0 +1,7 @@
+# Reproduce the P1 handoff validation environment (Python 3.12, Windows).
+-c requirements-handoff.lock
+-e ./implicit-ad-agent[test,mcp,rag]
+-r baseline/requirements.txt
+requests
+setuptools>=68
+wheel

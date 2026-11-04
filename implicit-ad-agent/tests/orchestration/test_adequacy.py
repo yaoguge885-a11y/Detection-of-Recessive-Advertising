@@ -7,6 +7,7 @@ from impad.contracts.evidence import (
     EvidenceConflict,
     EvidenceItem,
 )
+from impad.contracts.post import CaptureModality
 from impad.orchestration.adequacy import assess_evidence_adequacy
 from impad.orchestration.evidence_adapters import build_evidence_bundle
 from impad.tools.contracts import ToolEvidence, ToolResult
@@ -201,3 +202,21 @@ def test_tool_reported_image_text_conflict_requires_review():
 
     assert result.review_required is True
     assert "evidence_conflict" in result.reason_codes
+
+
+def test_unsupported_text_requires_review_but_unsupported_image_is_not_provided():
+    post = post_record_from_manual({"text": "普通记录"})
+    post.capture_status.modalities["text"] = CaptureModality(
+        status="unsupported"
+    )
+    post.capture_status.modalities["image"] = CaptureModality(
+        status="unsupported"
+    )
+
+    result = assess_evidence_adequacy(
+        post,
+        build_evidence_bundle(post, []),
+    )
+
+    assert "text_capture_incomplete" in result.reason_codes
+    assert "image_evidence_missing" not in result.reason_codes

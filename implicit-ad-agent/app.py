@@ -43,10 +43,16 @@ def create_app(
     )
 
     workbench_assets = asset_directory()
+    app_assets = workbench_assets / "app"
     application.mount(
         "/workbench/assets",
         StaticFiles(directory=workbench_assets),
         name="workbench-assets",
+    )
+    application.mount(
+        "/app/assets",
+        StaticFiles(directory=app_assets),
+        name="app-assets",
     )
 
     @application.get("/workbench", response_class=FileResponse)
@@ -57,12 +63,23 @@ def create_app(
             headers=WORKBENCH_HEADERS,
         )
 
+    @application.get("/app", response_class=FileResponse)
+    @application.get("/app/", response_class=FileResponse)
+    @application.get("/app/{full_path:path}", response_class=FileResponse)
+    def frontend(full_path: str = ""):
+        return FileResponse(
+            app_assets / "index.html",
+            media_type="text/html; charset=utf-8",
+            headers=WORKBENCH_HEADERS,
+        )
+
     @application.get("/", response_class=HTMLResponse)
     def root():
         return (
             "<h1>隐性广告识别 API</h1>"
             "<p>使用 <a href='/docs'>/docs</a> 试用接口；"
             "正式入口为 <code>POST /api/v1/analyze</code>。</p>"
+            '<p><a href="/app">打开隐性广告分析页面</a></p>'
             '<p><a href="/workbench">打开开发者研究工作台</a></p>'
         )
 

@@ -428,6 +428,81 @@ def extract_bilibili_article(html: str) -> Dict:
 # 统一入口
 # ═══════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════
+# 异常格式检测（登录墙 / 页面源码 / 空内容）
+# ═══════════════════════════════════════════════════════════════
+
+# 页面 JS 源码特征（提取出的 clean_text 若含这些标记 => 抓到了页面源码而非正文）
+GARBAGE_JS_MARKERS = [
+    "window.__MIRROR_CONFIG__",
+    "window.reportMsgObj",
+    "window.reportConfig",
+    "vue-ssr-outlet",
+    "<!DOCTYPE html",
+    "<html",
+    "</script>",
+    "</div>",
+    "<script",
+    "createElement",
+    "querySelector",
+]
+
+# 登录墙 / 风控页特征
+GARBAGE_LOGIN_MARKERS = [
+    "扫描二维码登录",
+    "请使用\n哔哩哔哩客户端",
+    "请使用哔哩哔哩客户端",
+    "立即登录",
+    "忘记密码",
+    "首次使用",
+    "点我注册",
+    "短信登录",
+    "密码登录",
+    "扫码登录",
+    "滑块验证",
+    "安全验证",
+    "人机验证",
+]
+
+
+def detect_garbage_clean_text(text: str) -> Optional[str]:
+    """检测提取出的正文是否为异常格式（页面源码/登录墙/风控页）。
+
+    Args:
+        text: 提取出的 clean_text
+
+    Returns:
+        异常原因字符串；正常返回 None。
+    """
+    if not text:
+        return "empty"
+    t = text.strip()
+    if len(t) < 10:
+        return "too_short"
+
+    # 强特征：页面 JS 源码
+    if "window.__MIRROR_CONFIG__" in t:
+        return "page_source(mirror_config)"
+    js_hits = sum(1 for m in GARBAGE_JS_MARKERS if m in t)
+    if js_hits >= 2:
+        return f"page_source(js_markers={js_hits})"
+
+    # 登录墙 / 风控页：文本很短且命中多个登录特征
+    if len(t) < 200:
+        login_hits = sum(1 for m in GARBAGE_LOGIN_MARKERS if m in t)
+        if login_hits >= 2:
+            return f"login_wall(markers={login_hits})"
+        # 无标题且含"请使用哔哩哔哩客户端"等强登录标记
+        if "请使用哔哩哔哩客户端" in t or "扫描二维码登录" in t:
+            return "login_wall(qr)"
+    return None
+
+
+def is_garbage_clean_text(text: str) -> bool:
+    """是否异常格式（简化版）。"""
+    return detect_garbage_clean_text(text) is not None
+
+
 def extract_from_bilibili_html(html: str, content_type: str = "auto") -> Dict:
     """B站 HTML 提取统一入口。
 
@@ -472,9 +547,13 @@ def extract_from_bilibili_html(html: str, content_type: str = "auto") -> Dict:
             "caption": None,
         })
 
+    # 异常格式检测：登录墙 / 页面源码 / 空内容
+    clean_text = data.get("clean_text", "") or ""
+    garbage_reason = detect_garbage_clean_text(clean_text)
+
     return {
         "title": data.get("title"),
-        "clean_text": data.get("clean_text", ""),
+        "clean_text": clean_text,
         "image_urls": data.get("image_urls", []),
         "media_enrichments": media_enrichments,
         "content_type": content_type,
@@ -485,6 +564,8 @@ def extract_from_bilibili_html(html: str, content_type: str = "auto") -> Dict:
         "bvid": data.get("bvid"),
         "dynamic_id": data.get("dynamic_id"),
         "cv_id": data.get("cv_id"),
+        "is_garbage": garbage_reason is not None,
+        "garbage_reason": garbage_reason,
         "confidence": 0.85,
         "needs_review": False,
         "notes": f"BS4: {content_type}",

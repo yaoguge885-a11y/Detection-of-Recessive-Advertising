@@ -47,6 +47,7 @@ OLLAMA_DEFAULT_MODEL = "qwen3.5:9b"
 OLLAMA_KEEP_ALIVE = "30m"       # 模型常驻时长；-1=永久
 OLLAMA_WARMUP_TIMEOUT = 300     # 首次加载 6.6GB 模型放宽到 5 分钟
 OLLAMA_READY_TIMEOUT = 40       # 拉起 serve 后等待就绪的时间（含 GPU 发现，约 25s）
+OLLAMA_NUM_PARALLEL = 2         # 序列批处理：Ollama 同时解码的请求数（需配客户端并发窗口）
 SERVE_LOG = "data/run_outputs/ollama_serve.log"
 
 
@@ -162,7 +163,8 @@ def model_loaded(model: str = OLLAMA_DEFAULT_MODEL,
 def ensure_ollama_running(url: str = OLLAMA_DEFAULT_URL,
                           start_if_down: bool = True,
                           wait: float = OLLAMA_READY_TIMEOUT,
-                          models_dir: Optional[str] = None) -> bool:
+                          models_dir: Optional[str] = None,
+                          num_parallel: Optional[int] = None) -> bool:
     """确保 Ollama 服务器可访问；未运行且允许时尝试拉起 `ollama serve`。
 
     Args:
@@ -170,6 +172,8 @@ def ensure_ollama_running(url: str = OLLAMA_DEFAULT_URL,
         start_if_down: 未运行时是否尝试拉起
         wait: 等待就绪的秒数
         models_dir: 模型目录；None 时从桌面应用日志探测（保证与已下载模型一致）
+        num_parallel: 序列批处理并发数（OLLAMA_NUM_PARALLEL），
+                      让 GPU 同时解码多个请求，配合客户端并发窗口提升吞吐
 
     Returns:
         True=服务器就绪；False=不可用。
@@ -185,10 +189,13 @@ def ensure_ollama_running(url: str = OLLAMA_DEFAULT_URL,
     log_path.parent.mkdir(parents=True, exist_ok=True)
     # 探测正确的模型目录：桌面应用日志优先，其次显式传入，最后默认
     models = models_dir or detect_models_dir()
-    env = None
+    env = dict(os.environ)
     if models:
-        env = dict(os.environ)
         env["OLLAMA_MODELS"] = models
+    if num_parallel is not None:
+        env["OLLAMA_NUM_PARALLEL"] = str(num_parallel)
+        # 并行时放宽 OLLAMA_MAX_QUEUE，避免客户端并发请求被丢弃
+        env["OLLAMA_MAX_QUEUE"] = env.get("OLLAMA_MAX_QUEUE", "2048")
     try:
         with log_path.open("w", encoding="utf-8") as f:
             if sys.platform == "win32":
@@ -271,7 +278,9 @@ def cmd_status(args) -> int:
 
 
 def cmd_preload(args) -> int:
-    if not ensure_ollama_running(args.url, start_if_down=True, models_dir=args.models_dir):
+    if not ensure_ollama_running(args.url, start_if_down=True,
+                                 models_dir=args.models_dir,
+                                 num_parallel=args.num_parallel):
         print(f"❌ 服务器不可用且无法拉起: {args.url}")
         return 1
     print(f"⏳ 确保模型已加载: {args.model}（keep_alive={args.keep_alive}）...")
@@ -287,8 +296,11 @@ def cmd_serve(args) -> int:
         print(f"✅ Ollama 已在运行: {args.url}")
     else:
         models_hint = args.models_dir or detect_models_dir()
-        print(f"⏳ 尝试启动 ollama serve ..." + (f"（模型目录: {models_hint}）" if models_hint else ""))
-        if not ensure_ollama_running(args.url, start_if_down=True, models_dir=args.models_dir):
+        parallel_hint = f"，序列批处理 NUM_PARALLEL={args.num_parallel}" if args.num_parallel else ""
+        print(f"⏳ 尝试启动 ollama serve ..." + (f"（模型目录: {models_hint}）" if models_hint else "") + parallel_hint)
+        if not ensure_ollama_running(args.url, start_if_down=True,
+                                     models_dir=args.models_dir,
+                                     num_parallel=args.num_parallel):
             print(f"❌ 启动失败，请手动运行 `ollama serve` 后重试")
             return 1
         print(f"✅ Ollama 已启动: {args.url}")
@@ -310,6 +322,8 @@ def main() -> None:
     parser.add_argument("--keep-alive", default=OLLAMA_KEEP_ALIVE, help=f"常驻时长（默认 {OLLAMA_KEEP_ALIVE}，-1=永久）")
     parser.add_argument("--models-dir", default=None,
                         help="模型目录（默认自动探测桌面应用配置，如 E:\\ollama）")
+    parser.add_argument("--num-parallel", type=int, default=OLLAMA_NUM_PARALLEL,
+                        help=f"序列批处理并发数 OLLAMA_NUM_PARALLEL（默认 {OLLAMA_NUM_PARALLEL}；8GB 显存建议 1-3）")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_status = sub.add_parser("status", help="查看服务器状态")

@@ -37,6 +37,8 @@ Thumbs.db
 
 #html
 *.html
+!/web/index.html
+!/impad/web/app/index.html
 /data/run_outputs/tmp_1784556667/
 
 *.zip

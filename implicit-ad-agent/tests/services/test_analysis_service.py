@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 import pytest
 
@@ -74,6 +75,92 @@ def test_analysis_service_runs_rag_after_judge_and_persists_by_run_id(
     assert stored.run_events[0].timestamp <= stored.run_events[1].timestamp
     assert "## 法规引用" in result.readable_report
     assert result.run_metadata.run_id in result.readable_report
+
+
+def test_analysis_result_report_and_run_file_redact_sensitive_input(
+    tmp_path: Path,
+):
+    run_dir = tmp_path / "runs"
+    service = AnalysisService(
+        retriever=StubRetriever(),
+        run_store=JsonRunStore(run_dir),
+    )
+    secrets = {
+        "cookie": "cookie-secret-123",
+        "bearer": "bearer-secret-456",
+        "query": "query-secret-abc",
+        "fragment": "fragment-secret-def",
+        "comment": "comment-token-secret",
+        "ocr": "ocr-api-secret",
+        "media_query": "media-query-secret",
+    }
+    text = (
+        f"Cookie: sid={secrets['cookie']}\n"
+        f"Authorization: Bearer {secrets['bearer']}\n"
+        "查看 https://user:pass@example.test:8443/post"
+        f"?token={secrets['query']}#{secrets['fragment']}"
+    )
+
+    result = service.analyze({
+        "text": text,
+        "comments": [{
+            "comment_id": "comment-1",
+            "text": f"access_token={secrets['comment']}",
+        }],
+        "media": [{
+            "media_id": "media-1",
+            "type": "image",
+            "ref": (
+                "https://media-user:media-pass@example.test:9443/image.jpg"
+                f"?token={secrets['media_query']}#raw-fragment"
+            ),
+            "ocr_text": f"api_key={secrets['ocr']}",
+        }],
+        "capture_complete": True,
+    })
+    run_path = run_dir / f"{result.run_metadata.run_id}.json"
+    outputs = [
+        result.model_dump_json(),
+        result.readable_report,
+        run_path.read_text(encoding="utf-8"),
+    ]
+
+    leaked = {
+        (name, output_index)
+        for output_index, output in enumerate(outputs)
+        for name, value in secrets.items()
+        if value in output
+    }
+    assert leaked == set()
+    for output in outputs:
+        assert "user:pass" not in output
+        assert "media-user:media-pass" not in output
+        assert ":8443" not in output
+        assert ":9443" not in output
+    assert isinstance(result.run_metadata.token_usage, dict)
+    stored = json.loads(run_path.read_text(encoding="utf-8"))
+    assert isinstance(stored["run_metadata"]["token_usage"], dict)
+
+
+def test_json_run_store_redacts_direct_store_calls(tmp_path: Path):
+    run_dir = tmp_path / "runs"
+    store = JsonRunStore(run_dir)
+    service = AnalysisService(retriever=StubRetriever(), run_store=store)
+    result = service.analyze({"text": "普通内容", "capture_complete": True})
+    record = service.get_run(result.run_metadata.run_id)
+    assert record is not None
+    unsafe = record.model_copy(update={
+        "post": record.post.model_copy(update={
+            "text": "Authorization: Bearer direct-store-secret",
+        }),
+    })
+
+    store.put(unsafe)
+
+    serialized = (
+        run_dir / f"{result.run_metadata.run_id}.json"
+    ).read_text(encoding="utf-8")
+    assert "direct-store-secret" not in serialized
 
 
 def test_unknown_disclosure_is_preserved_by_unified_service(tmp_path: Path):

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Schema 校验器 —— 读取权威 Schema 文件校验 JSONL 数据。
 
-v1.1 改进：
-  - 读取 data/schema/data_schema_v1_1.json（权威 schema），不维护另一套手写字段集合
-  - 支持 --target-schema 指定校验版本（1.0 / 1.1）
+v1.2 改进：
+  - 默认使用 data_schema_v1_2.json
+  - 支持 --target-schema 指定校验版本（1.0 / 1.1 / 1.2）
   - 增加敏感字段扫描、高熵/密钥模式扫描、直接身份与 URL 参数脱敏检查
   - 支持 raw/interim/public 三层输出校验
 
 用法：
-  python scripts/data/validate_schema.py data/interim/candidates_v1.jsonl
-  python scripts/data/validate_schema.py data/interim/candidates_v1.jsonl --target-schema 1.1 --privacy-scan
+  python data-tooling/annotation/validate_schema.py data/run_outputs/xxx/anonymized_posts_dedup.jsonl
+  python data-tooling/annotation/validate_schema.py data/run_outputs/xxx/anonymized_posts_dedup.jsonl --target-schema 1.2
 """
 import json
 import re
@@ -60,7 +60,7 @@ def resolve_schema_path(
             return path
         raise FileNotFoundError(f"Schema file not found: {path}")
 
-    filename = "data_schema_v1.json" if version == "1.0" else "data_schema_v1_1.json"
+    filename = "data_schema_v1.json" if version == "1.0" else f"data_schema_v{version.replace('.', '_')}.json"
     candidates = (
         project_root / "data" / "schema" / filename,
         project_root / "data-tooling" / "schema" / filename,
@@ -363,7 +363,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Schema 校验器（读取权威 schema）")
     parser.add_argument("input", nargs="?", default="data/interim/candidates_v1.jsonl",
                         help="待校验的 JSONL 文件路径")
-    parser.add_argument("--target-schema", default="1.0", choices=["1.0", "1.1"],
+    parser.add_argument("--target-schema", default="1.2", choices=["1.0", "1.1", "1.2"],
                         help="目标 schema 版本")
     parser.add_argument("--schema", default=None,
                         help="显式权威 schema 文件路径")

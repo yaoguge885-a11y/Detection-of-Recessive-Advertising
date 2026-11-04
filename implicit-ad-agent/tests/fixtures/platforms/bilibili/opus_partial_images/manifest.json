@@ -1,0 +1,1 @@
+{"fixture_version":"platform-fixture-v1","synthetic":true,"contains_real_user_data":false,"network_required":false,"platform":"bilibili","content_type":"opus","expected_modalities":{"text":"complete","image":"partial","comment":"unsupported","disclosure":"complete"},"real_platform_compatibility_verified":false,"terms_approved":false}

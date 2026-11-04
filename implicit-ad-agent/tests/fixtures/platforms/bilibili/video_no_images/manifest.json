@@ -1,0 +1,1 @@
+{"fixture_version":"platform-fixture-v1","synthetic":true,"contains_real_user_data":false,"network_required":false,"platform":"bilibili","content_type":"video","expected_modalities":{"text":"complete","image":"unsupported","comment":"unsupported","disclosure":"complete"},"real_platform_compatibility_verified":false,"terms_approved":false}

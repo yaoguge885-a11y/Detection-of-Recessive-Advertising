@@ -19,6 +19,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import math
 import re
 import sys
 import time
@@ -56,22 +58,36 @@ OLLAMA_HEALTH_TIMEOUT = 5     # 健康检查超时（秒）
 OLLAMA_KEEP_ALIVE = "30m"
 # 预热模型超时（秒）：首次加载 6.6GB 模型可能需要较长时间，单独放宽
 OLLAMA_WARMUP_TIMEOUT = 300
+# 完整指南 + 最长正文 + 评论摘要会超过 Ollama 默认 4,096 token。
+# 显式申请 32K，仍远低于 qwen3.5:4b 本地模型声明的 262K 上限。
+OLLAMA_NUM_CTX = 32768
 # Qwen3.5 默认开启 thinking 会消耗大量 token 并拖慢推理；
 # 自动判断只关心最终 JSON 判定，关闭 thinking 模式可显著加速。
 OLLAMA_DISABLE_THINKING = True
+
+# OpenAI 兼容云端端点（DeepSeek 等），走 /chat/completions，支持并发加速。
+OPENAI_COMPAT_DEFAULT_URL = "https://api.deepseek.com/v1"
+OPENAI_COMPAT_DEFAULT_MODEL = "deepseek-flash"
+OPENAI_COMPAT_TIMEOUT = 120  # 单条云端推理超时（秒）
 
 DEFAULT_AUTO_THRESHOLD = 0.85  # 自动保存阈值（默认，可调 0.70–0.95）
 SUGGESTION_LOWER_BOUND = 0.55  # 建议展示下限：低于此值不展示建议（防锚定）
 
 # 标签（与设计文档一致，中文标签；flet 端用代码可经 LABEL_TO_CODE 转换）
-VALID_LABELS = ("明广", "暗广", "非广", "out_of_scope")
+VALID_LABELS = ("明广", "暗广", "非广", "uncertain", "out_of_scope")
 LABEL_TO_CODE = {
     "明广": "mingguang",
     "暗广": "anguang",
     "非广": "feiguang",
+    "uncertain": "uncertain",
     "out_of_scope": "out_of_scope",
 }
 CODE_TO_LABEL = {v: k for k, v in LABEL_TO_CODE.items()}
+LABEL_ALIASES = {
+    "不确定": "uncertain",
+    "无法判断": "uncertain",
+    "需复核": "uncertain",
+}
 
 EVIDENCE_CODES = {
     "D": "明示商业关系（广告/赞助/合作标识）",
@@ -81,6 +97,43 @@ EVIDENCE_CODES = {
     "V": "视觉商业证据（产品特写、Logo、价格表）",
     "B": "行为偏移（与博主既往人设/主题不符）——只能辅助",
     "M": "评论异常（置顶导流、格式化赞美）",
+}
+
+OLLAMA_RESPONSE_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "label": {"type": "string", "enum": list(VALID_LABELS)},
+        "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "evidence_codes": {
+            "type": "array",
+            "maxItems": len(EVIDENCE_CODES),
+            "items": {"type": "string", "enum": list(EVIDENCE_CODES)},
+        },
+        "evidence": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {"type": "string", "maxLength": 240},
+        },
+        "reasoning": {"type": "string", "maxLength": 300},
+        "uncertain_reason": {
+            "anyOf": [{"type": "string", "maxLength": 300}, {"type": "null"}],
+        },
+        "information_gaps": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {"type": "string", "maxLength": 240},
+        },
+    },
+    "required": [
+        "label",
+        "confidence",
+        "evidence_codes",
+        "evidence",
+        "reasoning",
+        "uncertain_reason",
+        "information_gaps",
+    ],
+    "additionalProperties": False,
 }
 
 GUIDE_VERSION = "1.0"
@@ -160,6 +213,7 @@ OLLAMA_SYSTEM_PROMPT = """你是社交媒体内容审核专家，专门识别隐
 - 暗广：存在商业推广意图但未明确标识
   （品牌/产品是核心内容，有劝服话术，无广告标识）
 - 非广：正常的个人分享、生活记录（无单一商业对象，无劝服话术）
+- uncertain：证据缺失、冲突、未采集或不可读，当前不能可靠归入三元标签
 - out_of_scope：招聘、个人二手交易、公益募集等不属于商业内容营销
 
 ## 证据代码
@@ -185,7 +239,7 @@ OLLAMA_SYSTEM_PROMPT = """你是社交媒体内容审核专家，专门识别隐
 
 ## 输出格式（严格 JSON）
 {
-  "label": "明广" | "暗广" | "非广" | "out_of_scope",
+  "label": "明广" | "暗广" | "非广" | "uncertain" | "out_of_scope",
   "confidence": 0.0-1.0,
   "evidence_codes": ["D", "V"],
   "evidence": ["原文引用1", "原文引用2"],
@@ -197,6 +251,7 @@ OLLAMA_SYSTEM_PROMPT = """你是社交媒体内容审核专家，专门识别隐
 ## 输出要求
 - **直接输出最终 JSON 结果**，不要输出思考过程、不要使用 <think> 等推理标签
 - 只输出一个 JSON 对象，不要 markdown 代码块包裹
+- 证据缺失、采集状态未知或披露区域不完整时输出 uncertain；不得把“未提供”当成“未发现”
 - 如果确实需要简短思考，请确保最终以完整 JSON 对象结尾"""
 
 
@@ -258,6 +313,108 @@ def summarize_image_analyses(image_analyses: Optional[Dict[int, Dict]]) -> str:
     return "\n".join(parts) if parts else "无图片分析结果"
 
 
+def sha256_text(text: str) -> str:
+    """返回 UTF-8 文本的 SHA-256；空文本返回空字符串。"""
+    if not text:
+        return ""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def normalize_collection_complete(value: Any) -> str:
+    """把不同来源的采集完整性字段归一为 complete/incomplete/unknown。"""
+    if value is True:
+        return "complete"
+    if value is False:
+        return "incomplete"
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"complete", "completed", "true", "yes"}:
+            return "complete"
+        if normalized in {"incomplete", "partial", "false", "no"}:
+            return "incomplete"
+        return "unknown"
+    if isinstance(value, dict):
+        for key in ("status", "collection_status"):
+            if key in value:
+                state = normalize_collection_complete(value.get(key))
+                if state != "unknown":
+                    return state
+        if "complete" in value:
+            return normalize_collection_complete(value.get("complete"))
+        relevant = [
+            value[key]
+            for key in (
+                "page_complete",
+                "disclosure_area_complete",
+                "comments_complete",
+                "media_complete",
+            )
+            if key in value
+        ]
+        if relevant:
+            if any(item is False for item in relevant):
+                return "incomplete"
+            if all(item is True for item in relevant):
+                return "complete"
+    return "unknown"
+
+
+def determine_media_evidence_status(
+    post: Dict[str, Any],
+    image_analyses: Optional[Dict[int, Dict]],
+    media_analysis_requested: Optional[bool] = None,
+) -> str:
+    """区分无媒体、未请求、未提供、分析失败和已提供，避免证据语义混淆。"""
+    media = [m for m in (post.get("media") or []) if isinstance(m, dict)]
+    if not media:
+        return "no_media"
+    if media_analysis_requested is False:
+        return "not_requested"
+    if image_analyses is None:
+        return "not_provided"
+    if not image_analyses:
+        return "attempted_no_result" if media_analysis_requested else "not_provided"
+    successful = sum(
+        1 for analysis in image_analyses.values()
+        if isinstance(analysis, dict) and "error" not in analysis
+    )
+    if successful == 0:
+        return "analysis_failed"
+    if (successful < len(image_analyses)
+            or set(image_analyses) != set(range(len(media)))):
+        return "partial"
+    return "provided"
+
+
+def summarize_comments(
+    comments: Any,
+    max_chars: int = 4000,
+    max_comments: int = 30,
+) -> str:
+    """把已采集评论整理为可追踪的 Prompt 片段，并限制总长度。"""
+    if not isinstance(comments, list) or not comments:
+        return "无已提供评论（不代表评论区已完整采集）"
+    lines: List[str] = []
+    used = 0
+    for index, comment in enumerate(comments[:max_comments], 1):
+        if isinstance(comment, dict):
+            text = str(comment.get("text") or "").strip()
+        else:
+            text = str(comment).strip()
+        if not text:
+            continue
+        line = f"- 评论{index}：{text}"
+        remaining = max_chars - used
+        if remaining <= 0:
+            break
+        if len(line) > remaining:
+            lines.append(line[:remaining] + "[…已截断…]")
+            break
+        lines.append(line)
+        used += len(line)
+    return "\n".join(lines) if lines else "无可读评论（不代表评论区已完整采集）"
+
+
 # ════════════════════════════════════════════════════════════════════
 # User Prompt 模板（设计文档 4.3）
 # ════════════════════════════════════════════════════════════════════
@@ -265,6 +422,14 @@ def build_user_prompt(
     post: Dict[str, Any],
     image_analysis_summary: str,
     keyword_weights: Optional[Dict[str, float]] = None,
+    *,
+    guide_text: str = "",
+    guide_version: str = GUIDE_VERSION,
+    guide_sha256: str = "",
+    media_evidence_status: str = "unknown",
+    collection_complete: Any = None,
+    comment_limit: int = 30,
+    creator_history_summary: str = "",
 ) -> str:
     title = (post.get("title") or "").strip() or "(无标题)"
     blogger = (post.get("blogger_id") or "?").strip()
@@ -275,8 +440,28 @@ def build_user_prompt(
 
     weights = keyword_weights or compute_keyword_weights_for_post(text)
     kw_summary = summarize_keyword_weights(weights)
+    comments_summary = summarize_comments(
+        post.get("comments"),
+        max_comments=comment_limit,
+    )
+    guide_hash = guide_sha256 or sha256_text(guide_text)
+    collection_state = normalize_collection_complete(collection_complete)
+    media_count = len(post.get("media") or [])
+    authoritative_guide = guide_text.strip() or "（未提供外部指南；只能使用系统内置规则）"
 
-    return f"""## 帖子信息
+    return f"""## 权威标注指南（必须遵循）
+- 版本：{guide_version or "unknown"}
+- SHA-256：{guide_hash or "unknown"}
+
+{authoritative_guide}
+
+## 本次证据可用性
+- collection_complete：{collection_state}
+- media_evidence_status：{media_evidence_status}
+- 帖子媒体引用数：{media_count}
+- 重要：not_requested / not_provided / unknown 表示证据未知，不表示证据不存在。
+
+## 帖子信息
 - 标题：{title}
 - 博主：{blogger}
 - 平台：{platform}
@@ -286,6 +471,12 @@ def build_user_prompt(
 
 ## 图片分析结果
 {image_analysis_summary}
+
+## 已提供评论
+{comments_summary}
+
+## 创作者历史（同博主其他帖子）
+{creator_history_summary.strip() or "（本批次未提供创作者历史；只能依据当前帖判断，不得因缺少历史而推断存在或不存在商业合作。）"}
 
 ## 关键词特征向量
 {kw_summary}
@@ -373,6 +564,15 @@ def run_ollama_judge(
     url: str = OLLAMA_DEFAULT_URL,
     timeout: float = OLLAMA_TIMEOUT,
     keep_alive: Optional[str] = None,
+    guide_text: str = "",
+    guide_version: str = GUIDE_VERSION,
+    guide_sha256: str = "",
+    media_analysis_requested: Optional[bool] = None,
+    collection_complete: Any = None,
+    num_ctx: int = OLLAMA_NUM_CTX,
+    num_predict: int = 1024,
+    thinking: bool = False,
+    comment_limit: int = 30,
 ) -> Dict[str, Any]:
     """调用 Ollama /api/chat 对单条帖子做综合判定。
 
@@ -402,14 +602,40 @@ def run_ollama_judge(
         任何失败都会抛出异常（由调用方走 keyword_fallback 回退）。
     """
     text = post.get("text") or ""
-    img_summary = summarize_image_analyses(image_analyses)
+    media_status = determine_media_evidence_status(
+        post, image_analyses, media_analysis_requested
+    )
+    collection_value = (
+        post.get("collection_complete")
+        if collection_complete is None and "collection_complete" in post
+        else collection_complete
+    )
+    collection_state = normalize_collection_complete(collection_value)
+    resolved_guide_hash = guide_sha256 or sha256_text(guide_text)
+    img_summary = (
+        f"证据状态={media_status}\n{summarize_image_analyses(image_analyses)}"
+    )
     weights = keyword_weights or compute_keyword_weights_for_post(text)
-    user_prompt = build_user_prompt(post, img_summary, weights)
+    user_prompt = build_user_prompt(
+        post,
+        img_summary,
+        weights,
+        guide_text=guide_text,
+        guide_version=guide_version,
+        guide_sha256=resolved_guide_hash,
+        media_evidence_status=media_status,
+        collection_complete=collection_value,
+        comment_limit=comment_limit,
+    )
 
     # Qwen3.5 默认开启 thinking 会消耗上千 token、每帖 30-50s。
     # 顶层 "think": false 是 Qwen3 在 Ollama 0.32.5 下验证有效的禁用方式
     # （放进 options 里不生效）。禁用后每帖约 2-5 秒。
-    options: Dict[str, Any] = {"temperature": 0.0, "num_predict": 1024}
+    options: Dict[str, Any] = {
+        "temperature": 0.0,
+        "num_predict": int(num_predict),
+        "num_ctx": int(num_ctx),
+    }
 
     payload = {
         "model": model,
@@ -417,15 +643,12 @@ def run_ollama_judge(
             {"role": "system", "content": OLLAMA_SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
         ],
-        "format": "json",
+        "format": OLLAMA_RESPONSE_SCHEMA,
         "stream": False,
         "keep_alive": keep_alive or OLLAMA_KEEP_ALIVE,
         "options": options,
+        "think": bool(thinking),
     }
-    if OLLAMA_DISABLE_THINKING:
-        # 顶层参数：禁用思考（Qwen3 在 Ollama 0.32.5 下验证有效，
-        # 每帖从 ~30-50s 降到 ~2-5s；放进 options 里不生效）
-        payload["think"] = False
 
     resp = requests.post(
         f"{url.rstrip('/')}/api/chat",
@@ -434,20 +657,161 @@ def run_ollama_judge(
     )
     resp.raise_for_status()
     body = resp.json()
-    content = (body.get("message") or {}).get("content") or ""
+    message = body.get("message") or {}
+    content = message.get("content") or ""
+    if not content and message.get("thinking"):
+        raise ValueError(
+            "Ollama returned no final content after thinking; "
+            f"done_reason={body.get('done_reason', 'unknown')}"
+        )
     parsed = _extract_json_content(content)
     if parsed is None:
         raise ValueError(f"Ollama 返回非 JSON 内容: {content[:200]!r}")
 
+    raw_label = parsed.get("label", parsed.get("suggested_label"))
+    parsed["label_raw"] = raw_label
     parsed["_model"] = model
     parsed["_backend"] = "ollama"
-    return normalize_suggestion(parsed)
+    parsed["_guide_version"] = guide_version or "unknown"
+    parsed["_guide_sha256"] = resolved_guide_hash or "unknown"
+    parsed["_media_evidence_status"] = media_status
+    parsed["_collection_complete"] = collection_state
+    parsed["_num_ctx"] = int(num_ctx)
+    normalized = normalize_suggestion(parsed)
+    return enforce_evidence_contract(
+        normalized,
+        post=post,
+        media_evidence_status=media_status,
+        collection_complete=collection_state,
+    )
+
+
+def run_openai_compat_judge(
+    post: Dict[str, Any],
+    image_analyses: Optional[Dict[int, Dict]] = None,
+    keyword_weights: Optional[Dict[str, float]] = None,
+    model: str = OPENAI_COMPAT_DEFAULT_MODEL,
+    base_url: str = OPENAI_COMPAT_DEFAULT_URL,
+    api_key: str = "",
+    timeout: float = OPENAI_COMPAT_TIMEOUT,
+    guide_text: str = "",
+    guide_version: str = GUIDE_VERSION,
+    guide_sha256: str = "",
+    media_analysis_requested: Optional[bool] = None,
+    collection_complete: Any = None,
+    num_predict: int = 1024,
+    comment_limit: int = 30,
+    temperature: float = 0.0,
+    creator_history_summary: str = "",
+) -> Dict[str, Any]:
+    """调用 OpenAI 兼容端点（/chat/completions）对单条帖子做综合判定。
+
+    与 :func:`run_ollama_judge` 共用提示词、证据契约和标准化逻辑，区别只在
+    传输层。任何失败都抛出异常，由调用方失败关闭并转人工。``temperature``
+    固定为 0.0 以保证可复现。
+    """
+    if not api_key:
+        raise ValueError("缺少 API key：请通过环境变量提供，不要写入仓库")
+    if not base_url:
+        raise ValueError("缺少 API base_url")
+    text = post.get("text") or ""
+    media_status = determine_media_evidence_status(
+        post, image_analyses, media_analysis_requested
+    )
+    collection_value = (
+        post.get("collection_complete")
+        if collection_complete is None and "collection_complete" in post
+        else collection_complete
+    )
+    collection_state = normalize_collection_complete(collection_value)
+    resolved_guide_hash = guide_sha256 or sha256_text(guide_text)
+    img_summary = (
+        f"证据状态={media_status}\n{summarize_image_analyses(image_analyses)}"
+    )
+    weights = keyword_weights or compute_keyword_weights_for_post(text)
+    user_prompt = build_user_prompt(
+        post,
+        img_summary,
+        weights,
+        guide_text=guide_text,
+        guide_version=guide_version,
+        guide_sha256=resolved_guide_hash,
+        media_evidence_status=media_status,
+        collection_complete=collection_value,
+        comment_limit=comment_limit,
+        creator_history_summary=creator_history_summary,
+    )
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": OLLAMA_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": float(temperature),
+        "max_tokens": int(num_predict),
+        "response_format": {"type": "json_object"},
+        "stream": False,
+    }
+    def _send(body_payload):
+        request_headers = {"Content-Type": "application/json"}
+        request_headers["Authorization"] = "Bearer " + api_key
+        return requests.post(
+            f"{base_url.rstrip('/')}/chat/completions",
+            json=body_payload,
+            headers=request_headers,
+            timeout=timeout,
+        )
+
+    resp = _send(payload)
+    if resp.status_code == 400 and "response_format" in (resp.text or ""):
+        # 部分厂商要求提示词中字面出现 json 才允许 json_object；
+        # 提示词本身已要求 JSON，因此降级为不使用该参数重试一次。
+        payload.pop("response_format", None)
+        resp = _send(payload)
+    if resp.status_code >= 400:
+        raise ValueError(f"HTTP {resp.status_code}: {(resp.text or '')[:300]}")
+    body = resp.json()
+    choices = body.get("choices") or []
+    finish_reason = (choices[0].get("finish_reason") if choices else "") or ""
+    message = (choices[0].get("message") or {}) if choices else {}
+    content = message.get("content") or ""
+    parsed = _extract_json_content(content)
+    if parsed is None and finish_reason == "length":
+        # 推理型模型会先消耗 token；被截断时提高上限重试一次，避免把截断当成解析失败。
+        payload["max_tokens"] = min(int(payload["max_tokens"]) * 2, 8192)
+        resp = _send(payload)
+        if resp.status_code >= 400:
+            raise ValueError(f"HTTP {resp.status_code}: {(resp.text or '')[:300]}")
+        body = resp.json()
+        choices = body.get("choices") or []
+        message = (choices[0].get("message") or {}) if choices else {}
+        content = message.get("content") or ""
+        parsed = _extract_json_content(content)
+    if parsed is None:
+        raise ValueError(f"端点返回非 JSON 内容: {content[:200]!r}")
+
+    raw_label = parsed.get("label", parsed.get("suggested_label"))
+    parsed["label_raw"] = raw_label
+    parsed["_model"] = model
+    parsed["_backend"] = "openai_compat"
+    parsed["_guide_version"] = guide_version or "unknown"
+    parsed["_guide_sha256"] = resolved_guide_hash or "unknown"
+    parsed["_media_evidence_status"] = media_status
+    parsed["_collection_complete"] = collection_state
+    normalized = normalize_suggestion(parsed)
+    return enforce_evidence_contract(
+        normalized,
+        post=post,
+        media_evidence_status=media_status,
+        collection_complete=collection_state,
+    )
 
 
 def warm_up_model(model: str = OLLAMA_DEFAULT_MODEL,
                   url: str = OLLAMA_DEFAULT_URL,
                   timeout: float = OLLAMA_WARMUP_TIMEOUT,
-                  keep_alive: Optional[str] = None) -> bool:
+                  keep_alive: Optional[str] = None,
+                  num_ctx: int = OLLAMA_NUM_CTX) -> bool:
     """预加载模型：批处理前用最小请求把模型加载进内存并驻留。
 
     6.6GB 模型首次冷启动加载需要 60~120s+，容易超过单条推理超时。
@@ -462,7 +826,11 @@ def warm_up_model(model: str = OLLAMA_DEFAULT_MODEL,
             "messages": [{"role": "user", "content": "hi"}],
             "stream": False,
             "keep_alive": keep_alive or OLLAMA_KEEP_ALIVE,
-            "options": {"num_predict": 1, "temperature": 0.0},
+            "options": {
+                "num_predict": 1,
+                "temperature": 0.0,
+                "num_ctx": int(num_ctx),
+            },
         }
         if OLLAMA_DISABLE_THINKING:
             payload["think"] = False
@@ -472,12 +840,17 @@ def warm_up_model(model: str = OLLAMA_DEFAULT_MODEL,
         return False
 
 
+class SuggestionContractError(ValueError):
+    """模型输出不满足标签契约；调用方必须失败关闭并转人工。"""
+
+
 def normalize_suggestion(suggestion: Dict[str, Any]) -> Dict[str, Any]:
     """标准化 LLM 返回的判定结果（标签/置信度/证据字段校验）。"""
     result = dict(suggestion or {})
 
     # 标签：兼容中文与代码两种写法
     label = result.get("label") or result.get("suggested_label") or ""
+    result.setdefault("label_raw", label)
     result["label"] = normalize_label(label)
 
     # 置信度
@@ -485,10 +858,18 @@ def normalize_suggestion(suggestion: Dict[str, Any]) -> Dict[str, Any]:
         conf = float(result.get("confidence", result.get("suggested_confidence", 0.0)))
     except (TypeError, ValueError):
         conf = 0.0
+    if not math.isfinite(conf):
+        conf = 0.0
+    result.setdefault("confidence_raw", conf)
     result["confidence"] = round(max(0.0, min(1.0, conf)), 4)
+    if result["label"] == "uncertain":
+        # uncertain 永远进入纯人工层；保留 confidence_raw 供审计。
+        result["confidence"] = 0.0
 
     # 证据代码
     codes = result.get("evidence_codes") or result.get("suggested_evidence_codes") or []
+    if isinstance(codes, str):
+        codes = [codes]
     result["evidence_codes"] = [c for c in codes if c in EVIDENCE_CODES]
 
     # 证据描述
@@ -500,6 +881,11 @@ def normalize_suggestion(suggestion: Dict[str, Any]) -> Dict[str, Any]:
     result.setdefault("reasoning", "")
     result.setdefault("uncertain_reason", None)
     result.setdefault("information_gaps", [])
+    if isinstance(result["information_gaps"], str):
+        gap = result["information_gaps"].strip()
+        result["information_gaps"] = [gap] if gap else []
+    if result["label"] == "uncertain" and not result["uncertain_reason"]:
+        result["uncertain_reason"] = "模型判断为 uncertain，需人工复核"
 
     # 与 flet 端 copilot_suggestion 字段兼容
     result.setdefault("suggested_label", LABEL_TO_CODE.get(result["label"], result["label"]))
@@ -509,16 +895,63 @@ def normalize_suggestion(suggestion: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def normalize_label(label: str) -> str:
-    """把任意写法的标签归一为中文标签；非法标签返回 '非广'。"""
-    label = (label or "").strip()
+def normalize_label(label: Any) -> str:
+    """把已知写法归一为规范标签；非法或空标签显式失败。"""
+    label = str(label or "").strip()
+    if label in LABEL_ALIASES:
+        return LABEL_ALIASES[label]
     if label in VALID_LABELS:
         return label
     if label in LABEL_TO_CODE:
         return label
     if label in CODE_TO_LABEL:
         return CODE_TO_LABEL[label]
-    return "非广"
+    error = SuggestionContractError(f"非法标签: {label!r}")
+    error.label_raw = label
+    raise error
+
+
+def enforce_evidence_contract(
+    suggestion: Dict[str, Any],
+    *,
+    post: Dict[str, Any],
+    media_evidence_status: str,
+    collection_complete: Any,
+) -> Dict[str, Any]:
+    """暗广必须有完整披露链；缺失/未知证据时程序化转入 uncertain。"""
+    result = dict(suggestion)
+    if result.get("label") != "暗广":
+        return result
+
+    gaps: List[str] = []
+    collection_state = normalize_collection_complete(collection_complete)
+    if collection_state != "complete":
+        gaps.append(f"披露区域/评论采集完整性为 {collection_state}")
+
+    has_media = bool(post.get("media"))
+    if has_media and media_evidence_status not in {"provided", "no_media"}:
+        gaps.append(f"媒体证据状态为 {media_evidence_status}")
+
+    if not gaps:
+        return result
+
+    prior_reason = str(result.get("uncertain_reason") or "").strip()
+    reason = "；".join(gaps) + "，不能据此强判暗广，需人工复核"
+    if prior_reason:
+        reason = f"{reason}；模型原说明：{prior_reason}"
+    information_gaps = list(result.get("information_gaps") or [])
+    for gap in gaps:
+        if gap not in information_gaps:
+            information_gaps.append(gap)
+
+    result["label"] = "uncertain"
+    result["confidence"] = 0.0
+    result["uncertain_reason"] = reason
+    result["information_gaps"] = information_gaps
+    result["suggested_label"] = "uncertain"
+    result["suggested_confidence"] = 0.0
+    result["_evidence_contract_override"] = True
+    return result
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -533,7 +966,8 @@ def classify_confidence(confidence: float,
         "suggest" → 中置信度，展示建议（SUGGESTION_LOWER_BOUND <= c < auto_threshold）
         "manual"  → 低置信度，无建议（confidence < SUGGESTION_LOWER_BOUND）
     """
-    if confidence >= auto_threshold:
+    # 研究治理约定：0 明确表示关闭自动接受，而不是“所有结果都自动接受”。
+    if auto_threshold > 0 and confidence >= auto_threshold:
         return "auto"
     if confidence >= SUGGESTION_LOWER_BOUND:
         return "suggest"
@@ -607,21 +1041,38 @@ def build_auto_record(post: Dict[str, Any],
     record = {
         "post_id": post.get("post_id", ""),
         "annotator_id": "system",
-        "guide_version": GUIDE_VERSION,
-        "label": suggestion.get("label", "非广"),
+        "guide_version": suggestion.get("_guide_version", GUIDE_VERSION),
+        "guide_sha256": suggestion.get("_guide_sha256", "unknown"),
+        "label_raw": suggestion.get("label_raw"),
+        "label": suggestion.get("label", "uncertain"),
         "confidence": suggestion.get("confidence", 0.0),
         "evidence_codes": suggestion.get("evidence_codes", []),
         "evidence": suggestion.get("evidence", []),
         "uncertain_reason": suggestion.get("uncertain_reason"),
         "annotated_at": datetime.now(CST).isoformat(),
         "annotation_method": "auto_accepted" if auto_accepted else "human",
+        "backend": suggestion.get("_backend", "unknown"),
+        "fallback": bool(suggestion.get("_fallback", False)),
+        "error": suggestion.get("_error"),
+        "media_evidence_status": suggestion.get("_media_evidence_status", "unknown"),
+        "collection_complete": suggestion.get("_collection_complete", "unknown"),
+        "num_ctx": suggestion.get("_num_ctx", OLLAMA_NUM_CTX),
         "_llm_suggestion": {
-            "label": suggestion.get("label", "非广"),
+            "label_raw": suggestion.get("label_raw"),
+            "label": suggestion.get("label", "uncertain"),
             "confidence": suggestion.get("confidence", 0.0),
+            "confidence_raw": suggestion.get("confidence_raw"),
             "evidence_codes": suggestion.get("evidence_codes", []),
             "evidence": suggestion.get("evidence", []),
             "reasoning": suggestion.get("reasoning", ""),
             "model": suggestion.get("_model", model),
+            "backend": suggestion.get("_backend", "unknown"),
+            "fallback": bool(suggestion.get("_fallback", False)),
+            "error": suggestion.get("_error"),
+            "guide_sha256": suggestion.get("_guide_sha256", "unknown"),
+            "media_evidence_status": suggestion.get("_media_evidence_status", "unknown"),
+            "collection_complete": suggestion.get("_collection_complete", "unknown"),
+            "num_ctx": suggestion.get("_num_ctx", OLLAMA_NUM_CTX),
             "auto_accepted": bool(auto_accepted),
         },
     }
@@ -640,8 +1091,22 @@ def run_auto_judge(
     timeout: float = OLLAMA_TIMEOUT,
     auto_threshold: float = DEFAULT_AUTO_THRESHOLD,
     keep_alive: Optional[str] = None,
+    guide_text: str = "",
+    guide_version: str = GUIDE_VERSION,
+    guide_sha256: str = "",
+    media_analysis_requested: Optional[bool] = None,
+    collection_complete: Any = None,
+    num_ctx: int = OLLAMA_NUM_CTX,
+    num_predict: int = 1024,
+    thinking: bool = False,
+    comment_limit: int = 30,
+    backend: str = "ollama",
+    api_base_url: str = OPENAI_COMPAT_DEFAULT_URL,
+    api_key: str = "",
+    api_timeout: float = OPENAI_COMPAT_TIMEOUT,
+    creator_history_summary: str = "",
 ) -> Dict[str, Any]:
-    """完整自动判断管线：Ollama 判定 → 失败回退 → 三级分类。
+    """完整自动判断管线：判定后端 → 失败回退 → 三级分类。
 
     Returns:
         {
@@ -656,21 +1121,83 @@ def run_auto_judge(
     suggestion: Optional[Dict[str, Any]] = None
     fallback = False
     error: Optional[str] = None
+    media_status = determine_media_evidence_status(
+        post, image_analyses, media_analysis_requested
+    )
+    collection_value = (
+        post.get("collection_complete")
+        if collection_complete is None and "collection_complete" in post
+        else collection_complete
+    )
+    collection_state = normalize_collection_complete(collection_value)
+    resolved_guide_hash = guide_sha256 or sha256_text(guide_text) or "unknown"
 
     try:
-        suggestion = run_ollama_judge(
-            post, image_analyses, keyword_weights,
-            model=model, url=url, timeout=timeout, keep_alive=keep_alive,
-        )
+        if backend == "openai_compat":
+            suggestion = run_openai_compat_judge(
+                post, image_analyses, keyword_weights,
+                model=model, base_url=api_base_url, api_key=api_key,
+                timeout=api_timeout,
+                guide_text=guide_text,
+                guide_version=guide_version,
+                guide_sha256=resolved_guide_hash,
+                media_analysis_requested=media_analysis_requested,
+                collection_complete=collection_value,
+                num_predict=num_predict,
+                comment_limit=comment_limit,
+                creator_history_summary=creator_history_summary,
+            )
+        else:
+            suggestion = run_ollama_judge(
+                post, image_analyses, keyword_weights,
+                model=model, url=url, timeout=timeout, keep_alive=keep_alive,
+                guide_text=guide_text,
+                guide_version=guide_version,
+                guide_sha256=resolved_guide_hash,
+                media_analysis_requested=media_analysis_requested,
+                collection_complete=collection_value,
+                num_ctx=num_ctx,
+                num_predict=num_predict,
+                thinking=thinking,
+                comment_limit=comment_limit,
+            )
+    except SuggestionContractError as exc:
+        error = str(exc)[:300]
+        suggestion = normalize_suggestion({
+            "label": "uncertain",
+            "label_raw": getattr(exc, "label_raw", None),
+            "confidence": 0.0,
+            "evidence_codes": [],
+            "evidence": [],
+            "reasoning": f"模型标签契约错误: {error}",
+            "uncertain_reason": "模型输出标签不合法，已失败关闭并转纯人工",
+            "information_gaps": ["需要人工复核模型原始输出"],
+            "_model": model,
+            "_backend": "ollama-contract-error",
+        })
     except Exception as exc:  # noqa: BLE001 - Ollama 不可用/超时/非 JSON 一律回退
         error = str(exc)[:300]
         fallback = True
         suggestion = keyword_fallback(post, keyword_weights)
 
+    if suggestion is not None:
+        suggestion.setdefault("_model", model)
+        suggestion.setdefault("_backend", "unknown")
+        suggestion.setdefault("_guide_version", guide_version or "unknown")
+        suggestion.setdefault("_guide_sha256", resolved_guide_hash)
+        suggestion.setdefault("_media_evidence_status", media_status)
+        suggestion.setdefault("_collection_complete", collection_state)
+        suggestion.setdefault("_num_ctx", int(num_ctx))
+        suggestion["_fallback"] = fallback
+        suggestion["_error"] = error
+
     tier = "manual"
     record: Optional[Dict[str, Any]] = None
     if suggestion is not None:
-        tier = classify_confidence(suggestion.get("confidence", 0.0), auto_threshold)
+        if suggestion.get("label") in {"uncertain", "out_of_scope"}:
+            tier = "manual"
+        else:
+            tier = classify_confidence(suggestion.get("confidence", 0.0), auto_threshold)
         if tier == "auto":
             record = build_auto_record(
                 post, suggestion,
@@ -685,6 +1212,13 @@ def run_auto_judge(
         "record": record,
         "fallback": fallback,
         "error": error,
+        "backend": suggestion.get("_backend", "none") if suggestion else "none",
+        "label_raw": suggestion.get("label_raw") if suggestion else None,
+        "guide_version": guide_version or "unknown",
+        "guide_sha256": resolved_guide_hash,
+        "media_evidence_status": media_status,
+        "collection_complete": collection_state,
+        "num_ctx": int(num_ctx),
     }
 
 

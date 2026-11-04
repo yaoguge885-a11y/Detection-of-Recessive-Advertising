@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from ..contracts import EvidenceBundle, PostRecord, RunMetadata, VerdictReport
 from ..orchestration import RunEvent
+from ..security.redaction import redact_structure
 
 
 class RunRecord(BaseModel):
@@ -18,6 +19,14 @@ class RunRecord(BaseModel):
     run_metadata: RunMetadata
     run_events: list[RunEvent]
     readable_report: str
+
+
+def sanitize_run_record(record: RunRecord) -> RunRecord:
+    """Return a validated, recursively redacted copy of a run artifact."""
+
+    return RunRecord.model_validate(redact_structure(
+        record.model_dump(mode="python")
+    ))
 
 
 class RunStore(Protocol):
@@ -47,6 +56,7 @@ class JsonRunStore:
         return self.directory / f"{self._safe_run_id(run_id)}.json"
 
     def put(self, record: RunRecord) -> None:
+        record = sanitize_run_record(record)
         self.directory.mkdir(parents=True, exist_ok=True)
         target = self._path(record.run_metadata.run_id)
         temporary = target.with_suffix(".json.tmp")

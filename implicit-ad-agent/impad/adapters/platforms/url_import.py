@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from datetime import datetime, timezone
+from pathlib import Path
 from threading import Lock
 from uuid import uuid4
 
@@ -16,6 +17,8 @@ from .contracts import (
     URLImportPreview,
 )
 from .registry import PlatformAdapterRegistry
+from .media_safety import PlatformMediaPolicy
+from .safe_fetch import DisabledURLFetcher, SafeURLFetcher
 from .url_safety import validate_public_https_url
 
 
@@ -108,23 +111,36 @@ class URLImportService:
         analysis_service: AnalysisService,
         registry: PlatformAdapterRegistry | None = None,
         preview_store: InMemoryURLPreviewStore | None = None,
+        fetcher: SafeURLFetcher | None = None,
+        media_cache_root: Path | None = None,
     ):
         self.analysis_service = analysis_service
         self.registry = registry or PlatformAdapterRegistry()
         self.preview_store = (
             preview_store or InMemoryURLPreviewStore()
         )
+        self.fetcher = fetcher or DisabledURLFetcher()
+        self.media_policy = PlatformMediaPolicy(
+            fetcher=self.fetcher,
+            cache_root=media_cache_root,
+        )
 
     def preview(self, url: str) -> URLImportPreview:
         source = validate_public_https_url(url)
         adapter = self.registry.resolve(source)
         try:
-            post = PostRecord.model_validate(adapter.preview(source))
+            post = PostRecord.model_validate(adapter.preview(
+                source,
+                fetcher=self.fetcher,
+            ))
         except Exception as exc:
             raise URLImportError(
                 "adapter_failed",
                 "Platform adapter could not normalize this URL.",
             ) from exc
+        post = post.model_copy(update={
+            "media": self.media_policy.normalize(post.media),
+        })
         if post.platform != adapter.platform:
             raise URLImportError(
                 "adapter_failed",
