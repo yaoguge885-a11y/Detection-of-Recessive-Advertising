@@ -148,3 +148,4 @@ Desktop.ini
 # Local workbench exports carry post content and human labels; never commit them
 data/workbench_*.json
 /data/reports/m1/gold/
+/data/collection/
