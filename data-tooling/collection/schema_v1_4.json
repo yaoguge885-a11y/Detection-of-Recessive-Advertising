@@ -353,6 +353,9 @@
             null
           ],
           "description": "human = 未见 AI 预标注的纯人工；human_assisted = 看过预标注后人工确认。auto_accepted 不得进入 Gold。"
+        },
+        "annotation": {
+          "$ref": "#/$defs/annotation_record"
         }
       }
     },
@@ -623,6 +626,31 @@
         "annotated_at": {
           "type": "string",
           "format": "date-time"
+        },
+        "annotation_method": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "human",
+            "human_assisted",
+            "auto_accepted",
+            null
+          ],
+          "description": "human = 人工采集并标注，未使用 AI 预标注；human_assisted = 看过 AI 预标注后人工确认。"
+        },
+        "collection_mode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "manual_platform",
+            "crawler",
+            null
+          ],
+          "description": "manual_platform 表示人工在平台上直接采集并判定；crawler 表示机器采集。"
         }
       }
     },
