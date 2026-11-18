@@ -1,3 +1,0 @@
-fixture_dev_explicit
-fixture_dev_dark
-fixture_dev_natural

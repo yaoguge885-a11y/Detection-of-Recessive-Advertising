@@ -1,3 +1,0 @@
-scikit-learn>=1.5,<2
-pytest>=8,<9
-jsonschema>=4.22,<5

@@ -1,1 +1,0 @@
-"""Protocol integration tests."""

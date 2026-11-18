@@ -1,1 +1,0 @@
-"""Platform-adapter contract tests."""

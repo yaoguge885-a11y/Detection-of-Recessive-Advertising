@@ -1,3 +1,0 @@
-fixture_test_explicit
-fixture_test_dark
-fixture_test_natural
