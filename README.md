@@ -1,6 +1,6 @@
 # DoRA 文献资料
 
-[隐性广告与多模态方法（12）](#隐性广告与多模态方法) · [社交媒体虚假信息（4）](#社交媒体虚假信息) · [智能体与大模型（5）](#智能体与大模型)
+[隐性广告与多模态方法（20）](#隐性广告与多模态方法) · [社交媒体虚假信息（4）](#社交媒体虚假信息) · [智能体与大模型（5）](#智能体与大模型)
 
 ## 隐性广告与多模态方法
 
@@ -18,6 +18,14 @@
 | [A Systematic Review of Multimodal Fake News Detection on Social Media Using Deep Learning Models](<文献/隐性广告识别相关文献/A systematic review of multimodal fake news detection on social media.pdf>) | 多模态虚假新闻检测、深度学习模型、数据集、评估指标 |
 | [Hidden in Plain Sight: Reasoning in Underspecified and Misspecified Scenarios for Multimodal LLMs](<文献/隐性广告识别相关文献/Hidden in Plain Sight.pdf>) | 多模态推理、指代歧义、图文矛盾、澄清提问 |
 | [SURE: Safety Understanding and Reasoning Enhancement for Multimodal Large Language Models](<文献/隐性广告识别相关文献/SURE - Safety Understanding and Reasoning Enhancement.pdf>) | 多模态安全、风险识别、安全推理、过度拒答 |
+| [CHASM: Unveiling Covert Advertisements on Chinese Social Media](<文献/隐性广告识别相关文献/CHASM_Unveiling_Covert_Advertisements_on_Chinese_Social_Media.pdf>) | 隐蔽广告数据集、中文社媒、多模态大模型评测、标注体系 |
+| [Turning Trust to Transactions: Tracking Affiliate Marketing and FTC Compliance in YouTube's Influencer Economy](<文献/隐性广告识别相关文献/Turning_Trust_to_Transactions_Tracking_Affiliate_Marketing_and_FTC_Compliance_in_YouTube_Influencer_Economy.pdf>) | 联盟营销、FTC 披露合规、YouTube 测量、创作者经济 |
+| [InstaSynth: Opportunities and Challenges in Generating Synthetic Instagram Data with chatGPT for Sponsored Content Detection](<文献/隐性广告识别相关文献/InstaSynth_Opportunities_and_Challenges_in_Generating_Synthetic_Instagram_Data_with_ChatGPT_for_Sponsored_Content_Detection.pdf>) | 合成数据生成、ChatGPT、赞助内容检测、数据保真度 |
+| [TAIGR: Towards Modeling Influencer Content on Social Media via Structured, Pragmatic Inference](<文献/隐性广告识别相关文献/TAIGR_Towards_Modeling_Influencer_Content_on_Social_Media_via_Structured_Pragmatic_Inference.pdf>) | 结构化语用推理、论证图、影响者内容、概率校验 |
+| [AdDriftBench: A Benchmark for Detecting Data Drift and Label Drift in Short Video Advertising](<文献/隐性广告识别相关文献/AdDriftBench_A_Benchmark_for_Detecting_Data_Drift_and_Label_Drift_in_Short_Video_Advertising.pdf>) | 数据漂移、标签漂移、短视频广告、基准评测 |
+| [A Deep Learning-Based Sentiment Classification for Identifying Advertorial Content in Online News](<文献/隐性广告识别相关文献/A_Deep_Learning_Based_Sentiment_Classification_for_Identifying_Advertorial_Content_in_Online_News.pdf>) | 软文识别、情感分类、卷积神经网络、在线新闻 |
+| [ℛ3: Advertisement Compliance Rectification via Group-Relative Experience Extractor and Curriculum Reinforcement](<文献/隐性广告识别相关文献/R3_Advertisement_Compliance_Rectification_via_Group_Relative_Experience_Extractor_and_Curriculum.pdf>) | 广告合规修复、检索增强生成、语音与屏显文本、课程强化学习 |
+| [Covert Marketing: Advertising Law Review Paper](<文献/隐性广告识别相关文献/Covert_Marketing_Advertising_Law_Review_Paper.pdf>) | 隐蔽营销、广告法规、FTC/UCPD、披露义务 |
 
 ## 社交媒体虚假信息
 
