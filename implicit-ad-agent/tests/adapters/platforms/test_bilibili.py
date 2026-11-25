@@ -184,6 +184,45 @@ def test_bilibili_video_image_capture_is_unsupported_with_stable_issue():
     assert modality.missing_fields == []
 
 
+def test_bilibili_video_keeps_missing_media_evidence_and_blocks_assessment():
+    fixture = _fixture("video_no_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+
+    post = parse_bilibili_state(
+        state,
+        content_type="video",
+        source_ref_hash="b" * 64,
+    )
+
+    assert [item.model_dump() for item in post.media] == [{
+        "media_id": "bilibili_video_0",
+        "type": "video",
+        "ref": None,
+        "sha256": None,
+        "phash": None,
+        "ocr_text": None,
+    }]
+    assert post.capture_status.can_assess_disclosure is False
+
+
+def test_bilibili_video_without_explicit_disclosure_is_incomplete():
+    fixture = _fixture("video_no_images")
+    state = json.loads((fixture / "source_state.json").read_text("utf-8"))
+    state["videoData"].pop("disclosureLabels")
+
+    post = parse_bilibili_state(
+        state,
+        content_type="video",
+        source_ref_hash="b" * 64,
+    )
+
+    modality = post.capture_status.modalities["disclosure"]
+    assert modality.status == "missing"
+    assert modality.issues == ["disclosure_missing"]
+    assert modality.missing_fields == ["disclosures"]
+    assert post.capture_status.can_assess_disclosure is False
+
+
 def test_bilibili_comments_are_explicitly_unsupported():
     fixture = _fixture("video_no_images")
     state = json.loads((fixture / "source_state.json").read_text("utf-8"))

@@ -222,6 +222,15 @@ def _build(
             image_issues,
             image_missing,
         ) = _image_media(section, image_key, content_type)
+    if content_type == "video":
+        # A video has no still-image frames in this fixture, but it is still
+        # media evidence. Keep a null-ref placeholder so normalization does
+        # not treat ``media=[]`` as an all-image capture via ``all([])``.
+        media = [MediaRecord(
+            media_id="bilibili_video_0",
+            type="video",
+            ref=None,
+        )]
 
     text_parts = [
         value.strip()

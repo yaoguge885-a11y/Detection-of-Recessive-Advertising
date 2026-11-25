@@ -16,6 +16,8 @@ from impad.contracts import (
 from impad.agents import behavior_agent, nlp_agent, supervisor, vision_agent
 from impad.graph import graph
 from impad.orchestration import CapabilityPlan
+from impad.tools.contracts import ToolEvidence, ToolResult
+from impad.orchestration import LocalToolGateway
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -176,3 +178,80 @@ def test_run_level_call_budget_is_shared_across_expert_groups(tmp_path):
     assert state["agent_outputs"]["behavior"]["stopped_reason"] == (
         "max_calls_reached"
     )
+
+
+class MultiImageOcrGateway(LocalToolGateway):
+    def call(self, name, arguments, run):
+        if name == "ocr_extract":
+            image_name = Path(arguments["image_path"]).name
+            sponsored = image_name == "second.jpg"
+            quote = "本内容由品牌方赞助" if sponsored else "日常记录"
+            evidence = ToolEvidence(
+                kind="ocr_text" if sponsored else "absence",
+                source="image.ocr",
+                quote=quote,
+                score=0.99 if sponsored else 0.1,
+            )
+            return ToolResult(
+                tool_name=name,
+                tool_version="test-ocr-v1",
+                status="ok",
+                score=evidence.score,
+                evidence=[evidence],
+                payload={
+                    "vision_context": {
+                        "image_name": image_name,
+                        "capabilities": {"ocr": True},
+                    },
+                },
+                call_id=run.call_id,
+                run_id=run.run_id,
+            )
+        if name in {"image_text_consistency", "detect_logo_product"}:
+            return ToolResult(
+                tool_name=name,
+                tool_version="test-vision-v1",
+                status="ok",
+                payload={},
+                call_id=run.call_id,
+                run_id=run.run_id,
+            )
+        return super().call(name, arguments, run)
+
+
+def test_graph_tracks_per_image_ocr_disclosure_and_call_provenance(tmp_path):
+    first = tmp_path / "first.jpg"
+    second = tmp_path / "second.jpg"
+    first.write_bytes(b"first")
+    second.write_bytes(b"second")
+
+    out = graph.invoke({
+        "post": {
+            "text": "今天记录一下生活。",
+            "capture_complete": True,
+            "media": [
+                {"media_id": "media_first", "type": "image",
+                 "ref": str(first)},
+                {"media_id": "media_second", "type": "image",
+                 "ref": str(second)},
+            ],
+        },
+        "tool_gateway": MultiImageOcrGateway(),
+    })
+
+    assert out["verdict"] == "明广"
+    ocr_results = [
+        result for result in out["tool_results"]
+        if result.tool_name == "ocr_extract"
+    ]
+    assert {
+        result.payload["media_id"] for result in ocr_results
+    } == {"media_first", "media_second"}
+    marker = next(
+        item for item in out["evidence_bundle"].items
+        if item.kind == "explicit_ad_marker"
+    )
+    assert marker.call_id == "call_ocr_extract_media_1_media_second"
+    assert marker.call_id in {
+        trace.call_id for trace in out["function_traces"]
+    }

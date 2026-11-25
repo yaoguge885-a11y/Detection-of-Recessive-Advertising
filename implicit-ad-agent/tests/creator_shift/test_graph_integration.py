@@ -89,3 +89,20 @@ def test_readable_report_exposes_creator_shift_status(tmp_path):
     assert "## CreatorShift" in result.readable_report
     assert "- 状态：sufficient" in result.readable_report
     assert "- 历史数量：3/3" in result.readable_report
+
+
+def test_recurring_weak_cue_requires_review_only_with_supporting_history():
+    payload = _payload()
+    payload["text"] = "这回也是亲测。"
+    for post in payload["history"]:
+        post["text"] = "亲测，写一点日常体验。"
+    adaptive = graph.invoke({"post": payload})["verdict_report"]
+    fixed = graph.invoke({"post": payload, "evidence_strategy": "fixed"})["verdict_report"]
+    assert fixed.label == "暗广"
+    assert adaptive.label == "需复核"
+    assert adaptive.commercial_intent.status == "uncertain"
+    assert adaptive.creator_shift_evidence_ids
+    assert "commercial_wording_recurs_in_history" in adaptive.reasons
+
+    payload["text"] += "点击链接购买下单。"
+    assert graph.invoke({"post": payload})["verdict_report"].label == "暗广"

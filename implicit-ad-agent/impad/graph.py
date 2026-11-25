@@ -4,14 +4,28 @@ from langgraph.graph import StateGraph, START, END
 from .state import AdCheckState
 from .agents import (supervisor, route_next, nlp_agent,
                      vision_agent, behavior_agent, creator_shift_agent, judge)
+from .agents.disclosure_agent import verify_disclosure
 
 ROUTES = {
     "nlp": "nlp",
     "vision": "vision",
     "behavior": "behavior",
     "creator_shift": "creator_shift",
+    "verify_disclosure": "verify_disclosure",
     "judge": "judge",
 }
+
+
+def _route_after_evidence(state: AdCheckState) -> str:
+    next_node = route_next(state)
+    if next_node != "judge" or not state.get("disclosure_verifier"):
+        return next_node
+    if len(state.get("function_traces", [])) >= state["capability_plan"].call_budget:
+        return "judge"
+    kinds = {item.kind for item in state["evidence_bundle"].items}
+    if "disclosure_candidate" in kinds and "explicit_ad_marker" not in kinds:
+        return "verify_disclosure"
+    return "judge"
 
 
 def build_graph():
@@ -21,6 +35,7 @@ def build_graph():
     g.add_node("vision", vision_agent)
     g.add_node("behavior", behavior_agent)
     g.add_node("creator_shift", creator_shift_agent)
+    g.add_node("verify_disclosure", verify_disclosure)
     g.add_node("judge", judge)
 
     g.add_edge(START, "supervisor")
@@ -31,7 +46,8 @@ def build_graph():
         "behavior",
         "creator_shift",
     ):
-        g.add_conditional_edges(src, route_next, ROUTES)
+        g.add_conditional_edges(src, _route_after_evidence, ROUTES)
+    g.add_edge("verify_disclosure", "judge")
     g.add_edge("judge", END)
     return g.compile()
 

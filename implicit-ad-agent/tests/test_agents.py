@@ -7,7 +7,7 @@ from impad.contracts import (
     PostRecord,
     VerdictReport,
 )
-from impad.orchestration import CapabilityPlan
+from impad.orchestration import CapabilityPlan, build_evidence_bundle
 from impad.tools.contracts import ToolEvidence, ToolResult
 
 
@@ -83,6 +83,130 @@ def test_supervisor_accepts_schema_v12_content_record():
 def test_route_next_falls_back_to_judge():
     assert route_next({"plan": ["vision", "behavior"]}) == "vision"
     assert route_next({"plan": []}) == "judge"
+
+
+def test_adaptive_route_prioritizes_vision_then_history_after_text_signal(
+    tmp_path,
+):
+    image = tmp_path / "post.jpg"
+    image.write_bytes(b"fixture")
+    state = supervisor({
+        "post": {
+            "text": "限时优惠，链接在评论区",
+            "published_at": "2026-07-20T00:00:00Z",
+            "image_path": str(image),
+            "comments": ["评论"] * 5,
+            "history": [
+                {
+                    "post_id": f"history_{index}",
+                    "text": f"历史{index}",
+                    "published_at": f"2026-07-{17 + index}T00:00:00Z",
+                }
+                for index in range(3)
+            ],
+        }
+    })
+    assert state["evidence_strategy"] == "adaptive"
+    assert state["plan"] == ["nlp", "vision", "behavior", "creator_shift"]
+
+    state["tool_results"] = [ToolResult(
+        tool_name="analyze_text_intent",
+        status="degraded",
+        score=0.8,
+        evidence=[ToolEvidence(
+            kind="soft_ad_signal",
+            source="post.text",
+            quote="链接在评论区",
+        )],
+    )]
+    state["plan"] = ["vision", "behavior", "creator_shift"]
+
+    assert route_next(state) == "vision"
+    state["plan"] = ["behavior", "creator_shift"]
+    assert route_next(state) == "behavior"
+    state["plan"] = ["creator_shift"]
+    assert route_next(state) == "creator_shift"
+
+
+def test_adaptive_route_skips_optional_groups_for_confirmed_disclosure(
+    tmp_path,
+):
+    image = tmp_path / "post.jpg"
+    image.write_bytes(b"fixture")
+    state = supervisor({
+        "post": {
+            "text": "品牌合作，限时优惠",
+            "published_at": "2026-07-20T00:00:00Z",
+            "image_path": str(image),
+            "comments": ["评论"] * 5,
+            "history": [
+                {
+                    "post_id": f"history_{index}",
+                    "text": f"历史{index}",
+                    "published_at": f"2026-07-{17 + index}T00:00:00Z",
+                }
+                for index in range(3)
+            ],
+        }
+    })
+    state["tool_results"] = [ToolResult(
+        tool_name="analyze_text_intent",
+        status="degraded",
+        score=0.8,
+        evidence=[ToolEvidence(
+            kind="explicit_ad_marker",
+            source="post.text",
+            quote="品牌合作",
+        )],
+    )]
+    state["evidence_bundle"] = build_evidence_bundle(
+        state["post_record"], state["tool_results"]
+    )
+    state["plan"] = ["vision", "behavior", "creator_shift"]
+
+    assert route_next(state) == "vision"
+    state["plan"] = ["behavior", "creator_shift"]
+    assert route_next(state) == "creator_shift"
+    assert state["plan"] == ["behavior", "creator_shift"]
+
+
+def test_fixed_route_keeps_original_plan_order_after_confirmed_disclosure(
+    tmp_path,
+):
+    image = tmp_path / "post.jpg"
+    image.write_bytes(b"fixture")
+    state = supervisor({
+        "evidence_strategy": "fixed",
+        "post": {
+            "text": "品牌合作，限时优惠",
+            "published_at": "2026-07-20T00:00:00Z",
+            "image_path": str(image),
+            "comments": ["评论"] * 5,
+            "history": [
+                {
+                    "post_id": f"history_{index}",
+                    "text": f"历史{index}",
+                    "published_at": f"2026-07-{17 + index}T00:00:00Z",
+                }
+                for index in range(3)
+            ],
+        }
+    })
+    state["tool_results"] = [ToolResult(
+        tool_name="analyze_text_intent",
+        status="degraded",
+        score=0.8,
+        evidence=[ToolEvidence(
+            kind="explicit_ad_marker",
+            source="post.text",
+            quote="品牌合作",
+        )],
+    )]
+    state["plan"] = ["vision", "behavior", "creator_shift"]
+
+    assert state["evidence_strategy"] == "fixed"
+    assert route_next(state) == "vision"
+    assert state["plan"] == ["vision", "behavior", "creator_shift"]
 
 
 def test_judge_builds_structured_report_from_tool_results():

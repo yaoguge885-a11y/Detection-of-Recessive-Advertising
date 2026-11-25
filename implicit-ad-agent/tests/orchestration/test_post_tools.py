@@ -138,3 +138,33 @@ def test_unknown_timestamp_history_is_not_executable_or_sent_to_sentiment():
         call for call in calls if call["name"] == "sentiment_curve"
     )
     assert sentiment["args"]["history"] == []
+
+
+def test_multi_image_visual_calls_cover_each_local_ref_once(tmp_path):
+    first = tmp_path / "first.jpg"
+    second = tmp_path / "second.jpg"
+    first.write_bytes(b"first")
+    second.write_bytes(b"second")
+    post = _post(media=[
+        {"media_id": "media_first", "type": "image", "ref": str(first)},
+        {"media_id": "media_remote", "type": "image",
+         "ref": "https://example.com/remote.jpg"},
+        {"media_id": "media_second", "type": "image", "ref": str(second)},
+        {"media_id": "media_missing", "type": "image",
+         "ref": str(tmp_path / "missing.jpg")},
+    ])
+    plan = CapabilityPlanner().plan(capability_context_from_post(post))
+
+    calls = function_calls_from_post(post, plan)
+    image_calls = [
+        call for call in calls
+        if call["name"] in {"ocr_extract", "image_text_consistency",
+                             "detect_logo_product"}
+    ]
+
+    assert len(image_calls) == 6
+    assert len({call["id"] for call in image_calls}) == 6
+    assert {
+        call["args"].get("image_path") for call in image_calls
+    } == {str(first), str(second)}
+    assert function_calls_from_post(post, plan) == calls

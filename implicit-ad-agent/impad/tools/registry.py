@@ -74,7 +74,7 @@ TOOL_SPECS_V1 = [
         analyze_text_intent,
         required_modalities={"text"},
         minimum_samples={"text": 1},
-        default_timeout_seconds=10,
+        default_timeout_seconds=60,
     ),
     _spec(
         sentiment_curve,

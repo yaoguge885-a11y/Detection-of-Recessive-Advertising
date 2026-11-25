@@ -525,7 +525,7 @@ def main() -> int:
     parser.add_argument("--compact", action="store_true", help="Output compact single-line JSON instead of pretty-printed")
     parser.add_argument("--history-urls", default=None, help="File with all article URLs from the same blogger search (for blogger_history_refs)")
     parser.add_argument("--use-llm", action="store_true", help="Use dual DeepSeek LLMs to extract image captions and <图片N> position markers")
-    parser.add_argument("--use-bs4", action="store_true", help="Use BeautifulSoup DOM walker (no LLM cost) for clean text + image positioning")
+    parser.add_argument("--use-bs4", action="store_true", help="Explicitly opt in to the BeautifulSoup DOM walker (no LLM cost) for clean text + image positioning")
     parser.add_argument("--collector", default="D", help="Collector identifier")
     parser.add_argument("--terms-checked-at", default=None, help="Terms check date (YYYY-MM-DD)")
     parser.add_argument("--retry-rounds", type=int, default=3, help="单篇文章抓取失败重试轮数 (默认3轮)")
@@ -632,16 +632,24 @@ def main() -> int:
 
                 # 5. BS4 结构提取（可选，无 LLM 成本）
                 bs4_result = None
+                bs4_success = False
                 if args.use_bs4 and html:
                     from html_structure_extractor import extract_from_html
                     try:
                         bs4_result = extract_from_html(html)
-                        if bs4_result.get("title"):
-                            title = bs4_result["title"]
-                            print(f"  [BS4] title: {title[:60]}")
-                        if bs4_result.get("clean_text"):
-                            body_text = bs4_result["clean_text"]
-                            print(f"  [BS4] clean text: {len(body_text)} chars")
+                        bs4_success = (
+                            bs4_result.get("_method") == "bs4_dom_walk"
+                        )
+                        if bs4_success:
+                            if bs4_result.get("title"):
+                                title = bs4_result["title"]
+                                print(f"  [BS4] title: {title[:60]}")
+                            if "image_urls" in bs4_result and not args.no_images:
+                                image_urls = list(bs4_result["image_urls"])
+                                print(f"  [BS4] images: {len(image_urls)} selected")
+                            if "clean_text" in bs4_result:
+                                body_text = bs4_result["clean_text"]
+                                print(f"  [BS4] clean text: {len(body_text)} chars")
                         if bs4_result.get("needs_review"):
                             print(f"  [BS4] 需复核: {bs4_result.get('notes', '')[:80]}")
                     except Exception as exc:
@@ -654,22 +662,24 @@ def main() -> int:
                     try:
                         llm_result = llm_extract_from_html(html, image_urls)
                         # LLM 标题与 BS4 交叉参考
-                        if llm_result.get("title") and not bs4_result:
+                        if llm_result.get("title") and not bs4_success:
                             title = llm_result["title"]
                             print(f"  [LLM] title: {title[:60]}")
                         # LLM 正文：优先采用（通常更干净），BS4 结果作为回退
                         if llm_result.get("clean_text"):
                             body_text = llm_result["clean_text"]
                             print(f"  [LLM] clean text: {len(body_text)} chars")
-                        elif not bs4_result:
+                        elif not bs4_success:
                             print(f"  [LLM] 未提取到正文，保留现有结果")
                         if llm_result.get("needs_review"):
                             print(f"  [LLM] 需复核: 置信度 {llm_result.get('confidence', 0):.2f}")
                     except Exception as exc:
-                        print(f"  [LLM] 失败: {exc}, 回退到 {'BS4' if bs4_result else '正则'}结果")
+                        print(f"  [LLM] 失败: {exc}, 回退到 {'BS4' if bs4_success else '正则'}结果")
 
                 # 7. 保证正文内包含标题（若缺失则前置）
-                if title and title not in body_text:
+                if title and title not in body_text and not (
+                    bs4_success and not body_text
+                ):
                     body_text = title + "\n\n" + body_text
                     print(f"  [title] 前置标题到正文")
 

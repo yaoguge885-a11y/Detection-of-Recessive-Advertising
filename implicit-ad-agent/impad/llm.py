@@ -24,7 +24,9 @@ def get_llm(temperature: float = 0.0) -> ChatOpenAI:
 
 def get_ollama_llm(model: str = "qwen3.5:9b",
                    url: str = "http://localhost:11434",
-                   temperature: float = 0.0) -> ChatOpenAI:
+                   temperature: float = 0.0,
+                   *, timeout: float | None = None,
+                   max_retries: int | None = None) -> ChatOpenAI:
     """Ollama 本地推理客户端工厂（OpenAI 兼容端点 /v1）。
 
     Args:
@@ -40,4 +42,6 @@ def get_ollama_llm(model: str = "qwen3.5:9b",
         api_key="ollama",  # Ollama 本地端点不需要真实密钥
         base_url=f"{url.rstrip('/')}/v1",
         temperature=temperature,
+        timeout=timeout,
+        max_retries=max_retries,
     )

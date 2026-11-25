@@ -220,3 +220,72 @@ def test_unsupported_text_requires_review_but_unsupported_image_is_not_provided(
 
     assert "text_capture_incomplete" in result.reason_codes
     assert "image_evidence_missing" not in result.reason_codes
+
+
+def _media_ocr_result(*, media_id: str, media_ref: str, status: str = "ok"):
+    return ToolResult(
+        tool_name="ocr_extract",
+        status=status,
+        call_id=f"call_ocr_extract_{media_id}",
+        payload={
+            "media_id": media_id,
+            "media_ref": media_ref,
+            "vision_context": {"capabilities": {"ocr": True}},
+        },
+    )
+
+
+def test_each_local_image_needs_its_own_ocr_result(tmp_path):
+    first = tmp_path / "first.jpg"
+    second = tmp_path / "second.jpg"
+    first.write_bytes(b"first")
+    second.write_bytes(b"second")
+    post = post_record_from_manual({
+        "text": "普通生活记录",
+        "capture_complete": True,
+        "media": [
+            {"media_id": "media_first", "type": "image", "ref": str(first)},
+            {"media_id": "media_second", "type": "image", "ref": str(second)},
+        ],
+    })
+    bundle = build_evidence_bundle(
+        post,
+        [
+            _text_result(),
+            _media_ocr_result(media_id="media_first", media_ref=str(first)),
+            _media_ocr_result(media_id="media_second", media_ref=str(second)),
+        ],
+    )
+
+    result = assess_evidence_adequacy(post, bundle)
+
+    assert result.review_required is False
+    assert "image_coverage_incomplete" not in result.reason_codes
+
+
+def test_duplicate_or_partial_image_ocr_coverage_requires_review(tmp_path):
+    first = tmp_path / "first.jpg"
+    second = tmp_path / "second.jpg"
+    first.write_bytes(b"first")
+    second.write_bytes(b"second")
+    post = post_record_from_manual({
+        "text": "普通生活记录",
+        "capture_complete": True,
+        "media": [
+            {"media_id": "media_first", "type": "image", "ref": str(first)},
+            {"media_id": "media_second", "type": "image", "ref": str(second)},
+        ],
+    })
+    bundle = build_evidence_bundle(
+        post,
+        [
+            _text_result(),
+            _media_ocr_result(media_id="media_first", media_ref=str(first)),
+            _media_ocr_result(media_id="media_first", media_ref=str(first)),
+        ],
+    )
+
+    result = assess_evidence_adequacy(post, bundle)
+
+    assert result.review_required is True
+    assert "image_coverage_incomplete" in result.reason_codes

@@ -1,7 +1,7 @@
 """Structured LangGraph state for the P2.5 evidence flow."""
 from __future__ import annotations
 
-from typing import Any, TypedDict
+from typing import Any, Callable, Literal, TypedDict
 
 from .contracts import (
     CaptureStatus,
@@ -39,6 +39,8 @@ class AdCheckState(TypedDict, total=False):
     agent_outputs: dict[str, dict[str, Any]]
     tool_gateway: Any
     runtime_mode: str
+    evidence_strategy: Literal["adaptive", "fixed"]
+    disclosure_verifier: Callable[[list[str]], dict] | None
 
     # Compatibility presentation fields. They are derived, not authoritative.
     agent_votes: dict[str, dict[str, Any]]

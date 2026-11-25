@@ -13,6 +13,8 @@ class Settings:
     openai_base_url: str = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
     llm_model: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
     langsmith_project: str = os.getenv("LANGSMITH_PROJECT", "implicit-ad-agent")
+    text_intent_model_path: str = os.getenv("TEXT_INTENT_MODEL_PATH", "")
+    text_intent_positive_label_id: str = os.getenv("TEXT_INTENT_POSITIVE_LABEL_ID", "1")
 
 
 settings = Settings()

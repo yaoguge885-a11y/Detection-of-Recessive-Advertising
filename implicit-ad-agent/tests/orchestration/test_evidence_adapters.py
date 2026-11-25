@@ -228,7 +228,8 @@ def test_ocr_disclosure_marker_becomes_explicit_disclosure_evidence():
     ]
 
     assert len(disclosure) == 1
-    assert disclosure[0].quote == "赞助"
+    assert disclosure[0].quote == "本内容由品牌方赞助"
+    assert disclosure[0].span == (0, len("本内容由品牌方赞助"))
     assert disclosure[0].bbox == [10, 20, 100, 50]
     assert disclosure[0].source_type == "image"
     assert disclosure[0].polarity == "supports"

@@ -34,6 +34,31 @@ _P1_SOURCE_TYPES = {
     "synthetic",
 }
 _P1_SCHEMA_VERSIONS = {"1.0", "1.1", "1.2"}
+_EVIDENCE_STRATEGIES = {"adaptive", "fixed"}
+
+
+def _evidence_strategy(state: AdCheckState) -> str:
+    strategy = state.get("evidence_strategy", "adaptive")
+    return strategy if strategy in _EVIDENCE_STRATEGIES else "adaptive"
+
+
+def _has_confirmed_disclosure(state: AdCheckState) -> bool:
+    bundle = state.get("evidence_bundle")
+    return bundle is not None and any(
+        item.kind == "explicit_ad_marker" for item in bundle.items
+    )
+
+
+def _needs_followup_evidence(state: AdCheckState) -> bool:
+    result = next((item for item in state.get("tool_results", [])
+                   if item.tool_name == "analyze_text_intent"), None)
+    if result is None or result.status not in {"ok", "degraded"}:
+        return True
+    return bool(result.score and result.score >= 0.35) or any(
+        item.kind in {"disclosure_candidate", "soft_ad_signal",
+                      "keyword:urgency_expressions", "keyword:action_words"}
+        for item in result.evidence
+    )
 
 
 def normalize_post_record(raw: dict | PostRecord) -> PostRecord:
@@ -59,6 +84,7 @@ def supervisor(state: AdCheckState) -> AdCheckState:
     post = normalize_post_record(state.get("post", {}))
     context = capability_context_from_post(post)
     capability_plan = CapabilityPlanner().plan(context)
+    evidence_strategy = _evidence_strategy(state)
     available = set(capability_plan.available_tools)
     plan = []
     if available & _NLP_TOOLS:
@@ -73,6 +99,7 @@ def supervisor(state: AdCheckState) -> AdCheckState:
         "post_record": post,
         "capture_status": post.capture_status,
         "capability_plan": capability_plan,
+        "evidence_strategy": evidence_strategy,
         "plan": plan,
         "tool_results": [],
         "function_traces": [],
@@ -82,7 +109,7 @@ def supervisor(state: AdCheckState) -> AdCheckState:
             status="running",
             started_at=datetime.now(timezone.utc),
             runtime_mode=state.get("runtime_mode", "local"),
-            planner_version="capability_planner_v1",
+            planner_version=f"capability_planner_v2_{evidence_strategy}",
         ),
         "agent_outputs": {},
         "agent_votes": {},
@@ -94,7 +121,27 @@ def supervisor(state: AdCheckState) -> AdCheckState:
 
 
 def route_next(state: AdCheckState) -> str:
-    """Route each eligible expert group once, then hand off to Judge."""
+    """Route expert groups, optionally prioritizing evidence by signal."""
 
     plan = state.get("plan") or []
-    return plan[0] if plan else "judge"
+    if not plan:
+        return "judge"
+    if _evidence_strategy(state) == "fixed":
+        return plan[0]
+
+    # Text is the first-pass gate whenever it is available.  If it is not
+    # available, preserve the original deterministic order for the remaining
+    # groups rather than silently dropping a modality.
+    if "nlp" in plan:
+        return "nlp"
+
+    # Images can carry a disclosure marker that is absent from the text. Keep
+    # the eligible vision group in the route even when text intent is weak.
+    if "vision" in plan:
+        return "vision"
+
+    if "behavior" in plan and not _has_confirmed_disclosure(state) and _needs_followup_evidence(state):
+        return "behavior"
+    if "creator_shift" in plan:
+        return "creator_shift"
+    return "judge"

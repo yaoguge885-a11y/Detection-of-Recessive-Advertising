@@ -35,6 +35,7 @@ def judge(state: AdCheckState) -> AdCheckState:
         post,
         bundle,
         creator_shift=state.get("creator_shift_summary"),
+        use_history_for_review=state.get("evidence_strategy", "adaptive") == "adaptive",
     )
     finished_at = datetime.now(timezone.utc)
     metadata = state["run_metadata"]

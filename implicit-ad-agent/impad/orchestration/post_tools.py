@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Collection
 from urllib.parse import urlparse
 
-from ..contracts.post import HistoryPost, PostRecord
+from ..contracts.post import HistoryPost, MediaRecord, PostRecord
 from ..tools.registry import TOOL_SPECS_V1
 from .capability_planner import CapabilityPlan
 from .function_calling import (
@@ -20,6 +20,7 @@ from .tool_gateway import (
     ToolGateway,
     validate_tool_arguments,
 )
+from ..tools.contracts import ToolResult
 from .tracing import InMemoryTraceRecorder
 
 
@@ -32,10 +33,38 @@ def _is_local_file(ref: str | None) -> bool:
 
 
 def _local_image(post: PostRecord) -> str | None:
-    for item in post.media:
-        if item.type == "image" and _is_local_file(item.ref):
-            return item.ref
-    return None
+    images = _local_images(post)
+    return images[0].ref if images else None
+
+
+def _local_images(post: PostRecord) -> list[MediaRecord]:
+    """Return each executable local image, preserving source order."""
+
+    return [
+        item
+        for item in post.media
+        if item.type == "image" and _is_local_file(item.ref)
+    ]
+
+
+_IMAGE_TOOL_NAMES = frozenset({
+    "ocr_extract",
+    "image_text_consistency",
+    "detect_logo_product",
+})
+
+
+def _image_call_id(
+    tool_name: str,
+    image: MediaRecord,
+    image_index: int,
+    image_count: int,
+) -> str:
+    """Keep the legacy one-image id while making multi-image ids unique."""
+
+    if image_count == 1:
+        return f"call_{tool_name}"
+    return f"call_{tool_name}_media_{image_index}_{image.media_id}"
 
 
 def _time_safe_history(post: PostRecord) -> list[HistoryPost]:
@@ -57,11 +86,7 @@ def capability_context_from_post(post: PostRecord) -> CapabilityContext:
     if post.text.strip():
         modalities.add("text")
         sample_counts["text"] = 1
-    local_images = [
-        item
-        for item in post.media
-        if item.type == "image" and _is_local_file(item.ref)
-    ]
+    local_images = _local_images(post)
     if local_images:
         modalities.add("image")
         sample_counts["image"] = len(local_images)
@@ -93,8 +118,14 @@ def _history_payload(history: list[HistoryPost]) -> list[dict]:
     ]
 
 
-def _arguments_for(post: PostRecord, tool_name: str) -> dict:
-    image_path = _local_image(post)
+def _arguments_for(
+    post: PostRecord,
+    tool_name: str,
+    *,
+    image_path: str | None = None,
+) -> dict:
+    if image_path is None:
+        image_path = _local_image(post)
     history = _history_payload(_time_safe_history(post))
     comments = [
         item.model_dump(mode="json", exclude_none=True)
@@ -136,20 +167,80 @@ def function_calls_from_post(
     if tool_names is not None:
         allowed &= set(tool_names)
     calls = []
+    local_images = _local_images(post)
     for spec in TOOL_SPECS_V1:
         if spec.name not in allowed:
             continue
-        arguments = _arguments_for(post, spec.name)
-        validated = validate_tool_arguments(
-            spec.tool.args_schema,
-            arguments,
+        image_targets = (
+            list(enumerate(local_images))
+            if spec.name in _IMAGE_TOOL_NAMES
+            else [(None, None)]
         )
-        calls.append({
-            "id": f"call_{spec.name}",
-            "name": spec.name,
-            "args": validated.model_dump(mode="json"),
-        })
+        for image_index, image in image_targets:
+            arguments = _arguments_for(
+                post,
+                spec.name,
+                image_path=image.ref if image is not None else None,
+            )
+            validated = validate_tool_arguments(
+                spec.tool.args_schema,
+                arguments,
+            )
+            call_id = (
+                _image_call_id(
+                    spec.name,
+                    image,
+                    image_index,
+                    len(local_images),
+                )
+                if image is not None
+                else f"call_{spec.name}"
+            )
+            calls.append({
+                "id": call_id,
+                "name": spec.name,
+                "args": validated.model_dump(mode="json"),
+            })
     return calls
+
+
+def _annotate_image_result(
+    post: PostRecord,
+    result: ToolResult,
+) -> ToolResult:
+    """Attach source media identity to expanded visual outcomes."""
+
+    local_images = _local_images(post)
+    if len(local_images) <= 1:
+        return result
+    call_id = result.call_id
+    if not call_id or result.tool_name not in _IMAGE_TOOL_NAMES:
+        return result
+    for image_index, image in enumerate(local_images):
+        if call_id != _image_call_id(
+            result.tool_name,
+            image,
+            image_index,
+            len(local_images),
+        ):
+            continue
+        payload = dict(result.payload)
+        payload.setdefault("media_id", image.media_id)
+        payload.setdefault("media_ref", image.ref)
+        return result.model_copy(update={"payload": payload})
+    return result
+
+
+def _annotate_image_results(
+    post: PostRecord,
+    result: FunctionCallingResult,
+) -> FunctionCallingResult:
+    return result.model_copy(update={
+        "tool_results": [
+            _annotate_image_result(post, item)
+            for item in result.tool_results
+        ],
+    })
 
 
 def execute_post_tools(
@@ -166,7 +257,7 @@ def execute_post_tools(
 
     context = capability_context_from_post(post)
     calls = function_calls_from_post(post, plan, tool_names=tool_names)
-    return RestrictedFunctionCaller(gateway=gateway).execute(
+    result = RestrictedFunctionCaller(gateway=gateway).execute(
         calls=calls,
         context=context,
         run=run,
@@ -174,6 +265,7 @@ def execute_post_tools(
         plan=plan,
         recorder=recorder,
     )
+    return _annotate_image_results(post, result)
 
 
 def execute_post_tools_parallel(
@@ -236,4 +328,4 @@ def execute_post_tools_parallel(
         merged.rejected_count += outcome.rejected_count
         if recorder is not None:
             recorder.trace.events.extend(trace.events)
-    return merged
+    return _annotate_image_results(post, merged)

@@ -11,7 +11,7 @@ from ..contracts.evidence import (
 )
 from ..contracts.post import PostRecord
 from ..tools.contracts import ToolEvidence, ToolResult
-from ..tools.keywords import EXPLICIT_AD_MARKERS
+from ..tools.disclosure import disclosure_evidence
 
 
 _SUPPORTING_KINDS = {
@@ -29,6 +29,11 @@ _SUPPORTING_KEYWORDS = {
     "action_words",
 }
 _NON_EVIDENCE_KINDS = {"absence", "insufficient"}
+_PLATFORM_AD_BADGES = {
+    "广告", "商业推广", "付费推广", "付费合作", "品牌合作", "商务合作",
+    "商业合作", "广告合作", "赞助", "赞助内容", "ad", "sponsored",
+    "paid partnership",
+}
 _CAPTURE_TO_COVERAGE = {
     "complete": "covered",
     "partial": "partial",
@@ -54,6 +59,8 @@ def _source_type(source: str) -> str:
         return "history"
     if any(part in lowered for part in ("image", "media", "ocr", "yolo")):
         return "image"
+    if "disclosure" in lowered:
+        return "disclosure"
     if "text" in lowered:
         return "text"
     return "metadata"
@@ -110,29 +117,25 @@ def evidence_items_from_tool_result(
             index,
             limitations,
         ))
-        marker = None
+        disclosure = []
         if (
             result.tool_name == "ocr_extract"
             and evidence.kind == "ocr_text"
             and evidence.quote
         ):
-            marker = next(
-                (
-                    value
-                    for value in EXPLICIT_AD_MARKERS
-                    if value in evidence.quote
-                ),
-                None,
+            disclosure = disclosure_evidence(
+                evidence.quote,
+                source=evidence.source,
             )
-        if marker is not None:
-            derived = evidence.model_copy(update={
-                "kind": "explicit_ad_marker",
-                "quote": marker,
+        for derived_index, derived in enumerate(disclosure):
+            derived = derived.model_copy(update={
+                "bbox": evidence.bbox,
+                "score": evidence.score,
             })
             items.append(_item_from_observation(
                 result,
                 derived,
-                10_000 + index,
+                10_000 + index * 100 + derived_index,
                 limitations,
             ))
     return items
@@ -172,7 +175,8 @@ def _item_from_observation(
         if result.status == "degraded"
         else "observed",
         limitations=limitations,
-        metadata={"result_status": result.status},
+        metadata={"result_status": result.status,
+                  **({"model_info": result.model_info} if result.model_info else {})},
     )
 
 
@@ -199,6 +203,33 @@ def _missing_requirements(
     return list(dict.fromkeys(missing))
 
 
+def _captured_disclosure_items(post: PostRecord) -> list[EvidenceItem]:
+    """Carry recognized platform badges into judgment with capture provenance.
+
+    Free-text disclosures still need their original text/OCR observations;
+    a structured claim alone cannot manufacture a quote from the post.
+    """
+    observations = [
+        ToolEvidence(
+            kind="explicit_ad_marker", source=f"post.disclosures[{index}]",
+            quote=disclosure.text,
+        )
+        for index, disclosure in enumerate(post.disclosures)
+        if disclosure.kind == "platform_badge"
+        and disclosure.source == "platform_metadata"
+        and disclosure.text.strip().casefold() in _PLATFORM_AD_BADGES
+    ]
+    result = ToolResult(
+        tool_name="capture_disclosure", status="ok",
+        tool_version=post.capture_status.adapter_version,
+        evidence=observations,
+    )
+    return [
+        item.model_copy(update={"producer": f"adapter:{post.capture_status.source}"})
+        for item in evidence_items_from_tool_result(result)
+    ]
+
+
 def build_evidence_bundle(
     post: PostRecord,
     results: list[ToolResult],
@@ -212,6 +243,7 @@ def build_evidence_bundle(
         for result in results
         for item in evidence_items_from_tool_result(result)
     ]
+    items.extend(_captured_disclosure_items(post))
     items.extend(supplemental_items or [])
     ids_by_modality: dict[str, list[str]] = {}
     for item in items:

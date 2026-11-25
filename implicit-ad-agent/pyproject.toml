@@ -21,6 +21,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+text-model = [
+    "transformers>=4.46,<6",
+    "torch>=2.0",
+]
 crawler = [
     "requests>=2.31",
     "beautifulsoup4>=4.12",
@@ -49,6 +53,7 @@ rag = [
     "chromadb>=1.1,<2",
 ]
 all = [
+    "transformers>=4.46,<6",
     "requests>=2.31",
     "beautifulsoup4>=4.12",
     "playwright>=1.45",

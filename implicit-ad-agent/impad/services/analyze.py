@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Callable, Literal
 from uuid import uuid4
 
 from pydantic import (
@@ -134,6 +134,8 @@ class AnalysisService:
         run_store: RunStore | None = None,
         local_gateway: ToolGateway | None = None,
         mcp_gateway: ToolGateway | None = None,
+        evidence_strategy: Literal["adaptive", "fixed"] = "adaptive",
+        disclosure_verifier: Callable[[list[str]], dict] | None = None,
     ):
         self.retriever = retriever or build_default_legal_retriever()
         self.run_store = run_store or JsonRunStore(
@@ -141,6 +143,8 @@ class AnalysisService:
         )
         self.local_gateway = local_gateway or LocalToolGateway()
         self.mcp_gateway = mcp_gateway
+        self.evidence_strategy = evidence_strategy
+        self.disclosure_verifier = disclosure_verifier
 
     def analyze(
         self,
@@ -156,6 +160,8 @@ class AnalysisService:
             "post": post,
             "tool_gateway": gateway,
             "runtime_mode": runtime_mode,
+            "evidence_strategy": self.evidence_strategy,
+            "disclosure_verifier": self.disclosure_verifier,
         })
         normalized = state["post_record"]
         bundle = state["evidence_bundle"]

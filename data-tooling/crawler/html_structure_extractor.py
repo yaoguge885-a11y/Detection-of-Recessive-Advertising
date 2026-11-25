@@ -172,6 +172,7 @@ def extract_from_html(html: str) -> Dict:
         {
             "title": str|None,       # 纯净标题
             "clean_text": str,        # 带 <图片N> 标记的正文
+            "image_urls": [str],      # 与 media_enrichments 同序的图片 URL
             "media_enrichments": [    # 图片补充信息
                 {"index": 0, "is_content": bool, "caption": str|None}
             ],
@@ -182,7 +183,8 @@ def extract_from_html(html: str) -> Dict:
     """
     if not HAS_BS4:
         return {
-            "title": None, "clean_text": "", "media_enrichments": [],
+            "title": None, "clean_text": "", "image_urls": [],
+            "media_enrichments": [],
             "confidence": 0.0, "needs_review": True,
             "notes": "BeautifulSoup 未安装 (pip install beautifulsoup4 lxml)"
         }
@@ -213,22 +215,105 @@ def extract_from_html(html: str) -> Dict:
         content_div = soup.find("body")
     if not content_div:
         return {
-            "title": title, "clean_text": "", "media_enrichments": [],
+            "title": title, "clean_text": "", "image_urls": [],
+            "media_enrichments": [],
             "confidence": 0.0, "needs_review": True,
             "notes": "无法定位文章正文容器"
         }
+    body_fallback = content_div.name == "body"
 
     # ── 3. 标记需要跳过的装饰性元素 ──
-    skip_tags = {"script", "style", "noscript", "iframe", "svg", "video", "audio"}
+    # 这些标签表示页面 chrome 或非正文内容。按子树跳过，避免其中的
+    # 文本和图片分别泄漏到正文和 media_enrichments。
+    skip_tags = {
+        "script", "style", "noscript", "iframe", "svg", "video", "audio",
+        "nav",
+    }
     skip_classes = {"qr_code", "qrcode", "reward", "copyright", "profile",
                     "avatar", "emoji", "wx_tap_link", "original_primary",
                     "rich_media_meta", "reward_area", "like_comment",
                     "qr_code_pc", "code_pc", "img_loading"}
 
+    # 仅匹配明确的推荐/相关内容语义，不把 ``ad`` 等可能出现在正文
+    # 结构中的通用片段当作广告容器。
+    recommendation_name_pattern = re.compile(
+        r"(?:recommend(?:ation|ed)?|related)"
+        r"(?:posts?|articles?|content|links?|reading|list|section|container|"
+        r"box|card|area|items?|module|block|wrapper)?$",
+        re.IGNORECASE,
+    )
+    recommendation_labels = {
+        "相关推荐", "推荐阅读", "相关阅读", "猜你喜欢", "热门推荐",
+        "recommendation", "recommendations", "recommended", "related",
+        "related content", "recommended reading",
+    }
+    hidden_class_names = {
+        "hidden", "is-hidden", "visually-hidden", "sr-only", "d-none",
+        "u-hidden", "invisible", "hide",
+    }
+    structural_skip_roles = {"complementary", "contentinfo"}
+
+    def _normalized_names(tag: Tag) -> List[str]:
+        """Return class/id names in a form suitable for exact semantics."""
+        names = [str(value).strip().lower() for value in tag.get("class", [])]
+        element_id = tag.get("id")
+        if element_id:
+            names.append(str(element_id).strip().lower())
+        return [name for name in names if name]
+
+    def _is_recommendation_container(tag: Tag) -> bool:
+        """Identify explicit recommendation/related-content containers."""
+        for name in _normalized_names(tag):
+            compact_name = re.sub(r"[\s_-]+", "", name)
+            if recommendation_name_pattern.fullmatch(compact_name):
+                return True
+            if name in recommendation_labels:
+                return True
+
+        role = str(tag.get("role", "")).strip().lower()
+        if role == "navigation":
+            return True
+        if (role in structural_skip_roles and body_fallback
+                and tag.find_parent(["article", "main"]) is None):
+            return True
+
+        for attribute in ("aria-label", "title"):
+            label = str(tag.get(attribute, "")).strip().lower()
+            if label in recommendation_labels:
+                return True
+        return False
+
+    def _is_hidden(tag: Tag) -> bool:
+        """Detect DOM-hidden nodes without relying on rendered browser state."""
+        if tag.has_attr("hidden"):
+            return True
+        if str(tag.get("aria-hidden", "")).strip().lower() in {"true", "1"}:
+            return True
+
+        if any(
+            re.sub(r"[\s_-]+", "-", name) in hidden_class_names
+            for name in _normalized_names(tag)
+        ):
+            return True
+
+        style = str(tag.get("style", ""))
+        for declaration in style.split(";"):
+            if ":" not in declaration:
+                continue
+            property_name, value = declaration.split(":", 1)
+            property_name = property_name.strip().lower()
+            value = value.strip().lower().split("!", 1)[0].strip()
+            if property_name == "display" and value == "none":
+                return True
+            if property_name == "visibility" and value in {"hidden", "collapse"}:
+                return True
+        return False
+
     # ── 4. DOM 遍历：按文档顺序收集文本和图片 ──
     paragraphs: List[str] = []          # 文本段落
     content_images: List[Dict] = []     # 内容图片信息
     all_images: List[Dict] = []         # 所有图片信息
+    image_urls: List[str] = []          # 与 all_images/media_enrichments 同序
     image_counter = 0                    # 内容图计数器
     total_images = 0                     # 总图片计数器
 
@@ -236,13 +321,19 @@ def extract_from_html(html: str) -> Dict:
         """判断是否跳过该标签及其子节点。"""
         if tag.name in skip_tags:
             return True
+        if (
+            tag.name in {"aside", "footer"}
+            and body_fallback
+            and tag.find_parent(["article", "main"]) is None
+        ):
+            return True
         cls = " ".join(tag.get("class", []))
         for sc in skip_classes:
             if sc in cls.lower():
                 return True
-        # 跳过隐藏元素
-        style = tag.get("style", "")
-        if "display:none" in style or "visibility:hidden" in style:
+        if _is_recommendation_container(tag):
+            return True
+        if _is_hidden(tag):
             return True
         return False
 
@@ -264,16 +355,19 @@ def extract_from_html(html: str) -> Dict:
 
         # 遇到图片
         if node.name == "img":
+            src = node.get("data-src") or node.get("src") or ""
+            if not re.match(r"^https?://", src, re.IGNORECASE):
+                return
             total_images += 1
             is_content, reason = _is_likely_content_image(node)
-            src = node.get("data-src") or node.get("src") or ""
+            image_urls.append(src)
             caption = _extract_image_caption(node) if is_content else None
 
             all_images.append({
                 "total_index": total_images - 1,
                 "is_content": is_content,
                 "reason": reason,
-                "src": src[:120],
+                "src": src,
                 "caption": caption,
             })
 
@@ -357,6 +451,9 @@ def extract_from_html(html: str) -> Dict:
     if content_count > 30:
         needs_review = True
         review_reasons.append(f"内容图片较多 ({content_count})，建议抽查")
+    if not clean_text:
+        needs_review = True
+        review_reasons.append("未提取到正文内容，建议复核")
 
     notes = f"BS4模式: {total_images}张图, {content_count}内容+{decoration_count}装饰"
     if review_reasons:
@@ -365,6 +462,7 @@ def extract_from_html(html: str) -> Dict:
     return {
         "title": title,
         "clean_text": clean_text,
+        "image_urls": image_urls,
         "media_enrichments": media_enrichments,
         "confidence": 0.85,  # 固定值：规则置信度
         "needs_review": needs_review,

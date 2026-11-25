@@ -174,7 +174,7 @@ def _url_service(tmp_path: Path):
             "bilibili",
             "video_no_images",
             "https://www.bilibili.com/video/BV_SYNTHETIC_001",
-            [],
+            [None],
         ),
         (
             "bilibili",

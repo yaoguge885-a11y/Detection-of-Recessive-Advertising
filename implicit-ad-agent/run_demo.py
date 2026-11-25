@@ -2,6 +2,7 @@
 
 Usage:
     python run_demo.py
+    python run_demo.py --verify-disclosure
     python run_demo.py --llm
     python run_demo.py --image path/to.jpg
 """
@@ -69,10 +70,28 @@ def main(
         "--image",
         help="optional local image path for the real vision pipeline",
     )
+    parser.add_argument(
+        "--verify-disclosure",
+        action="store_true",
+        help="verify ambiguous quotes with local Ollama Qwen",
+    )
+    parser.add_argument(
+        "--fixed-route",
+        action="store_true",
+        help="use the fixed expert-group schedule for comparison",
+    )
     args = parser.parse_args(argv)
 
     if args.llm:
         print(">> --llm 已弃用；继续使用零 Key 的确定性 AnalysisService。\n")
+
+    if service is None and (args.verify_disclosure or args.fixed_route):
+        from impad.agents.disclosure_agent import verify_with_local_qwen
+
+        service = AnalysisService(
+            evidence_strategy="fixed" if args.fixed_route else "adaptive",
+            disclosure_verifier=verify_with_local_qwen if args.verify_disclosure else None,
+        )
 
     results = run_demo(
         samples_path,
